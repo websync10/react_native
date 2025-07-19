@@ -1,14 +1,14 @@
-import ProfileForm from '@/components/ProfileForm';
 import { supabase } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
 
+import PageOne from '@/components/onboarding/PageOne';
 import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 const Hello = () => {
     const [session, setSession] = useState<Session | null>(null);
     const [fullname, setFullname] = useState('');
-
+    
     useEffect(() => {
         const init = async () => {
             const { data: { session } } = await supabase.auth.getSession();
@@ -48,7 +48,7 @@ const Hello = () => {
     return (
         <ScrollView contentContainerStyle={styles.container}>
             <View style={{ flex: 1 }}>
-                <ProfileForm fullname={fullname} />
+                <PageOne />
             </View>
         </ScrollView>
     );
@@ -58,6 +58,8 @@ const styles = StyleSheet.create({
     container: {
         padding: 16,
         flexGrow: 1,
+        backgroundColor: '#ffffff',
+        fontFamily: 'Helvetica'
     },
 });
 

@@ -230,14 +230,13 @@ export default function ProfileForm({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#FFFFFF",
     },
     scrollView: {
         flex: 1,
     },
     scrollContent: {
-        paddingHorizontal: 16,
-        paddingVertical: 24,
+        paddingHorizontal: 0,
+        paddingVertical: 4,
     },
     section: {
         marginBottom: 24,

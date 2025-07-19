@@ -1,268 +1,342 @@
 import { StyleSheet } from 'react-native';
 
-export const styles = StyleSheet.create({
-  // App Container Styles
-  appContainer: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  content: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
+export
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingHorizontal: 0,
+      paddingVertical: 4,
+    },
+    section: {
+      marginBottom: 24,
+    },
+    sizeSection: {
+      marginBottom: 8,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 20,
+      borderBottomWidth: 0.3,
+      borderColor: "#999",
+      width: '100%',
+      alignSelf: 'stretch',
+    },
+    backButton: {
+      padding: 10,
+      borderColor: "black",
+      borderWidth: 0.5,
+      borderRadius: "50%",
+      textAlign: "center",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center"
+    },
+    progressContainer: {
+      top: -6,
+      display: "flex",
+      flexDirection: "row",
+      width: "auto",
+      justifyContent: "space-between"
+    },
+    progressBar: {
+      width: '50%',
+      height: 15,
+      backgroundColor: '#ddd',
+      borderRadius: 10,
+      overflow: 'hidden',
+    },
+    progressFill: {
+      width: '25%',
+      height: 15,
+      backgroundColor: '#007bff',
+    },
+    progressText: {
+      fontSize: 20,
+      color: '#333',
+      marginTop: 10,
+    },
+    content: {
+      flex: 1,
+      justifyContent: 'center',
+    },
+    title: {
+      fontSize: 30,
+      fontWeight: 'bold',
+      marginTop: 30,
+      marginBottom: 10,
+      fontFamily: "Helvetica",
+      textAlign: "center"
+    },
+    subtitle: {
+      fontSize: 16,
+      color: '#666',
+      marginBottom: 30,
+      textAlign: "center"
+    },
+    label: {
+      fontSize: 18,
+      fontWeight: "500",
+      color: "#111827",
+      marginBottom: 8,
+    },
+    textInput: {
+      borderWidth: 1,
+      borderColor: "#D1D5DB",
+      borderRadius: 8,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      fontSize: 16,
+      color: "#111827",
+    },
+    radioGroup: {
+      flexDirection: "row",
+      gap: 24,
+    },
+    radioOption: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    radioButton: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      borderWidth: 2,
+      borderColor: "#9CA3AF",
+      marginRight: 8,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    radioButtonSelected: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: "#000000",
+    },
+    radioText: {
+      fontSize: 16,
+      color: "#111827",
+    },
+    dropdownContainer: {
+      position: "relative",
+    },
+    dropdown: {
+      borderWidth: 1,
+      borderColor: "#D1D5DB",
+      borderRadius: 20,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      height: 60,
+    },
+    dropdownText: {
+      fontSize: 18,
+      color: "#111827",
+    },
+    dropdownMenu: {
+      position: "absolute",
+      top: "100%",
+      left: 0,
+      right: 0,
+      backgroundColor: "#FFFFFF",
+      borderWidth: 1,
+      borderColor: "#D1D5DB",
+      borderRadius: 8,
+      marginTop: 4,
+      zIndex: 10,
+      elevation: 5,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+    },
+    dropdownItem: {
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: "#F3F4F6",
+    },
+    dropdownItemLast: {
+      borderBottomWidth: 0,
+    },
+    dropdownItemText: {
+      fontSize: 16,
+      color: "#111827",
+    },
+    helpText: {
+      fontSize: 18,
+      color: "#6B7280",
+      marginBottom: 24,
+    },
+    photoContainer: {
+      borderWidth: 2,
+      borderColor: "#D1D5DB",
+      borderStyle: "dashed",
+      borderRadius: 8,
+      padding: 32,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "#F9FAFB",
+      minHeight: 300,
+    },
+    humanFigure: {
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 16,
+    },
+    figureContainer: {
+      width: 128,
+      height: 192,
+      alignItems: "center",
+      justifyContent: "center",
+      position: "relative",
+    },
+    head: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      borderWidth: 2,
+      borderColor: "#9CA3AF",
+      marginBottom: 4,
+    },
+    body: {
+      width: 48,
+      height: 64,
+      borderWidth: 2,
+      borderColor: "#9CA3AF",
+      borderTopLeftRadius: 8,
+      borderTopRightRadius: 8,
+      marginBottom: 4,
+    },
+    arm: {
+      position: "absolute",
+      width: 24,
+      height: 8,
+      borderWidth: 2,
+      borderColor: "#9CA3AF",
+      borderRadius: 12,
+      top: 32,
+    },
+    leftArm: {
+      left: -12,
+      transform: [{ rotate: "45deg" }],
+    },
+    rightArm: {
+      right: -12,
+      transform: [{ rotate: "-45deg" }],
+    },
+    legs: {
+      flexDirection: "row",
+      gap: 4,
+    },
+    leg: {
+      width: 20,
+      height: 48,
+      borderWidth: 2,
+      borderColor: "#9CA3AF",
+      borderBottomLeftRadius: 8,
+      borderBottomRightRadius: 8,
+    },
+    iconRow: {
+      flexDirection: "row",
+      gap: 16,
+    },
+    iconButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: "#E5E7EB",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    infoSection: {
+      marginBottom: 50,
+      gap: 20,
+    },
+    infoItem: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 8,
+    },
+    bullet: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: "#9CA3AF",
+      marginTop: 8,
+      marginRight: 12,
+    },
+    infoText: {
+      fontSize: 18,
+      color: "#6B7280",
+      flex: 1,
+      lineHeight: 20,
+    },
+    nextButton: {
+      backgroundColor: "#000000",
+      borderRadius: 8,
+      paddingVertical: 16,
+      alignItems: "center",
+    },
+    nextButtonText: {
+      color: "#FFFFFF",
+      fontSize: 16,
+      fontWeight: "500",
+    },
 
-  // Header Styles
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 20,
-  },
-  backButton: {
-    marginRight: 15,
-  },
-  progressContainer: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  progressBar: {
-    width: 100,
-    height: 4,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 2,
-    marginBottom: 5,
-  },
-  progressFill: {
-    width: '50%',
-    height: '100%',
-    backgroundColor: '#6366F1',
-    borderRadius: 2,
-  },
-  progressText: {
-    fontSize: 12,
-    color: '#666',
-  },
-
-  // Title Styles
-  titleContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 30,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 5,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-  },
-
-  // Section Styles
-  section: {
-    paddingHorizontal: 20,
-    marginBottom: 25,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-    marginBottom: 10,
-  },
-
-  // Dropdown Styles
-  dropdown: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-  },
-  dropdownText: {
-    fontSize: 16,
-    color: '#000',
-  },
-
-  // Slider Styles
-  sliderContainer: {
-    marginVertical: 10,
-  },
-  slider: {
-    width: '100%',
-    height: 40,
-  },
-  sliderThumb: {
-    backgroundColor: '#D2691E',
-    width: 20,
-    height: 20,
-  },
-  helperText: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 5,
-  },
-
-  // Profile Photo Styles
-  profileContainer: {
-    alignItems: 'center',
-  },
-  silhouette: {
-    width: 120,
-    height: 200,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  silhouetteBody: {
-    alignItems: 'center',
-  },
-  silhouetteHead: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    borderWidth: 2,
-    borderColor: '#000',
-    marginBottom: 5,
-  },
-  silhouetteTorso: {
-    width: 40,
-    height: 60,
-    borderWidth: 2,
-    borderColor: '#000',
-    borderRadius: 20,
-    marginBottom: 5,
-  },
-  silhouetteArms: {
-    flexDirection: 'row',
-    position: 'absolute',
-    top: 40,
-    width: 80,
-    justifyContent: 'space-between',
-  },
-  silhouetteArm: {
-    width: 15,
-    height: 50,
-    borderWidth: 2,
-    borderColor: '#000',
-    borderRadius: 7,
-  },
-  silhouetteLegs: {
-    flexDirection: 'row',
-    width: 30,
-    justifyContent: 'space-between',
-  },
-  silhouetteLeg: {
-    width: 12,
-    height: 70,
-    borderWidth: 2,
-    borderColor: '#000',
-    borderRadius: 6,
-  },
-
-  // Button Styles
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 15,
-  },
-  actionButton: {
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-  },
-  actionButtonText: {
-    fontSize: 14,
-    color: '#000',
-  },
-  continueButton: {
-    backgroundColor: '#000',
-    marginHorizontal: 20,
-    borderRadius: 25,
-    paddingVertical: 15,
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  continueButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  cancelButton: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  cancelText: {
-    fontSize: 14,
-    color: '#666',
-  },
-
-  // Info Section Styles
-  infoSection: {
-    paddingHorizontal: 20,
-    marginBottom: 30,
-  },
-  infoItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 10,
-  },
-  bullet: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#000',
-    marginTop: 6,
-    marginRight: 10,
-  },
-  infoText: {
-    flex: 1,
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 18,
-  },
-
-  // Tab Bar Styles
-  tabBar: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
-    paddingVertical: 10,
-  },
-  tabItem: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  activeTabItem: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#6366F1',
-  },
-  tabText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  activeTabText: {
-    color: '#6366F1',
-    fontWeight: '600',
-  },
-  tabContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  tabTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000',
-  },
-});
+    saveButton: {
+      width: '100%',
+      height: 60,
+      backgroundColor: 'black',
+      fontSize: 20,
+      borderRadius: 28,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 10,
+    },
+    saveButtonText: {
+      fontSize: 22,
+      fontWeight:"bold",
+      color: '#fff',
+    },
+    cancelButton: {
+      width: '100%',
+      height: 60,
+      backgroundColor: 'white',
+      fontSize: 20,
+      borderRadius: 28,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+    },
+    cancelButtonText: {
+      fontSize: 22,
+      fontWeight:"normal",
+      color: '#999',
+    },
+    roundedCheckbox: {
+      width: 14,
+      height: 14,
+      borderRadius: 10,
+      backgroundColor: 'black',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    figureImage: {
+      position: 'absolute',
+      width: 200,
+      height: 200,
+      resizeMode: 'contain',
+      top: 0,
+      left: -40,
+    },
+    
+  })

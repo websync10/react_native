@@ -1,8 +1,9 @@
+import GradientBackground from '@/components/ui/GradientBackground';
+import GradientRight from '@/components/ui/GradientRight';
+import { createSessionFromUrl } from '@/lib/services/supabase/createSession';
 import { supabase } from '@/lib/supabase';
 import { makeRedirectUri } from 'expo-auth-session';
-import * as QueryParams from "expo-auth-session/build/QueryParams";
 import * as Linking from 'expo-linking';
-import { Link } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useEffect, useState } from 'react';
 import {
@@ -18,34 +19,10 @@ import {
 } from 'react-native';
 
 WebBrowser.maybeCompleteAuthSession();
-
-const redirectTo = makeRedirectUri();
-
-export const createSessionFromUrl = async (url: string) => {
-    const { params, errorCode } = QueryParams.getQueryParams(url);
-    if (errorCode) throw new Error(errorCode);
-
-    const { access_token, refresh_token } = params;
-    Alert.alert("Tokens from URL:");
-
-    if (!access_token || !refresh_token) {
-        Alert.alert("Missing token(s) in URL");
-        return;
-    }
-
-    const { data, error } = await supabase.auth.setSession({
-        access_token,
-        refresh_token,
-    });
-
-    if (error) {
-        Alert.alert("setSession error:", error.message);
-        return;
-    }
-
-    Alert.alert("Session set successfully!")
-};
-
+const redirectTo = makeRedirectUri({
+    scheme: 'myuzeapp',
+    path: 'validate',
+});
 
 const performOAuth = async (provider: 'google' | 'facebook') => {
     const { data, error } = await supabase.auth.signInWithOAuth({
@@ -73,7 +50,7 @@ const sendMagicLink = async (email: string) => {
     const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-            emailRedirectTo: redirectTo,
+            emailRedirectTo: Linking.createURL("/validate"),
         },
     });
 
@@ -93,25 +70,61 @@ const LoginScreen = () => {
         if (url) {
             createSessionFromUrl(url).catch(console.error);
         }
+        console.log("redirectTo", redirectTo)
     }, [url]);
 
     return (
-        <SafeAreaView style={{ flex: 1 }}>
+        <SafeAreaView style={{ flex: 1, }}>
+            <GradientBackground />
             <ScrollView>
-
                 <View style={styles.content}>
-                    <Text style={{
-                        fontSize: 60,
-                        textAlign: "center",
-                        marginBottom: 20,
-                        fontWeight: 900,
-
+                    <View style={{
+                        display: "flex",
+                        flexDirection: "row",
+                        justifyContent: "center",
+                        alignItems: "flex-end"
                     }}>
-                        Myuze
-                    </Text>
+                        <Image
+                            source={require('../../assets/images/bag.png')}
+                            resizeMode="contain"
+                            style={{
+                                width: 80,
+                                height: 80,
+                                alignSelf: 'center',
+                            }}
+                        />
+                        <Text style={{
+                            fontSize: 45,
+                            textAlign: "center",
+                            marginBottom: 10,
+                            fontWeight: 900,
+                        }}>
+                            Myuze
+                        </Text>
+                    </View>
                     <Text style={styles.headerText}>
-                        Find your style. Try it on. Own it.
+                        Find your style with AI.{"\n"}Try it on. Own it.
                     </Text>
+                    <View style={{
+                        display: "flex",
+                        flexDirection: 'column',
+                        gap: 10,
+                    }}>
+                        <Text style={{
+                            textAlign: "center",
+                            fontSize: 24,
+                            fontWeight: "bold"
+                        }}>
+                            Sign in
+                        </Text>
+                        <Text style={{
+                            textAlign: "center",
+                            fontSize: 17,
+                            marginBottom: 20,
+                        }}>
+                            Enter your email address to complete sign in
+                        </Text>
+                    </View>
 
                     <TouchableOpacity onPress={() => performOAuth('google')} style={styles.socialButton}>
                         <View style={styles.socialButtonContent}>
@@ -134,12 +147,12 @@ const LoginScreen = () => {
 
                     <View style={styles.dividerContainer}>
                         <View style={styles.dividerLine} />
-                        <Text style={styles.dividerText}>OR</Text>
+                        <Text style={styles.dividerText}>Or sign in with</Text>
                         <View style={styles.dividerLine} />
                     </View>
 
                     <View style={styles.inputContainer}>
-                        <Text style={styles.inputLabel}>Email</Text>
+                        <Text style={styles.inputLabel}>Email address</Text>
                         <TextInput
                             style={styles.textInput}
                             placeholder="Enter email"
@@ -150,27 +163,22 @@ const LoginScreen = () => {
                             autoCapitalize="none"
                         />
                     </View>
+                    <View style={{ display: 'flex', flexDirection: "column", gap: 10 }}>
+                        <TouchableOpacity onPress={() => sendMagicLink(email)} style={styles.continueButton}>
+                            <Text style={styles.continueButtonText}>Sign in</Text>
+                        </TouchableOpacity>
 
+                    </View>
                     <View style={styles.signUpContainer}>
                         <Text style={styles.signUpText}>Don't have an account? </Text>
                         <TouchableOpacity>
                             <Text style={styles.signUpLink}>Sign Up</Text>
                         </TouchableOpacity>
                     </View>
-
-                    <View style={{ display: 'flex', flexDirection: "column", gap: 10 }}>
-                        <TouchableOpacity onPress={() => sendMagicLink(email)} style={styles.continueButton}>
-                            <Text style={styles.continueButtonText}>Continue with email</Text>
-                        </TouchableOpacity>
-
-                        <Link href="/(auth)/onboarding" asChild>
-                            <TouchableOpacity style={styles.continueButton}>
-                                <Text style={styles.nextPage}>View Other Page</Text>
-                            </TouchableOpacity>
-                        </Link>
-                    </View>
                 </View>
             </ScrollView>
+            <GradientRight />
+
         </SafeAreaView>
     );
 };
@@ -178,6 +186,7 @@ const LoginScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: "white"
     },
     safeArea: {
         flex: 1,
@@ -185,30 +194,23 @@ const styles = StyleSheet.create({
     content: {
         flex: 1,
         paddingHorizontal: 24,
-        paddingTop: 60,
         justifyContent: 'center',
     },
     headerText: {
-        fontSize: 16,
-        color: '#333',
+        fontSize: 20,
+        color: '#888',
         textAlign: 'center',
-        marginBottom: 40,
-        fontWeight: '400',
+        marginBottom: 70,
+        fontWeight: 'bold',
     },
     socialButton: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 8,
+        borderRadius: 28,
         paddingVertical: 12,
         paddingHorizontal: 16,
         marginBottom: 12,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 1,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
+        borderWidth: 0.3,
+        borderColor: "#777"
     },
     facebookButton: {
         marginBottom: 24,
@@ -219,33 +221,33 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     socialIcon: {
-        width: 20,
-        height: 20,
+        width: 30,
+        height: 30,
         marginRight: 12,
     },
     facebookIcon: {
-        width: 20,
-        height: 20,
+        width: 30,
+        height: 30,
         backgroundColor: '#1877F2',
-        borderRadius: 10,
+        borderRadius: 28,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
     },
     facebookIconText: {
         color: '#FFFFFF',
-        fontSize: 12,
+        fontSize: 30,
         fontWeight: 'bold',
     },
     socialButtonText: {
-        fontSize: 16,
+        fontSize: 20,
         color: '#333',
         fontWeight: '500',
     },
     dividerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginVertical: 24,
+        marginVertical: 5,
     },
     dividerLine: {
         flex: 1,
@@ -261,51 +263,46 @@ const styles = StyleSheet.create({
         marginBottom: 24,
     },
     inputLabel: {
-        fontSize: 14,
+        fontSize: 20,
         color: '#333',
         marginBottom: 8,
         fontWeight: '500',
     },
     textInput: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 8,
+        borderRadius: 20,
         paddingVertical: 12,
         paddingHorizontal: 16,
-        fontSize: 16,
+        fontSize: 18,
         color: '#333',
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 1,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
+        borderWidth: 0.3,
+        borderColor: "#777",
+        height: 60,
     },
     signUpContainer: {
         flexDirection: 'row',
         justifyContent: 'center',
-        marginBottom: 32,
+        marginTop: 32,
     },
     signUpText: {
-        fontSize: 14,
+        fontSize: 18,
         color: '#666',
     },
     signUpLink: {
-        fontSize: 14,
+        fontSize: 18,
         color: '#007AFF',
-        fontWeight: '600',
+        fontWeight: 'bold',
     },
     continueButton: {
-        backgroundColor: '#666',
-        borderRadius: 8,
+        backgroundColor: '#000',
+        borderRadius: 28,
         paddingVertical: 16,
         alignItems: 'center',
     },
     continueButtonText: {
-        color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: '600',
+        color: 'white',
+        fontSize: 20,
+        fontWeight: 'bold',
     },
     nextPage: {
         color: '#FFFFFF',

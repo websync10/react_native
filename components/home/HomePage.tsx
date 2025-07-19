@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     SafeAreaView,
     StatusBar,
@@ -8,18 +8,34 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/Feather';
+import MobileSidebar from './Sidebar';
 
-const HomePage = () => {
+interface HomePageProps{
+    userData: User | null
+}
+
+const HomePage = ({
+    userData
+}: HomePageProps) => {
+    const [sidebarVisible, setSidebarVisible] = useState(false);
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="#f8f9fa" />
 
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity>
+
+                <TouchableOpacity onPress={() => setSidebarVisible(true)}>
                     <Icon name="menu" size={24} color="#333" />
                 </TouchableOpacity>
+
+                <MobileSidebar
+                    visible={sidebarVisible}
+                    onClose={() => setSidebarVisible(false)}
+                    userData={userData}
+                />
 
                 <View style={styles.logoContainer}>
                     <View style={styles.logoIcon}>
@@ -63,6 +79,7 @@ const HomePage = () => {
                     </TouchableOpacity>
                 </View>
             </View>
+
         </SafeAreaView>
     );
 };

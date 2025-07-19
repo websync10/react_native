@@ -1,28 +1,47 @@
 import HomePage from '@/components/home/HomePage';
 import { supabase } from '@/lib/supabase';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { Text } from 'react-native-elements';
+
+interface UserData {
+  id: string;
+  fullName: string;
+  profileImage: string;
+}
 
 export default function HomeScreen() {
-  const [users, setUsers] = useState<{ id: string }[]>([])
-  async function getAllUsers() {
-    const { data, error } = await supabase.from("profiles").select('id')
-    if (error) console.log(error?.message)
-    setUsers(data ?? [])
+  const [userData, setUserData] = useState<UserData | null>(null);
+
+  async function getUser() {
+    const {
+      data,
+      error,
+    } = await supabase
+      .from("profiles")
+      .select('id, full_name, avatar_url')
+      .single();
+
+    if (error) {
+      console.log("Error fetching user:", error.message);
+      return;
+    }
+
+    const user = {
+      id: data.id,
+      fullName: data.full_name,
+      profileImage: data.avatar_url,
+    };
+
+    setUserData(user);
   }
-  console.log(users)
+
   useEffect(() => {
-    getAllUsers()
-  }, [])
+    getUser();
+  }, []);
+
   return (
-    <View style={{ flex: 1, }}>
-      <HomePage />
-      {users && users.map(u => (
-        <Text>
-          {u.id}
-        </Text>
-      ))}
+    <View style={{flex: 1, paddingVertical: 20, backgroundColor: "#ffffff"}}>
+      <HomePage userData={userData} />
     </View>
   );
 }

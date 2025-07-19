@@ -1,0 +1,31 @@
+import { LinearGradient } from 'expo-linear-gradient';
+import React from 'react';
+import { Dimensions, StyleSheet, View } from 'react-native';
+
+const { height } = Dimensions.get('window');
+export default function GradientRight() {
+    return (
+        <View style={styles.container}>
+            <LinearGradient
+                colors={['rgba(0,122,255,0.27)', 'rgba(0,122,255,0)']}
+                start={{ x: 0.3, y: 1 }}
+                end={{ x: 0, y: 0}}
+                style={styles.gradient}
+            />
+        </View>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    gradient: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        height: height/2.4 ,
+        width: '100%',
+        zIndex: -1,
+    },
+});

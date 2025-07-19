@@ -20,9 +20,9 @@
         {
           "action": "VIEW",
           "data": {
-            "scheme": "myuze",
+            "scheme": "myuzeapp",
             "host": "auth",
-            "pathPrefix": "/callback"
+            "pathPrefix": "/"
           },
           "category": [
             "BROWSABLE",
