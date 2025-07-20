@@ -1,3 +1,4 @@
+import { useChatStore } from '@/lib/stores/chatStore';
 import { supabase } from '@/lib/supabase';
 import {
     Feather,
@@ -32,18 +33,18 @@ const MobileSidebar: React.FC<SidebarProps> = ({ visible, onClose, userData }) =
     const slideAnim = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
     const [showModal, setShowModal] = useState(visible);
 
-
+    const { clearMessages } = useChatStore();
     const handleLogout = async () => {
         const { error } = await supabase.auth.signOut();
-      
+
         if (error) {
-          console.error("Logout error:", error.message);
-          Alert.alert("Logout failed", error.message);
-          return;
+            console.error("Logout error:", error.message);
+            Alert.alert("Logout failed", error.message);
+            return;
         }
-      
+
         router.replace('/(auth)/login');
-      };
+    };
     useEffect(() => {
         if (visible) {
             setShowModal(true);
@@ -137,6 +138,12 @@ const MobileSidebar: React.FC<SidebarProps> = ({ visible, onClose, userData }) =
 
                         <View style={styles.logoutSection}>
                             <MenuItem
+                                icon={<MaterialIcons name="delete" size={20} color="#FF4444" />}
+                                label="Clear chat"
+                                onPress={clearMessages}
+                                isClose={true}
+                            />
+                            <MenuItem
                                 icon={<MaterialIcons name="logout" size={20} color="#FF4444" />}
                                 label="Log Out"
                                 onPress={handleLogout}
@@ -155,9 +162,10 @@ interface MenuItemProps {
     label: string;
     onPress: () => void;
     isLogout?: boolean;
+    isClose?: boolean;
 }
 
-const MenuItem: React.FC<MenuItemProps> = ({ icon, label, onPress, isLogout = false }) => {
+const MenuItem: React.FC<MenuItemProps> = ({ icon, label, onPress, isLogout = false, isClose = false }) => {
     return (
         <TouchableOpacity style={styles.menuItem} onPress={onPress}>
             <View style={styles.menuItemLeft}>
@@ -169,7 +177,7 @@ const MenuItem: React.FC<MenuItemProps> = ({ icon, label, onPress, isLogout = fa
             <Ionicons
                 name="chevron-forward"
                 size={16}
-                color={isLogout ? "#FF4444" : "#999"}
+                color={isLogout && isClose ? "#FF4444" : "#999"}
             />
         </TouchableOpacity>
     );

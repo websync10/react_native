@@ -61,14 +61,6 @@ const ValidateScreen = () => {
         );
     }
 
-    if (error) {
-        return (
-            <View style={styles.centered}>
-                <Text style={styles.errorText}>{error}</Text>
-            </View>
-        );
-    }
-
     const handleNavigate = async () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
@@ -77,6 +69,17 @@ const ValidateScreen = () => {
             Alert.alert("You're not logged in");
         }
     };
+    if (error) {
+        return (
+            <View style={styles.centered}>
+                <Text style={styles.errorText}>{error}</Text>
+                <TouchableOpacity style={styles.button} onPress={handleNavigate}>
+                    <Text style={styles.buttonText}>Let’s get started →</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
+
 
     return (
         <View style={styles.container}>

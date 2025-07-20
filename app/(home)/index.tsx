@@ -1,47 +1,66 @@
 import HomePage from '@/components/home/HomePage';
+import { getUserProfile } from '@/lib/services/handleusers/getProfile';
+import { getUser } from '@/lib/services/handleusers/getUser';
 import { supabase } from '@/lib/supabase';
+import { Session } from '@supabase/supabase-js';
+import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 
-interface UserData {
-  id: string;
-  fullName: string;
-  profileImage: string;
-}
 
 export default function HomeScreen() {
-  const [userData, setUserData] = useState<UserData | null>(null);
-
-  async function getUser() {
-    const {
-      data,
-      error,
-    } = await supabase
-      .from("profiles")
-      .select('id, full_name, avatar_url')
-      .single();
-
-    if (error) {
-      console.log("Error fetching user:", error.message);
-      return;
-    }
-
-    const user = {
-      id: data.id,
-      fullName: data.full_name,
-      profileImage: data.avatar_url,
-    };
-
-    setUserData(user);
-  }
+  const [session, setSession] = useState<Session | null>(null);
+  const [isOnboarded, setIsOnboarded] = useState<boolean | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [userData, setUserData] = useState<User | null>(null)
 
   useEffect(() => {
-    getUser();
+    const fetchSessionAndProfile = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error('Error getting session:', error);
+        setLoading(false);
+        return;
+      }
+
+      setSession(session);
+
+      if (session?.user) {
+        const profile = await getUserProfile(session.user.id);
+        const onboarded = await getUser(session.user.id)
+        if (profile) {
+          setUserData(profile)
+        }
+        if (onboarded) {
+          setIsOnboarded(onboarded ?? false);
+        } else {
+          setIsOnboarded(false);
+        }
+      }
+
+      setLoading(false);
+    };
+
+    fetchSessionAndProfile();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => {
+      authListener?.subscription?.unsubscribe();
+    };
   }, []);
 
+  useEffect(() => {
+    if (isOnboarded === false) {
+      router.push('/(auth)/onboarding');
+    }
+  }, [isOnboarded]);
+
   return (
-    <View style={{flex: 1, paddingVertical: 20, backgroundColor: "#ffffff"}}>
-      <HomePage userData={userData} />
+    <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
+      <HomePage userData={userData}  />
     </View>
   );
 }

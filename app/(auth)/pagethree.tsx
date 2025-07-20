@@ -9,11 +9,10 @@ import {
 
 const pagetwo = () => {
     const params = useLocalSearchParams();
-    const gender = Array.isArray(params.gender) ? params.gender[0] : params.gender;
     return (
         <ScrollView contentContainerStyle={styles.container}>
             <View style={{ flex: 1 }}>
-                <PageThree gender={gender} />
+                <PageThree />
             </View>
         </ScrollView>
     )
@@ -23,7 +22,7 @@ const styles = StyleSheet.create({
         padding: 10,
         flexGrow: 1,
         backgroundColor: '#ffffff',
-        fontFamily: 'Helvetica Neue'
+        fontFamily: 'Helvetica Neue',
     },
 });
 export default pagetwo

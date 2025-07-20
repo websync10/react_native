@@ -1,15 +1,12 @@
 import PageFour from '@/components/onboarding/PageFour';
-import { useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 const pagetwo = () => {
-    const params = useLocalSearchParams();
-    const gender = Array.isArray(params.gender) ? params.gender[0] : params.gender;
     return (
         <ScrollView contentContainerStyle={styles.container}>
             <View style={{ flex: 1 }}>
-                <PageFour gender={gender} />
+                <PageFour />
             </View>
         </ScrollView>
     )
