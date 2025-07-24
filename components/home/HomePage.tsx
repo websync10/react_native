@@ -2,6 +2,7 @@ import { ChatMessage, useChatStore } from '@/lib/stores/chatStore';
 import axios from 'axios';
 import React, { useEffect, useRef, useState } from 'react';
 import {
+    Image,
     KeyboardAvoidingView,
     Platform,
     SafeAreaView,
@@ -17,6 +18,8 @@ import 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Feather';
 import MobileSidebar from './Sidebar';
+import Svg from 'react-native-svg';
+
 
 interface HomePageProps {
     userData: User | null
@@ -108,6 +111,11 @@ const HomePage = ({
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => setSidebarVisible(true)}>
                         <Icon name="menu" size={24} color="#333" />
+                        {/* <Image
+                            source={require('@/assets/images/icons/menu-alt.png')}
+                            style={{ width: 24, height: 24 }}
+                            resizeMode="contain"
+                        /> */}
                     </TouchableOpacity>
 
                     <MobileSidebar
@@ -118,7 +126,10 @@ const HomePage = ({
 
                     <View style={styles.logoContainer}>
                         <View style={styles.logoIcon}>
-                            <Text style={styles.logoText}>M</Text>
+                            <Image
+                                            source={require('@/assets/images/headerlogo.png')}
+                                            resizeMode="contain"
+                                           style={{width:26, height:26,}}/>
                         </View>
                         <Text style={styles.brandText}>Myuze</Text>
                     </View>
@@ -133,13 +144,19 @@ const HomePage = ({
                         <View style={styles.mainContent}>
                             <View style={styles.largeLogo}>
                                 <View style={styles.shoppingBag}>
-                                    <Text style={styles.largeLogoText}>M</Text>
+                                    {/* <Text style={styles.largeLogoText}>M</Text> */}
+                                    <Image
+                                            source={require('@/assets/images/headerlogo.png')}
+                                            resizeMode="contain"
+                                           style={{width:116, height:120,}}   
+                                            />
                                 </View>
                             </View>
                             <Text style={styles.greeting}>Hi there 👋</Text>
                             <Text style={styles.subtitle}>Ask Myuze for outfit ideas</Text>
                         </View>
 
+                        <Text style={styles.howcaniText} >How can I help you today?</Text>
                         <View style={styles.bottomSection}>
                             <View style={styles.inputContainer}>
                                 <TextInput
@@ -202,15 +219,14 @@ const HomePage = ({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: '#ffffff',
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: 20,
-        paddingVertical: 15,
-        backgroundColor: '#f8f9fa',
+        paddingVertical: 36,
     },
     logoContainer: {
         flexDirection: 'row',
@@ -219,8 +235,6 @@ const styles = StyleSheet.create({
     logoIcon: {
         width: 24,
         height: 24,
-        backgroundColor: '#007AFF',
-        borderRadius: 4,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 8,
@@ -233,7 +247,8 @@ const styles = StyleSheet.create({
     brandText: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#333',
+        color: '#00272E',
+        top:2,
     },
     mainContent: {
         flex: 1,
@@ -247,34 +262,38 @@ const styles = StyleSheet.create({
     shoppingBag: {
         width: 120,
         height: 120,
-        backgroundColor: '#007AFF',
+        // backgroundColor: '#007AFF',
         borderRadius: 20,
         justifyContent: 'center',
         alignItems: 'center',
-        shadowColor: '#007AFF',
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 8,
+        // shadowColor: '#007AFF',
+        // shadowOffset: {
+        //     width: 0,
+        //     height: 4,
+        // },
+        // shadowOpacity: 0.3,
+        // shadowRadius: 8,
+        // elevation: 8,
     },
-    largeLogoText: {
-        color: '#fff',
-        fontSize: 48,
-        fontWeight: 'bold',
-    },
+    
     greeting: {
         fontSize: 28,
-        fontWeight: '600',
-        color: '#333',
+        fontWeight: '700',
+        color: '#00272E',
         marginBottom: 8,
     },
     subtitle: {
         fontSize: 16,
         color: '#666',
         textAlign: 'center',
+    },
+    howcaniText: {
+        color: '#00272E',
+        fontSize: 20,
+        fontWeight: '700',
+        fontFamily: 'Helvetica',
+        textAlign:'center',
+        marginBottom: 32
     },
     bottomSection: {
         paddingHorizontal: 20,
@@ -290,25 +309,26 @@ const styles = StyleSheet.create({
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#e9ecef',
-        borderRadius: 25,
+        backgroundColor: '#efefef',
+        borderRadius: 50,
         paddingHorizontal: 20,
         paddingVertical: 4,
+        marginHorizontal:12
     },
     textInput: {
         flex: 1,
         fontSize: 16,
         paddingVertical: 12,
-        color: '#333',
+        color: '#000',
     },
     sendButton: {
-        width: 36,
-        height: 36,
-        backgroundColor: '#333',
-        borderRadius: 18,
+        width: 48,
+        height: 48,
+        backgroundColor: '#000',
+        borderRadius: 50,
         justifyContent: 'center',
         alignItems: 'center',
-        marginLeft: 10,
+        marginRight:-14
     },
     bottomNav: {
         flexDirection: 'row',
@@ -351,7 +371,7 @@ const styles = StyleSheet.create({
         borderBottomRightRadius: 0,
     },
     aiBubble: {
-        backgroundColor: '#f0f0f0',
+        backgroundColor: '#efefef',
         alignSelf: 'flex-start',
         borderBottomLeftRadius: 0,
     },

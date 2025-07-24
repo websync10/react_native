@@ -21,7 +21,7 @@ import {
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
-const SIDEBAR_WIDTH = width * 0.75;
+const SIDEBAR_WIDTH = width * 0.85;
 
 interface SidebarProps {
     visible: boolean;
@@ -92,19 +92,27 @@ const MobileSidebar: React.FC<SidebarProps> = ({ visible, onClose, userData }) =
                         },
                     ]}
                 >
+                    <Image
+                        source={require('@/assets/images/icons/Union.png')}
+                        style={styles.backgroundImage}
+                        resizeMode="cover"
+                    />
                     <SafeAreaView style={styles.container}>
-                        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-                            <Ionicons name="close" size={24} color="#666" />
-                        </TouchableOpacity>
+                        {/* Header with back arrow */}
+                        <View style={styles.header}>
+                            <TouchableOpacity style={styles.backButton} onPress={onClose}>
+                                <Ionicons name="chevron-back" size={24} color="#333" />
+                            </TouchableOpacity>
+                        </View>
 
                         <View style={styles.profileSection}>
                             <View style={styles.profileContainer}>
                                 <Image
-                                    source={{ uri: `${userData?.profileImage}` }}
+                                    source={{ uri: 'https://picsum.photos/120/120' }}
                                     style={styles.profileImage}
                                 />
                                 <View style={styles.profileInfo}>
-                                    <Text style={styles.profileName}>{userData?.fullName}</Text>
+                                    <Text style={styles.profileName}>Robert L.</Text>
                                     <TouchableOpacity style={styles.editProfileContainer} onPress={() => router.push("/edit")}>
                                         <Text style={styles.editProfileText}>Edit Profile</Text>
                                         <Feather name="edit-2" size={12} color="#999" />
@@ -115,7 +123,7 @@ const MobileSidebar: React.FC<SidebarProps> = ({ visible, onClose, userData }) =
 
                         <View style={styles.menuSection}>
                             <MenuItem
-                                icon={<MaterialIcons name="fitness-center" size={20} color="#666" />}
+                                icon={<MaterialIcons name="checkroom" size={20} color="#666" />}
                                 label="Fit Preferences"
                                 onPress={() => { }}
                             />
@@ -125,7 +133,7 @@ const MobileSidebar: React.FC<SidebarProps> = ({ visible, onClose, userData }) =
                                 onPress={() => { }}
                             />
                             <MenuItem
-                                icon={<MaterialIcons name="security" size={20} color="#666" />}
+                                icon={<MaterialIcons name="privacy-tip" size={20} color="#666" />}
                                 label="Privacy Policy"
                                 onPress={() => { }}
                             />
@@ -137,12 +145,6 @@ const MobileSidebar: React.FC<SidebarProps> = ({ visible, onClose, userData }) =
                         </View>
 
                         <View style={styles.logoutSection}>
-                            <MenuItem
-                                icon={<MaterialIcons name="delete" size={20} color="#FF4444" />}
-                                label="Clear chat"
-                                onPress={clearMessages}
-                                isClose={true}
-                            />
                             <MenuItem
                                 icon={<MaterialIcons name="logout" size={20} color="#FF4444" />}
                                 label="Log Out"
@@ -189,55 +191,83 @@ const styles = StyleSheet.create({
     },
     backdrop: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0, 0, 0, 0.2)',
+        backgroundColor: '#00272E66',
     },
     sidebar: {
         width: SIDEBAR_WIDTH,
-        backgroundColor: 'white',
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 2,
-            height: 0,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
+        backgroundColor: 'transparent',
+        // shadowColor: '#000',
+        // shadowOffset: {
+        //     width: 2,
+        //     height: 0,
+        // },
+        // shadowOpacity: 0.25,
+        // shadowRadius: 3.84,
+        // elevation: 5,
         zIndex: 2,
+        overflow: 'hidden',
+    },
+    backgroundImage: {
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+        zIndex: -1,
     },
     container: {
         flex: 1,
+        backgroundColor: 'transparent',
+    },
+    header: {
+        paddingHorizontal: 20,
+        paddingTop: 16,
+        paddingBottom: 16,
+        backgroundColor: 'transparent',
+    },
+    backButton: {
+        // alignSelf: '',
+        padding: 8,
+        position: 'absolute',
+        top: 100,
+        right: -.5,
+        zIndex: 1,
     },
     closeButton: {
         position: 'absolute',
-        top: 16,
-        right: 16,
+        top: 86,
+        right: 56,
         zIndex: 1,
-        padding: 8,
+        padding: 18,
     },
     profileSection: {
-        paddingHorizontal: 24,
-        paddingTop: 32,
-        paddingBottom: 24,
+        paddingHorizontal: 34,
+        paddingTop: 16,
+        paddingBottom: 32,
+        left: -10,
+        backgroundColor: 'transparent',
     },
     profileContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        backgroundColor: '#efefef',
+        borderRadius: 16,
+        padding: 16,
     },
     profileImage: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
+        width: 60,
+        height: 60,
+        borderRadius: 12,
         backgroundColor: '#f0f0f0',
     },
     profileInfo: {
-        marginLeft: 12,
+        marginLeft: 16,
         flex: 1,
     },
     profileName: {
-        fontSize: 16,
-        fontWeight: '500',
-        color: '#333',
-        marginBottom: 4,
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#1A1A1A',
+        marginBottom: 6,
+        fontFamily: 'HelveticaNeue',
     },
     editProfileContainer: {
         flexDirection: 'row',
@@ -246,18 +276,27 @@ const styles = StyleSheet.create({
     editProfileText: {
         fontSize: 14,
         color: '#666',
-        marginRight: 4,
+        marginRight: 6,
+        fontWeight: 'bold',
+        fontFamily: 'HelveticaNeue',
     },
     menuSection: {
-        paddingHorizontal: 16,
+        paddingHorizontal: 32,
+        left: -8,
+        backgroundColor: 'transparent',
+        gap:16
     },
     menuItem: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingVertical: 16,
-        borderRadius: 8,
+        paddingHorizontal: 20,
+        paddingVertical: 18,
+        borderRadius: 12,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        marginBottom: 8,
+        borderColor: '#efefef',
+        borderWidth: 1
     },
     menuItemLeft: {
         flexDirection: 'row',
@@ -267,18 +306,22 @@ const styles = StyleSheet.create({
     menuItemText: {
         fontSize: 16,
         fontWeight: '500',
-        color: '#333',
-        marginLeft: 12,
+        color: '#1A1A1A',
+        marginLeft: 16,
+        fontFamily: 'HelveticaNeue',
     },
     logoutText: {
         color: '#FF4444',
+        fontFamily: 'HelveticaNeue',
     },
     logoutSection: {
-        position: 'absolute',
-        bottom: 32,
-        left: 0,
-        right: 0,
-        paddingHorizontal: 16,
+        // position: 'absolute',
+        top: 280,
+        paddingHorizontal: 34,
+        paddingTop: 16,
+        paddingBottom: 32,
+        left: -10,
+        backgroundColor: 'transparent',
     },
 });
 

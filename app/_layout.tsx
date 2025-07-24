@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -14,6 +15,9 @@ export default function RootLayout() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    // HelveticaNeue: 'HelveticaNeue',
+    // 'HelveticaNeue-Bold': 'HelveticaNeue-Bold',
+    // 'HelveticaNeue-Medium': 'HelveticaNeue-Medium',
   });
 
   useEffect(() => {
@@ -25,15 +29,19 @@ export default function RootLayout() {
     return () => subscription.subscription.unsubscribe();
   }, []);
 
-  if (isLoggedIn === null) return null
+  if (!loaded || isLoggedIn === null) return null
   return (
     <SafeAreaProvider>
-      <Stack>
+      <StatusBar style="dark" backgroundColor="#FFFFFF" translucent={false} />
+      <Stack screenOptions={{ headerShown: false }}>
         <Stack.Protected guard={isLoggedIn}>
           <Stack.Screen name="(auth)/onboarding" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)/pagetwo" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)/pagethree" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)/pagefour" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)/accountsetup" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)/FemalePickstyle" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)/MalePickstyle" options={{ headerShown: false }} />
           <Stack.Screen name="(home)" options={{ headerShown: false }} />
           <Stack.Screen name="edit" options={{ headerShown: false }} />
         </Stack.Protected>

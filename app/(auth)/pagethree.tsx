@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 
 const pagetwo = () => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const params = useLocalSearchParams();
     return (
         <ScrollView contentContainerStyle={styles.container}>

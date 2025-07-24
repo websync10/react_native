@@ -1,7 +1,7 @@
-import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Keyboard, StatusBar } from 'react-native';
+import { Image, Keyboard, StatusBar } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HomeLayout() {
@@ -25,6 +25,9 @@ export default function HomeLayout() {
           : {
             paddingBottom: insets.bottom + 10,
             height: 60 + insets.bottom,
+            borderTopWidth: 0,
+            elevation: 0,
+            shadowOpacity: 0,
           },
       }}
     >
@@ -33,7 +36,7 @@ export default function HomeLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
-            <Feather name="home" size={24} color={focused ? 'black' : color} />
+            <Image style={{width:26, height:26}} source={require('@/assets/images/icons/home.png')} />
           ),
         }}
       />
@@ -42,11 +45,7 @@ export default function HomeLayout() {
         options={{
           title: 'Try On',
           tabBarIcon: ({ color, focused }) => (
-            <MaterialCommunityIcons
-              name="magic-staff"
-              size={24}
-              color={focused ? 'black' : color}
-            />
+            <Image style={{width:26, height:26}} source={require('@/assets/images/icons/tryon.png')} />
           ),
         }}
       />
