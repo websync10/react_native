@@ -62,7 +62,6 @@ export default function HomeScreen() {
     <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
       <HomePage userData={userData}  />
 
-
     </View>
   );
 }

@@ -1,31 +1,34 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 
-const { height } = Dimensions.get('window');
+
 
 export default function GradientBackground() {
-    return (
-        <View style={styles.container}>
-            <LinearGradient
-                colors={['rgba(173, 216, 230, 0.8)', 'rgba(240, 248, 255, 0.4)', 'rgba(255, 255, 255, 0)']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={styles.gradient}
-            />
+    return (<>
+        <View style={styles.topleft}>
+            <Image source={require('@/assets/images/topleftgradient.png')} />
         </View>
+        <View style={styles.centerright}>
+            <Image source={require('@/assets/images/centerrightgradient.png')} />
+        </View>
+        </>
     );
 }
 const styles = StyleSheet.create({
     container: {
+        position:'absolute',
         flex: 1,
     },
-    gradient: {
+    topleft:{
         position: 'absolute',
         top: 0,
         left: 0,
-        height: height * 0.75,
-        width: '100%',
         zIndex: -1,
     },
+    centerright:{
+        position: 'absolute',
+        right: 0,
+        top: '50%',
+        zIndex: -1,
+    }
 });

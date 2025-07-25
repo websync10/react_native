@@ -60,7 +60,7 @@ const HomePage = ({
         console.log('[🔄] Connecting to backend...');
         setIsTyping(true);
         try {
-            const res = await axios.post('http://192.168.111.110:3000/api/rag', { query: input });
+            const res = await axios.post('https://56375e06968c.ngrok-free.app/api/rag', { query: input });
             console.log('[✅] Connected to backend. Received response.');
             const aiMsg: ChatMessage = { role: 'assistant', content: res.data.answer };
             addMessage(aiMsg);

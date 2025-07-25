@@ -1,3 +1,4 @@
+import { defaultFontFamily } from '@/constants/GlobalStyles';
 import { StyleSheet } from 'react-native';
 
 export
@@ -71,7 +72,7 @@ export
       fontWeight: 'bold',
       marginTop: 30,
       marginBottom: 10,
-      fontFamily: "Helvetica",
+      fontFamily: defaultFontFamily,
       textAlign: "center"
     },
     subtitle: {

@@ -14,10 +14,25 @@ if (typeof global.structuredClone === 'undefined') {
 export default function RootLayout() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    // HelveticaNeue: 'HelveticaNeue',
-    // 'HelveticaNeue-Bold': 'HelveticaNeue-Bold',
-    // 'HelveticaNeue-Medium': 'HelveticaNeue-Medium',
+    // Helvetica Neue font family variants
+    'HelveticaNeue-Thin': require('../assets/fonts/HelveticaNeueThin.otf'),
+    'HelveticaNeue-Light': require('../assets/fonts/HelveticaNeueLight.otf'),
+    'HelveticaNeue-Roman': require('../assets/fonts/HelveticaNeueRoman.otf'),
+    'HelveticaNeue-Medium': require('../assets/fonts/HelveticaNeueMedium.otf'),
+    'HelveticaNeue-Bold': require('../assets/fonts/HelveticaNeueBold.otf'),
+    'HelveticaNeue-Heavy': require('../assets/fonts/HelveticaNeueHeavy.otf'),
+    'HelveticaNeue-Black': require('../assets/fonts/HelveticaNeueBlack.otf'),
+    
+    // Backward compatibility aliases
+    'Helvetica': require('../assets/fonts/HelveticaNeueRoman.otf'),
+    'Helvetica-Medium': require('../assets/fonts/HelveticaNeueMedium.otf'),
+    'HelveticaNeue': require('../assets/fonts/HelveticaNeueRoman.otf'),
+    'Helvetica Neue': require('../assets/fonts/HelveticaNeueRoman.otf'),
+    'HelveticaNeueMedium': require('../assets/fonts/HelveticaNeueMedium.otf'),
+    'HelveticaNeueLight': require('../assets/fonts/HelveticaNeueLight.otf'),
+    
+    // SpaceMono for monospace text
+    'SpaceMono': require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
   useEffect(() => {
@@ -34,7 +49,8 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <StatusBar style="dark" backgroundColor="#FFFFFF" translucent={false} />
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Protected guard={isLoggedIn}>
+        <Stack.Protected guard={isLoggedIn}> 
+          {/* true= valid !true= notvalid */}
           <Stack.Screen name="(auth)/onboarding" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)/pagetwo" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)/pagethree" options={{ headerShown: false }} />

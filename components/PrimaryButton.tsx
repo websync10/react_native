@@ -1,3 +1,4 @@
+import { FontFamily } from '@/constants/Fonts'
 import React from 'react'
 import { StyleSheet, Text, TouchableOpacity } from 'react-native'
 
@@ -25,10 +26,10 @@ const PrimaryButton = ({ title, onPress, disabled = false }: PrimaryButtonProps)
 const styles = StyleSheet.create({
   btn: {
     height: 52,
-    borderRadius: 8,
-    backgroundColor: '#000000',
+    borderRadius: 50,
+    backgroundColor: '#030318',
     paddingHorizontal: 14,
-    marginBottom: 26,
+    // marginBottom: 26,
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
@@ -39,7 +40,8 @@ const styles = StyleSheet.create({
   btnText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '600',
+    // fontWeight: '600',
+    fontFamily: FontFamily.HelveticaNeue.Medium,
   },
   btnTextDisabled: {
     color: '#666666',
