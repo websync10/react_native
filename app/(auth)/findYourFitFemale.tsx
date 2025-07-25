@@ -48,7 +48,7 @@ const FindYourFitFemaleScreen = () => {
 
   const handleContinue = () => {
     // Navigate to next step - you can customize this based on your flow
-    router.push('/(home)')
+    router.push('/(auth)/yourStyleFemale')
   }
 
   const handleGoBack = () => {
