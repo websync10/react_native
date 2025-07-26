@@ -25,7 +25,6 @@ const AccountSetupScreen = () => {
   const handleGenderChange = (gender: string) => {
     setField("gender", gender)
   }
-
   const handleGoBack = () => {
     router.push('/(auth)/login')
   }
@@ -139,6 +138,7 @@ const AccountSetupScreen = () => {
                 <View style={styles.dateInputContainer}>
                   <TextInput
                     style={styles.dateInput}
+                    keyboardType='numeric'
                     placeholder="Enter your birth"
                     placeholderTextColor="#999"
                     value={dob}

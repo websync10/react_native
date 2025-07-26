@@ -1,5 +1,5 @@
 import { ChatMessage, useChatStore } from '@/lib/stores/chatStore';
-import axios from 'axios';
+import { useImageStore } from '@/lib/stores/imageStore';
 import React, { useEffect, useRef, useState } from 'react';
 import {
     Image,
@@ -17,8 +17,8 @@ import {
 import 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Feather';
+import ImageResponseBlock from '../chatbot/ImageResponseBlock';
 import MobileSidebar from './Sidebar';
-import Svg from 'react-native-svg';
 
 
 interface HomePageProps {
@@ -34,8 +34,8 @@ const HomePage = ({
     const inputRef = useRef<TextInput>(null);
     const scrollRef = useRef<ScrollView>(null);
     const { bottom } = useSafeAreaInsets();
-
     const { messages, addMessage, loadMessages, clearMessages } = useChatStore();
+    const { generatedImages } = useImageStore();
 
     const [chatStarted, setChatStarted] = useState(false);
     useEffect(() => {
@@ -60,10 +60,21 @@ const HomePage = ({
         console.log('[🔄] Connecting to backend...');
         setIsTyping(true);
         try {
-            const res = await axios.post('https://56375e06968c.ngrok-free.app/api/rag', { query: input });
+            const res = await fetch(`https://27b45700e3ac.ngrok-free.app/api/ai-chat/${userData?.id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messages: [{ role: 'user', content: input }],
+                }),
+            });
+            const data = await res.json()
+            console.log("images", data.images)
             console.log('[✅] Connected to backend. Received response.');
-            const aiMsg: ChatMessage = { role: 'assistant', content: res.data.answer };
+            const aiMsg: ChatMessage = { role: 'assistant', content: data.reply, images: data.images || [] };
             addMessage(aiMsg);
+            if (data.images && data.images.length > 0) {
+                useImageStore.getState().addImages(data.images);
+            }
         } catch (err: any) {
             console.error('[❌] Backend connection failed:', err.message);
             addMessage({ role: 'assistant', content: 'Something went wrong. Try again.' });
@@ -77,7 +88,7 @@ const HomePage = ({
             key={index}
             style={[
                 styles.messageRow,
-                msg.role === 'user' ? styles.alignEnd : styles.alignStart
+                msg.role === 'user' ? styles.alignEnd : styles.alignStart,
             ]}
         >
             {msg.role === 'assistant' && (
@@ -85,14 +96,31 @@ const HomePage = ({
                     <Text style={styles.avatarText}>🤖</Text>
                 </View>
             )}
+
             <View
                 style={[
                     styles.messageBubble,
                     msg.role === 'user' ? styles.userBubble : styles.aiBubble,
                 ]}
             >
+                {/* Message Text */}
                 <Text style={styles.messageText}>{msg.content}</Text>
+                {/* ✅ Render Images If Available */}
+                {Array.isArray(msg.images) && msg.images.length > 0 && (
+                    <View style={styles.imageContainer}>
+                        {msg.images.map((imgUrl, i) => (
+                            <Image
+                                key={i}
+                                source={{ uri: imgUrl }}
+                                style={styles.generatedImage}
+                                resizeMode="cover"
+                            />
+                        ))}
+                    </View>
+                )}
+
             </View>
+
             {msg.role === 'user' && (
                 <View style={styles.avatar}>
                     <Text style={styles.avatarText}>🧑</Text>
@@ -100,6 +128,7 @@ const HomePage = ({
             )}
         </View>
     );
+
     return (
         <KeyboardAvoidingView
             style={{ flex: 1 }}
@@ -111,11 +140,6 @@ const HomePage = ({
                 <View style={styles.header}>
                     <TouchableOpacity onPress={() => setSidebarVisible(true)}>
                         <Icon name="menu" size={24} color="#333" />
-                        {/* <Image
-                            source={require('@/assets/images/icons/menu-alt.png')}
-                            style={{ width: 24, height: 24 }}
-                            resizeMode="contain"
-                        /> */}
                     </TouchableOpacity>
 
                     <MobileSidebar
@@ -127,9 +151,9 @@ const HomePage = ({
                     <View style={styles.logoContainer}>
                         <View style={styles.logoIcon}>
                             <Image
-                                            source={require('@/assets/images/headerlogo.png')}
-                                            resizeMode="contain"
-                                           style={{width:26, height:26,}}/>
+                                source={require('@/assets/images/headerlogo.png')}
+                                resizeMode="contain"
+                                style={{ width: 26, height: 26, }} />
                         </View>
                         <Text style={styles.brandText}>Myuze</Text>
                     </View>
@@ -146,10 +170,10 @@ const HomePage = ({
                                 <View style={styles.shoppingBag}>
                                     {/* <Text style={styles.largeLogoText}>M</Text> */}
                                     <Image
-                                            source={require('@/assets/images/headerlogo.png')}
-                                            resizeMode="contain"
-                                           style={{width:116, height:120,}}   
-                                            />
+                                        source={require('@/assets/images/headerlogo.png')}
+                                        resizeMode="contain"
+                                        style={{ width: 116, height: 120, }}
+                                    />
                                 </View>
                             </View>
                             <Text style={styles.greeting}>Hi there 👋</Text>
@@ -180,6 +204,7 @@ const HomePage = ({
                         contentContainerStyle={{ padding: 16, paddingBottom: bottom + 100 }}
                     >
                         {messages.map(renderItem)}
+
                         {isTyping && (
                             <View style={[styles.messageRow, styles.alignStart]}>
                                 <View style={styles.avatar}>
@@ -190,6 +215,17 @@ const HomePage = ({
                                 </View>
                             </View>
                         )}
+                        <ScrollView horizontal style={{ gap: 10 }}>
+                            {messages.map((msg, index) => (
+                                <React.Fragment key={index}>
+                                    {msg.role === 'assistant' &&
+                                        Array.isArray(msg.images) &&
+                                        msg.images.length > 0 && (
+                                            <ImageResponseBlock key={index} images={msg.images} />
+                                        )}
+                                </React.Fragment>
+                            ))}
+                        </ScrollView>
                     </ScrollView>
                 )}
 
@@ -248,7 +284,7 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '600',
         color: '#00272E',
-        top:2,
+        top: 2,
     },
     mainContent: {
         flex: 1,
@@ -275,7 +311,21 @@ const styles = StyleSheet.create({
         // shadowRadius: 8,
         // elevation: 8,
     },
-    
+    imageContainer: {
+        marginTop: 8,
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+
+    generatedImage: {
+        width: 150,
+        height: 150,
+        borderRadius: 12,
+        marginRight: 8,
+        marginTop: 4,
+    },
+
     greeting: {
         fontSize: 28,
         fontWeight: '700',
@@ -292,7 +342,7 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: '700',
         fontFamily: 'Helvetica',
-        textAlign:'center',
+        textAlign: 'center',
         marginBottom: 32
     },
     bottomSection: {
@@ -313,7 +363,7 @@ const styles = StyleSheet.create({
         borderRadius: 50,
         paddingHorizontal: 20,
         paddingVertical: 4,
-        marginHorizontal:12
+        marginHorizontal: 12
     },
     textInput: {
         flex: 1,
@@ -328,7 +378,7 @@ const styles = StyleSheet.create({
         borderRadius: 50,
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight:-14
+        marginRight: -14
     },
     bottomNav: {
         flexDirection: 'row',

@@ -4,6 +4,7 @@ import { create } from 'zustand';
 export type ChatMessage = {
     role: 'user' | 'assistant';
     content: string;
+    images?: string[];
 };
 
 interface ChatState {
