@@ -1,9 +1,9 @@
+import { FontFamily } from '@/constants/Fonts';
 import { useChatStore } from '@/lib/stores/chatStore';
 import { supabase } from '@/lib/supabase';
 import {
-    Feather,
     Ionicons,
-    MaterialIcons,
+    MaterialIcons
 } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
@@ -92,16 +92,11 @@ const MobileSidebar: React.FC<SidebarProps> = ({ visible, onClose, userData }) =
                         },
                     ]}
                 >
-                    <Image
-                        source={require('@/assets/images/icons/Union.png')}
-                        style={styles.backgroundImage}
-                        resizeMode="cover"
-                    />
                     <SafeAreaView style={styles.container}>
-                        {/* Header with back arrow */}
+                        {/* Header with close icon */}
                         <View style={styles.header}>
-                            <TouchableOpacity style={styles.backButton} onPress={onClose}>
-                                <Ionicons name="chevron-back" size={24} color="#333" />
+                            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+                                <Ionicons name="close" size={24} color="#333" />
                             </TouchableOpacity>
                         </View>
 
@@ -113,11 +108,11 @@ const MobileSidebar: React.FC<SidebarProps> = ({ visible, onClose, userData }) =
                                 />
                                 <View style={styles.profileInfo}>
                                     <Text style={styles.profileName}>Robert L.</Text>
-                                    <TouchableOpacity style={styles.editProfileContainer} onPress={() => router.push("/edit")}>
-                                        <Text style={styles.editProfileText}>Edit Profile</Text>
-                                        <Feather name="edit-2" size={12} color="#999" />
-                                    </TouchableOpacity>
+                                    <Text style={styles.profileUsername}>@robertlowsky</Text>
                                 </View>
+                                <TouchableOpacity style={styles.editProfileContainer}>
+                                    <Ionicons name="chevron-forward" size={20} color="#999" />
+                                </TouchableOpacity>
                             </View>
                         </View>
 
@@ -140,17 +135,19 @@ const MobileSidebar: React.FC<SidebarProps> = ({ visible, onClose, userData }) =
                             <MenuItem
                                 icon={<MaterialIcons name="help-outline" size={20} color="#666" />}
                                 label="Help & Support"
-                                onPress={() => { }}
+                                onPress={() => {
+                                    onClose();
+                                    router.push('/pages/help-support');
+                                }}
                             />
                         </View>
 
                         <View style={styles.logoutSection}>
-                            <MenuItem
-                                icon={<MaterialIcons name="logout" size={20} color="#FF4444" />}
-                                label="Log Out"
-                                onPress={handleLogout}
-                                isLogout={true}
-                            />
+                            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                                <MaterialIcons name="logout" size={20} color="#FF4444" />
+                                <Text style={styles.logoutButtonText}>Logout</Text>
+                                <Ionicons name="chevron-forward" size={16} color="#FF4444" />
+                            </TouchableOpacity>
                         </View>
                     </SafeAreaView>
                 </Animated.View>
@@ -195,67 +192,59 @@ const styles = StyleSheet.create({
     },
     sidebar: {
         width: SIDEBAR_WIDTH,
-        backgroundColor: 'transparent',
-        // shadowColor: '#000',
-        // shadowOffset: {
-        //     width: 2,
-        //     height: 0,
-        // },
-        // shadowOpacity: 0.25,
-        // shadowRadius: 3.84,
-        // elevation: 5,
+        backgroundColor: 'white',
+        shadowColor: '#000',
+        borderTopRightRadius: 24,
+        borderBottomRightRadius: 24,
+        shadowOffset: {
+            width: 2,
+            height: 0,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
         zIndex: 2,
         overflow: 'hidden',
     },
-    backgroundImage: {
-        position: 'absolute',
-        width: '100%',
-        height: '100%',
-        zIndex: -1,
-    },
     container: {
         flex: 1,
-        backgroundColor: 'transparent',
+        backgroundColor: 'white', 
     },
     header: {
         paddingHorizontal: 20,
         paddingTop: 16,
         paddingBottom: 16,
-        backgroundColor: 'transparent',
-    },
-    backButton: {
-        // alignSelf: '',
-        padding: 8,
-        position: 'absolute',
-        top: 100,
-        right: -.5,
-        zIndex: 1,
+        backgroundColor: 'white',
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
     },
     closeButton: {
-        position: 'absolute',
-        top: 86,
-        right: 56,
-        zIndex: 1,
-        padding: 18,
+        padding: 8,
+        borderRadius: 8,
+        // backgroundColor: '#f5f5f5',
     },
     profileSection: {
-        paddingHorizontal: 34,
-        paddingTop: 16,
-        paddingBottom: 32,
-        left: -10,
-        backgroundColor: 'transparent',
+        paddingHorizontal: 24,
+        paddingTop: 8,
+        paddingBottom: 24,
+        backgroundColor: 'white',
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
     },
     profileContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#efefef',
-        borderRadius: 16,
+        backgroundColor: 'white',
+        borderRadius: 20,
         padding: 16,
+        borderWidth: 1,
+        borderColor: '#e0e0e0',
     },
     profileImage: {
         width: 60,
         height: 60,
-        borderRadius: 12,
+        borderRadius: 30,
         backgroundColor: '#f0f0f0',
     },
     profileInfo: {
@@ -266,37 +255,34 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         color: '#1A1A1A',
-        marginBottom: 6,
-        fontFamily: 'HelveticaNeue',
+        marginBottom: 4,
+        fontFamily: FontFamily.HelveticaNeue.Bold,
+    },
+    profileUsername: {
+        fontSize: 14,
+        color: '#999',
+        fontFamily: FontFamily.HelveticaNeue.Regular,
     },
     editProfileContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    editProfileText: {
-        fontSize: 14,
-        color: '#666',
-        marginRight: 6,
-        fontWeight: 'bold',
-        fontFamily: 'HelveticaNeue',
+        padding: 8,
     },
     menuSection: {
-        paddingHorizontal: 32,
-        left: -8,
-        backgroundColor: 'transparent',
-        gap:16
+        paddingHorizontal: 24,
+        paddingTop: 16,
+        backgroundColor: 'white',
+        gap: 0,
     },
     menuItem: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 20,
-        paddingVertical: 18,
-        borderRadius: 12,
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        marginBottom: 8,
-        borderColor: '#efefef',
-        borderWidth: 1
+        paddingHorizontal: 0,
+        paddingVertical: 16,
+        borderRadius: 0,
+        backgroundColor: 'white',
+        marginBottom: 0,
+        borderBottomWidth: 1.1,
+        borderBottomColor: '#e0e0e0',
     },
     menuItemLeft: {
         flexDirection: 'row',
@@ -304,24 +290,42 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     menuItemText: {
-        fontSize: 16,
-        fontWeight: '500',
+        fontSize: 14,
         color: '#1A1A1A',
         marginLeft: 16,
-        fontFamily: 'HelveticaNeue',
+        fontFamily: FontFamily.HelveticaNeue.Regular,
     },
     logoutText: {
-        color: '#FF4444',
-        fontFamily: 'HelveticaNeue',
+        color: '#F84D64',
+        fontFamily: FontFamily.HelveticaNeue.Regular,
     },
     logoutSection: {
-        // position: 'absolute',
-        top: 280,
-        paddingHorizontal: 34,
-        paddingTop: 16,
-        paddingBottom: 32,
-        left: -10,
-        backgroundColor: 'transparent',
+        position: 'absolute',
+        bottom: 50,
+        left: 0,
+        right: 0,
+        paddingHorizontal: 24,
+        paddingVertical: 16,
+        backgroundColor: 'white',
+    },
+    logoutButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        borderRadius: 100,
+        backgroundColor: 'white',
+        borderWidth: 1.5,
+        borderColor: '#FF4444',
+    },
+    logoutButtonText: {
+        fontSize: 16,
+        fontWeight: '500',
+        color: '#FF4444',
+        marginLeft: 12,
+        flex: 1,
+        fontFamily: 'HelveticaNeue',
     },
 });
 

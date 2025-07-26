@@ -49,7 +49,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <StatusBar style="dark" backgroundColor="#FFFFFF" translucent={false} />
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Protected guard={isLoggedIn}> 
+        <Stack.Protected guard={!isLoggedIn}> 
           {/* true= valid !true= notvalid */}
           <Stack.Screen name="(auth)/onboarding" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)/pagetwo" options={{ headerShown: false }} />

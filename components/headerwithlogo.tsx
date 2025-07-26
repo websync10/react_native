@@ -1,65 +1,150 @@
-import { router } from 'expo-router'
+import { FontFamily } from '@/constants/Fonts'
+import { Ionicons, SimpleLineIcons } from '@expo/vector-icons'
 import React from 'react'
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
-const HeaderWithLogo = () => {
-  return (
-    <View style={styles.headerSection}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => router.back()}
-      >
-        <Image style={styles.backArrow} source={require('@/assets/images/icons/leftarrow.png')} /> 
-      </TouchableOpacity>
+interface HeaderWithLogoProps {
+  onMenuPress?: () => void
+  onNotificationPress?: () => void
+  showBackButton?: boolean
+  onBackPress?: () => void
+  showNotification?: boolean
+  notificationCount?: number
+}
 
-      <View style={styles.logoCenterContainer}>
-        <Image
-          source={require('@/assets/images/headerlogo.png')}
-          resizeMode="contain"
-          style={styles.bagLogo}
-        />
-        <Text style={styles.logoText}>Myuze</Text>
+const HeaderWithLogo = ({
+  onMenuPress,
+  onNotificationPress,
+  showBackButton = false,
+  onBackPress,
+  showNotification = true,
+  notificationCount = 0
+}: HeaderWithLogoProps) => {
+  return (
+    <View style={styles.header}>
+      {/* Left Button - Menu or Back */}
+      {showBackButton ? (
+        <TouchableOpacity 
+          style={styles.headerButton}
+          onPress={onBackPress}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="arrow-back" size={20} color="black" />
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity 
+          style={styles.headerButton}
+          onPress={onMenuPress}
+          activeOpacity={0.7}
+        >
+          <SimpleLineIcons name="menu" size={20} color="black" />
+        </TouchableOpacity>
+      )}
+
+      {/* Logo Container */}
+      <View style={styles.logoContainer}>
+        <View style={styles.logoIcon}>
+          <Image
+            source={require('@/assets/images/baglogo.png')}
+            resizeMode="contain"
+            style={styles.logoImage}
+          />
+        </View>
+        <Text style={styles.brandText}>Myuze</Text>
       </View>
 
-      {/* Right Spacer */}
-      <View style={{ width: 24 }} />
+      {/* Right Button - Notification or Spacer */}
+      {showNotification ? (
+        <TouchableOpacity 
+          style={styles.headerButton}
+          onPress={onNotificationPress}
+          activeOpacity={0.7}
+        >
+          <View style={styles.notificationContainer}>
+            <Ionicons name="notifications-outline" size={24} color="black" />
+            {notificationCount > 0 && (
+              <View style={styles.notificationBadge}>
+                <Text style={styles.badgeText}>
+                  {notificationCount > 99 ? '99+' : notificationCount.toString()}
+                </Text>
+              </View>
+            )}
+          </View>
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.headerButton} />
+      )}
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-// Header Section
-  headerSection: {
+  header: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 42,
-    paddingBlock:28,
-  },
-  backButton: {
-    width:20,
-    height: 20,
     alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 0,
+    marginBottom: 8,
   },
-  backArrow: {
-    width: 8,
-    height: 16,
+  headerButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    // backgroundColor: '#F8F9FA',
+    borderColor: '#E5E5EA',
+    borderWidth: 1,
   },
-  logoCenterContainer: {
+  logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    flex: 1,
+    justifyContent: 'center',
+    marginHorizontal: 16,
   },
-  bagLogo: {
+  logoIcon: {
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+    borderRadius: 8,
+  },
+  logoImage: {
     width: 28,
     height: 28,
   },
-  logoText: {
-    fontSize: 22,
-    fontWeight: 'bold',
+  brandText: {
+    fontSize: 24,
+    fontFamily: FontFamily.HelveticaNeue.Bold,
     color: '#00272E',
-    marginTop:4
+    textAlign: 'center',
+    top: 4,
+    right: 8,
+  },
+  notificationContainer: {
+    position: 'relative',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    backgroundColor: '#FF3B30',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFF',
+  },
+  badgeText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontFamily: FontFamily.HelveticaNeue.Bold,
+    textAlign: 'center',
   },
 })
 

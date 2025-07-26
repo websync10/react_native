@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 24,
     marginBottom: 2,
-    fontFamily: FontFamily.HelveticaNeue.Bold,
+    fontFamily: FontFamily.HelveticaNeue.Medium,
   },
   subtitle: {
     fontSize: 14,

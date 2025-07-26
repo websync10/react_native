@@ -2,7 +2,7 @@ import React from 'react'
 import { View } from 'react-native'
 import { Text } from 'react-native-elements'
 
-const tryon = () => {
+const lookbook = () => {
     return (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
             <Text>Welcome to Explore page!</Text>
@@ -10,4 +10,4 @@ const tryon = () => {
     )
 }
 
-export default tryon
+export default lookbook
