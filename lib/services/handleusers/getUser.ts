@@ -9,12 +9,13 @@ export async function getUser(userId: string) {
         .from("users")
         .select('isOnboarded')
         .eq('user_id', userId)
-        .single();
+        .limit(1)
+        .single()
 
     if (error) {
         console.log(" hello Error fetching user:", error.message);
         return;
     } else {
-        return data.isOnboarded
+        return data?.isOnboarded
     }
 }

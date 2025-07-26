@@ -11,7 +11,7 @@ interface OnboardingState {
     skin_tone: string;
     size: string;
     image: string;
-    style: string[];
+    style: string;
     body_shape: string;
 
     setField: <K extends keyof OnboardingState>(
@@ -33,7 +33,7 @@ export const useOnboardingStore = create<OnboardingState>()(
             skin_tone: "",
             size: "XL",
             image: "",
-            style: [""],
+            style: "",
             body_shape: "",
 
             setField: (key, value) => set((state) => ({ ...state, [key]: value })),
@@ -47,7 +47,7 @@ export const useOnboardingStore = create<OnboardingState>()(
                     skin_tone: "",
                     size: "",
                     image: "",
-                    style: [""],
+                    style: "",
                     body_shape: "",
                 }),
         }),

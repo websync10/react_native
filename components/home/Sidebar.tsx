@@ -1,4 +1,3 @@
-import { useChatStore } from '@/lib/stores/chatStore';
 import { supabase } from '@/lib/supabase';
 import {
     Feather,
@@ -33,7 +32,6 @@ const MobileSidebar: React.FC<SidebarProps> = ({ visible, onClose, userData }) =
     const slideAnim = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
     const [showModal, setShowModal] = useState(visible);
 
-    const { clearMessages } = useChatStore();
     const handleLogout = async () => {
         const { error } = await supabase.auth.signOut();
 
@@ -101,18 +99,17 @@ const MobileSidebar: React.FC<SidebarProps> = ({ visible, onClose, userData }) =
                         {/* Header with back arrow */}
                         <View style={styles.header}>
                             <TouchableOpacity style={styles.backButton} onPress={onClose}>
-                                <Ionicons name="chevron-back" size={24} color="#333" />
                             </TouchableOpacity>
                         </View>
 
                         <View style={styles.profileSection}>
                             <View style={styles.profileContainer}>
                                 <Image
-                                    source={{ uri: 'https://picsum.photos/120/120' }}
+                                    source={{ uri: userData?.profileImage }}
                                     style={styles.profileImage}
                                 />
                                 <View style={styles.profileInfo}>
-                                    <Text style={styles.profileName}>Robert L.</Text>
+                                    <Text style={styles.profileName}>{userData?.fullName}</Text>
                                     <TouchableOpacity style={styles.editProfileContainer} onPress={() => router.push("/edit")}>
                                         <Text style={styles.editProfileText}>Edit Profile</Text>
                                         <Feather name="edit-2" size={12} color="#999" />
@@ -196,14 +193,6 @@ const styles = StyleSheet.create({
     sidebar: {
         width: SIDEBAR_WIDTH,
         backgroundColor: 'transparent',
-        // shadowColor: '#000',
-        // shadowOffset: {
-        //     width: 2,
-        //     height: 0,
-        // },
-        // shadowOpacity: 0.25,
-        // shadowRadius: 3.84,
-        // elevation: 5,
         zIndex: 2,
         overflow: 'hidden',
     },
@@ -225,10 +214,10 @@ const styles = StyleSheet.create({
     },
     backButton: {
         // alignSelf: '',
-        padding: 8,
+        padding: 10,
         position: 'absolute',
-        top: 100,
-        right: -.5,
+        top: 90,
+        right: 5,
         zIndex: 1,
     },
     closeButton: {
@@ -316,7 +305,7 @@ const styles = StyleSheet.create({
     },
     logoutSection: {
         // position: 'absolute',
-        top: 280,
+        top: 250,
         paddingHorizontal: 34,
         paddingTop: 16,
         paddingBottom: 32,

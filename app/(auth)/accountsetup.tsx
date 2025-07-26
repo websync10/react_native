@@ -1,9 +1,10 @@
 import PrimaryButton from '@/components/PrimaryButton'
 import SecondaryButton from '@/components/SecondaryButton'
 import { FontFamily } from '@/constants/Fonts'
+import { useOnboardingStore } from '@/lib/stores/onboardingStore'
 import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
-import React, { useState } from 'react'
+import React from 'react'
 import {
   Image,
   KeyboardAvoidingView,
@@ -18,29 +19,26 @@ import {
 } from 'react-native'
 
 const AccountSetupScreen = () => {
-  const [fullName, setFullName] = useState('')
-  const [username, setUsername] = useState('')
-  const [selectedGender, setSelectedGender] = useState('')
-  const [dateOfBirth, setDateOfBirth] = useState('')
+  const { fullName, username, gender, dob, setField } = useOnboardingStore();
 
   // Reset size when gender changes
   const handleGenderChange = (gender: string) => {
-    setSelectedGender(gender)
+    setField("gender", gender)
   }
 
   const handleGoBack = () => {
-      router.push('/(auth)/login')
+    router.push('/(auth)/login')
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        // keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      // keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
-        <ScrollView 
-          style={styles.scrollView} 
+        <ScrollView
+          style={styles.scrollView}
           contentContainerStyle={styles.scrollContentContainer}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -49,139 +47,138 @@ const AccountSetupScreen = () => {
           {/* <HeaderWithLogo /> */}
 
           {/* Progress Section */}
-        <View style={styles.progressSection}>
-          <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-            <Image 
-              source={require('@/assets/images/icons/leftarrow.png')} 
-              style={styles.backArrowIcon}
-            />
-          </TouchableOpacity>
-          
-          <View style={styles.progressBarContainer}>
-            <View style={styles.progressBar}>
-              <LinearGradient
-                colors={['#595CFF', '#C6F8FF']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.progressFill}
+          <View style={styles.progressSection}>
+            <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+              <Image
+                source={require('@/assets/images/icons/leftarrow.png')}
+                style={styles.backArrowIcon}
               />
-            </View>
-          </View>
-          
-          <View style={styles.progressCounterContainer}>
-            <Text style={styles.progressCounterCurrent}>1</Text>
-            <Text style={styles.progressCounterTotal}> of 4</Text>
-          </View>
-        </View>
+            </TouchableOpacity>
 
-        {/* Progress Divider */}
-        <View style={styles.progressDivider} />
-
-        {/* Content Section */}
-        <View style={styles.contentSection}>
-          <Text style={styles.title}>Let&apos;s Get to Know You</Text>
-          <Text style={styles.subtitle}>Please complete your try-on information</Text>
-
-          {/* Form Section */}
-          <View style={styles.formSection}>
-            {/* Full Name Section */}
-            <View style={styles.inputSection}>
-              <Text style={styles.inputLabel}>Full Name</Text>
-              <TextInput
-                style={styles.textInput}
-                placeholder="Enter Full Name"
-                placeholderTextColor="#999"
-                value={fullName}
-                onChangeText={setFullName}
-                autoCapitalize="words"
-              />
-            </View>
-            {/* Username Section */}
-            <View style={styles.inputSection}>
-              <Text style={styles.inputLabel}>Username</Text>
-              <TextInput
-                style={styles.textInput}
-                placeholder="Enter username"
-                placeholderTextColor="#999"
-                value={username}
-                onChangeText={setUsername}
-                autoCapitalize="none"
-              />
-            </View>
-
-            {/* Gender Section */}
-            <View style={styles.genderSection}>
-              <Text style={styles.inputLabel}>Gender</Text>
-              <View style={styles.genderOptions}>
-                <TouchableOpacity
-                  style={[
-                    styles.genderOption,
-                    selectedGender === 'Male' && styles.genderOptionSelected,
-                  ]}
-                  onPress={() => handleGenderChange('Male')}
-                >
-                  <Text style={styles.genderText}>Male</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.genderOption,
-                    selectedGender === 'Female' && styles.genderOptionSelected,
-                  ]}
-                  onPress={() => handleGenderChange('Female')}
-                >
-                  <Text style={styles.genderText}>Female</Text>
-                </TouchableOpacity>
+            <View style={styles.progressBarContainer}>
+              <View style={styles.progressBar}>
+                <LinearGradient
+                  colors={['#595CFF', '#C6F8FF']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.progressFill}
+                />
               </View>
             </View>
 
-            {/* Date of Birth Section */}
-            <View style={styles.inputSection}>
-              <Text style={styles.inputLabel}>Date of birth</Text>
-              <View style={styles.dateInputContainer}>
+            <View style={styles.progressCounterContainer}>
+              <Text style={styles.progressCounterCurrent}>1</Text>
+              <Text style={styles.progressCounterTotal}> of 4</Text>
+            </View>
+          </View>
+
+          {/* Progress Divider */}
+          <View style={styles.progressDivider} />
+
+          {/* Content Section */}
+          <View style={styles.contentSection}>
+            <Text style={styles.title}>Let&apos;s Get to Know You</Text>
+            <Text style={styles.subtitle}>Please complete your try-on information</Text>
+
+            {/* Form Section */}
+            <View style={styles.formSection}>
+              {/* Full Name Section */}
+              <View style={styles.inputSection}>
+                <Text style={styles.inputLabel}>Full Name</Text>
                 <TextInput
-                  style={styles.dateInput}
-                  placeholder="Enter your birth"
+                  style={styles.textInput}
+                  placeholder="Enter Full Name"
                   placeholderTextColor="#999"
-                  value={dateOfBirth}
-                  onChangeText={setDateOfBirth}
+                  value={fullName}
+                  onChangeText={(text) => setField("fullName", text)}
+                  autoCapitalize="words"
                 />
-                <TouchableOpacity style={styles.calendarButton}>
-                  <View style={styles.calendarIcon}>
-                    <View style={styles.calendarTop} />
-                    <View style={styles.calendarBody}>
-                      <View style={styles.calendarGrid}>
-                        <View style={styles.calendarDot} />
-                        <View style={styles.calendarDot} />
-                        <View style={styles.calendarDot} />
-                        <View style={styles.calendarDot} />
+              </View>
+              {/* Username Section */}
+              <View style={styles.inputSection}>
+                <Text style={styles.inputLabel}>Username</Text>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Enter username"
+                  placeholderTextColor="#999"
+                  value={username}
+                  onChangeText={(text) => setField("username", text)}
+                  autoCapitalize="none"
+                />
+              </View>
+
+              {/* Gender Section */}
+              <View style={styles.genderSection}>
+                <Text style={styles.inputLabel}>Gender</Text>
+                <View style={styles.genderOptions}>
+                  <TouchableOpacity
+                    style={[
+                      styles.genderOption,
+                      gender === 'Male' && styles.genderOptionSelected,
+                    ]}
+                    onPress={() => handleGenderChange('Male')}
+                  >
+                    <Text style={styles.genderText}>Male</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.genderOption,
+                      gender === 'Female' && styles.genderOptionSelected,
+                    ]}
+                    onPress={() => handleGenderChange('Female')}
+                  >
+                    <Text style={styles.genderText}>Female</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Date of Birth Section */}
+              <View style={styles.inputSection}>
+                <Text style={styles.inputLabel}>Date of birth</Text>
+                <View style={styles.dateInputContainer}>
+                  <TextInput
+                    style={styles.dateInput}
+                    placeholder="Enter your birth"
+                    placeholderTextColor="#999"
+                    value={dob}
+                    onChangeText={(dob) => setField("dob", dob)}
+                  />
+                  <TouchableOpacity style={styles.calendarButton}>
+                    <View style={styles.calendarIcon}>
+                      <View style={styles.calendarTop} />
+                      <View style={styles.calendarBody}>
+                        <View style={styles.calendarGrid}>
+                          <View style={styles.calendarDot} />
+                          <View style={styles.calendarDot} />
+                          <View style={styles.calendarDot} />
+                          <View style={styles.calendarDot} />
+                        </View>
                       </View>
                     </View>
-                  </View>
-                </TouchableOpacity>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           </View>
-        </View>
-        
-        {/* Fixed Bottom Buttons */}
-        <View style={styles.buttons}>
-          <PrimaryButton 
-            title="Save"
-            onPress={() => {
-              if (selectedGender === 'Male') {
-                router.push('/(auth)/findYourFitMale')
-              } else if (selectedGender === 'Female') {
-                router.push('/(auth)/findYourFitFemale')
-              } else {
-                // Optional: Show alert or validation message if no gender is selected
-                console.log('Please select a gender first')
-              }
-            }} 
-          />
-          <SecondaryButton title='Cancel' onPress={() => {}} />
-        </View>
-      </ScrollView>
+
+          {/* Fixed Bottom Buttons */}
+          <View style={styles.buttons}>
+            <PrimaryButton
+              title="Save"
+              onPress={() => {
+                if (gender === 'Male') {
+                  router.push('/(auth)/findYourFitMale')
+                } else if (gender === 'Female') {
+                  router.push('/(auth)/findYourFitFemale')
+                } else {
+                  console.log('Please select a gender first')
+                }
+              }}
+            />
+            <SecondaryButton title='Cancel' onPress={() => { }} />
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   )
@@ -198,7 +195,7 @@ const styles = StyleSheet.create({
   scrollContentContainer: {
     flexGrow: 1,
   },
-  
+
   // Progress Section
   progressSection: {
     paddingHorizontal: 20,
@@ -207,7 +204,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    top:48,
+    top: 48,
   },
   backButton: {
     position: 'absolute',
@@ -221,11 +218,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  
+
   backArrowIcon: {
     width: 8,
     height: 16,
-    left:-2
+    left: -2
   },
   progressBarContainer: {
     flex: 1,
@@ -331,9 +328,9 @@ const styles = StyleSheet.create({
   genderOption: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent:'center',
+    justifyContent: 'center',
     paddingVertical: 16,
-    paddingHorizontal:16,
+    paddingHorizontal: 16,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#D9DBE2',

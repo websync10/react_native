@@ -2,9 +2,10 @@ import PrimaryButton from '@/components/PrimaryButton'
 import SecondaryButton from '@/components/SecondaryButton'
 import StyleCardHorizontal from '@/components/StyleCardHorizontal'
 import { FontFamily } from '@/constants/Fonts'
+import { useOnboardingStore } from '@/lib/stores/onboardingStore'
 import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
-import React, { useState } from 'react'
+import React from 'react'
 import {
   Image,
   SafeAreaView,
@@ -16,11 +17,11 @@ import {
 } from 'react-native'
 
 const FemalePickstyle = () => {
-  const [selectedStyle, setSelectedStyle] = useState<string>('')
+  const { style, setField } = useOnboardingStore();
 
   const handleContinue = () => {
-    if (selectedStyle) {
-      console.log('Selected style:', selectedStyle)
+    if (styles) {
+      console.log('Selected style:', styles)
       router.replace('/(auth)/bodyShapeFemale')
     } else {
       console.log('Please select a style first')
@@ -76,12 +77,12 @@ const FemalePickstyle = () => {
         {/* Progress Section */}
         <View style={styles.progressSection}>
           <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-            <Image 
-              source={require('@/assets/images/icons/leftarrow.png')} 
+            <Image
+              source={require('@/assets/images/icons/leftarrow.png')}
               style={styles.backArrowIcon}
             />
           </TouchableOpacity>
-          
+
           <View style={styles.progressBarContainer}>
             <View style={styles.progressBar}>
               <LinearGradient
@@ -92,7 +93,7 @@ const FemalePickstyle = () => {
               />
             </View>
           </View>
-          
+
           <View style={styles.progressCounterContainer}>
             <Text style={styles.progressCounterCurrent}>3</Text>
             <Text style={styles.progressCounterTotal}> of 4</Text>
@@ -111,31 +112,30 @@ const FemalePickstyle = () => {
           <View style={styles.formSection}>
             {/* Style Options */}
             <View style={styles.styleList}>
-              {styleOptions.map((style) => (
+              {styleOptions.map((s) => (
                 <StyleCardHorizontal
-                  key={style.id}
-                  title={style.title}
-                  description={style.description}
-                  imageSource={style.imageSource}
-                  isSelected={selectedStyle === style.id}
-                  onPress={() => setSelectedStyle(style.id)}
+                  key={s.id}
+                  title={s.title}
+                  description={s.description}
+                  imageSource={s.imageSource}
+                  isSelected={style === s.id}
+                  onPress={() => setField("style", s.id)}
                 />
               ))}
             </View>
+            <View style={{ gap: 12, marginTop: -12, }}>
 
-            <View style={{gap:12, marginTop:-12,}}>
+              {/* Continue Button */}
+              <PrimaryButton
+                title="Continue"
+                onPress={handleContinue}
+              />
 
-            {/* Continue Button */}
-            <PrimaryButton 
-              title="Continue"
-              onPress={handleContinue}
-            />
-            
-            {/* Secondary Button */}
-            <SecondaryButton 
-              title="Skip for now"
-              onPress={() => router.push('/(home)')}
-            /></View>
+              {/* Secondary Button */}
+              <SecondaryButton
+                title="Skip for now"
+                onPress={() => router.push('/(home)')}
+              /></View>
           </View>
         </View>
       </ScrollView>
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  
+
   // Progress Section
   progressSection: {
     paddingHorizontal: 20,

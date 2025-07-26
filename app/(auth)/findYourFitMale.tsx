@@ -1,6 +1,8 @@
+import { openCamera, pickFromGallery } from '@/components/onboarding/HumanFigurePicker'
 import PrimaryButton from '@/components/PrimaryButton'
 import SecondaryButton from '@/components/SecondaryButton'
 import { FontFamily } from '@/constants/Fonts'
+import { useOnboardingStore } from '@/lib/stores/onboardingStore'
 import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
 import React, { useState } from 'react'
@@ -15,10 +17,10 @@ import {
 } from 'react-native'
 
 const FindYourFitMaleScreen = () => {
-  const [selectedSkinTone, setSelectedSkinTone] = useState('')
-  const [selectedSize, setSelectedSize] = useState('')
   const [showSkinToneDropdown, setShowSkinToneDropdown] = useState(false)
   const [showSizeDropdown, setShowSizeDropdown] = useState(false)
+
+  const { image, skin_tone, size, setField } = useOnboardingStore()
 
   // Skin tone options with colors
   const getSkinToneOptions = () => {
@@ -43,12 +45,11 @@ const FindYourFitMaleScreen = () => {
 
   // Male size options
   const getSizeOptions = () => {
-    return ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL']
+    return ['XS', 'S', 'M', 'L', 'XL', 'XXL']
   }
 
   const handleContinue = () => {
-    // Navigate to next step - you can customize this based on your flow
-    router.push('/(auth)/yourStyleMale') // or wherever the next step should be
+    router.push('/(auth)/yourStyleMale')
   }
 
   const handleGoBack = () => {
@@ -61,12 +62,12 @@ const FindYourFitMaleScreen = () => {
         {/* Progress Section */}
         <View style={styles.progressSection}>
           <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-            <Image 
-                          source={require('@/assets/images/icons/leftarrow.png')} 
-                          style={styles.backArrowIcon}
-                        />
+            <Image
+              source={require('@/assets/images/icons/leftarrow.png')}
+              style={styles.backArrowIcon}
+            />
           </TouchableOpacity>
-          
+
           <View style={styles.progressBarContainer}>
             <View style={styles.progressBar}>
               <LinearGradient
@@ -77,7 +78,7 @@ const FindYourFitMaleScreen = () => {
               />
             </View>
           </View>
-          
+
           <View style={styles.progressCounterContainer}>
             <Text style={styles.progressCounterCurrent}>2</Text>
             <Text style={styles.progressCounterTotal}> of 4</Text>
@@ -85,7 +86,7 @@ const FindYourFitMaleScreen = () => {
         </View>
 
         {/* Progress Divider */}
-                <View style={styles.progressDivider} />
+        <View style={styles.progressDivider} />
 
         {/* Content Section */}
         <View style={styles.contentSection}>
@@ -97,7 +98,7 @@ const FindYourFitMaleScreen = () => {
             {/* Skin Tone Section */}
             <View style={styles.inputSection}>
               <Text style={styles.inputLabel}>What&apos;s your skin tone?</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[
                   styles.dropdownButton,
                   showSkinToneDropdown && styles.dropdownButtonActive
@@ -108,17 +109,17 @@ const FindYourFitMaleScreen = () => {
                 <View style={styles.dropdownContent}>
                   <View style={[
                     styles.colorIndicator,
-                    { backgroundColor: getSkinToneOptions().find(tone => tone.name === selectedSkinTone)?.color || '#F1C27D' }
+                    { backgroundColor: getSkinToneOptions().find(tone => tone.name === skin_tone)?.color || '#F1C27D' }
                   ]} />
                   <Text style={styles.dropdownText}>
-                    {selectedSkinTone || 'Limestone'}
+                    {skin_tone || 'Limestone'}
                   </Text>
-                  <Image 
-                    source={require('@/assets/images/icons/leftarrow.png')} 
+                  <Image
+                    source={require('@/assets/images/icons/leftarrow.png')}
                     style={[
                       styles.dropdownArrowImage,
                       showSkinToneDropdown && styles.dropdownArrowImageRotated
-                    ]} 
+                    ]}
                   />
                 </View>
               </TouchableOpacity>
@@ -132,10 +133,10 @@ const FindYourFitMaleScreen = () => {
                       style={[
                         styles.skinToneOption,
                         { backgroundColor: tone.color },
-                        selectedSkinTone === tone.name && styles.skinToneOptionSelected
+                        skin_tone === tone.name && styles.skinToneOptionSelected
                       ]}
                       onPress={() => {
-                        setSelectedSkinTone(tone.name)
+                        setField("skin_tone", tone.name)
                         setShowSkinToneDropdown(false)
                       }}
                     />
@@ -146,7 +147,7 @@ const FindYourFitMaleScreen = () => {
               {/* Skin Tone Options Dropdown */}
               {showSkinToneDropdown && (
                 <View style={styles.dropdownOptions}>
-                  <ScrollView 
+                  <ScrollView
                     style={styles.dropdownScrollView}
                     nestedScrollEnabled={true}
                     showsVerticalScrollIndicator={true}
@@ -159,11 +160,11 @@ const FindYourFitMaleScreen = () => {
                         key={tone.name}
                         style={[
                           styles.dropdownOption,
-                          selectedSkinTone === tone.name && styles.dropdownOptionSelected,
+                          skin_tone === tone.name && styles.dropdownOptionSelected,
                           index === getSkinToneOptions().length - 1 && styles.dropdownOptionLast
                         ]}
                         onPress={() => {
-                          setSelectedSkinTone(tone.name)
+                          setField("skin_tone", tone.name)
                           setShowSkinToneDropdown(false)
                         }}
                         activeOpacity={0.7}
@@ -175,9 +176,9 @@ const FindYourFitMaleScreen = () => {
                           ]} />
                           <Text style={[
                             styles.dropdownOptionText,
-                            selectedSkinTone === tone.name && styles.dropdownOptionTextSelected
+                            skin_tone === tone.name && styles.dropdownOptionTextSelected
                           ]}>
-                            {tone.name}
+                            {skin_tone}
                           </Text>
                         </View>
                         {/* {selectedSkinTone === tone.name && (
@@ -193,7 +194,7 @@ const FindYourFitMaleScreen = () => {
             {/* Size Section */}
             <View style={styles.inputSection}>
               <Text style={styles.inputLabel}>Clothing size</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[
                   styles.dropdownButton,
                   showSizeDropdown && styles.dropdownButtonActive
@@ -203,22 +204,22 @@ const FindYourFitMaleScreen = () => {
               >
                 <View style={styles.dropdownContent}>
                   <Text style={styles.dropdownText}>
-                    {selectedSize || 'XL'}
+                    {size || 'XL'}
                   </Text>
-                  <Image 
-                    source={require('@/assets/images/icons/leftarrow.png')} 
+                  <Image
+                    source={require('@/assets/images/icons/leftarrow.png')}
                     style={[
                       styles.dropdownArrowImage,
                       showSizeDropdown && styles.dropdownArrowImageRotated
-                    ]} 
+                    ]}
                   />
                 </View>
               </TouchableOpacity>
-              
+
               {/* Size Options Dropdown */}
               {showSizeDropdown && (
                 <View style={styles.dropdownOptions}>
-                  <ScrollView 
+                  <ScrollView
                     style={styles.dropdownScrollView}
                     nestedScrollEnabled={true}
                     showsVerticalScrollIndicator={true}
@@ -226,27 +227,27 @@ const FindYourFitMaleScreen = () => {
                     contentContainerStyle={{ flexGrow: 1 }}
                     keyboardShouldPersistTaps="handled"
                   >
-                    {getSizeOptions().map((size, index) => (
+                    {getSizeOptions().map((s, index) => (
                       <TouchableOpacity
-                        key={size}
+                        key={s}
                         style={[
                           styles.dropdownOption,
-                          selectedSize === size && styles.dropdownOptionSelected,
+                          size === s && styles.dropdownOptionSelected,
                           index === getSizeOptions().length - 1 && styles.dropdownOptionLast
                         ]}
                         onPress={() => {
-                          setSelectedSize(size)
+                          setField("size", s)
                           setShowSizeDropdown(false)
                         }}
                         activeOpacity={0.7}
                       >
                         <Text style={[
                           styles.dropdownOptionText,
-                          selectedSize === size && styles.dropdownOptionTextSelected
+                          size === s && styles.dropdownOptionTextSelected
                         ]}>
-                          {size}
+                          {s}
                         </Text>
-                        {selectedSize === size && (
+                        {size === s && (
                           <Text style={styles.checkMark}>✓</Text>
                         )}
                       </TouchableOpacity>
@@ -254,7 +255,7 @@ const FindYourFitMaleScreen = () => {
                   </ScrollView>
                 </View>
               )}
-              
+
               <Text style={styles.sizeSubtext}>
                 Help us understand your clothing size to improve your fitting.
               </Text>
@@ -266,7 +267,11 @@ const FindYourFitMaleScreen = () => {
               <View style={styles.photoUploadContainer}>
                 <View style={styles.figureContainer}>
                   <Image
-                    source={require('../../assets/images/MaleVector.png')}
+                    source={
+                      image
+                        ? { uri: image }
+                        : require('../../assets/images/femalevector.png')
+                    }
                     style={styles.humanFigure}
                     resizeMode="contain"
                   />
@@ -277,16 +282,27 @@ const FindYourFitMaleScreen = () => {
 
                 {/* Camera and Gallery Icons */}
                 <View style={styles.photoActions}>
-                  <TouchableOpacity style={styles.photoActionButton}>
-                    
-                      <Text style={styles.photoActionText}>Gallery</Text>
-                    
+                  <TouchableOpacity style={styles.photoActionButton}
+                    onPress={async () => {
+                      const uri = await pickFromGallery();
+                      if (uri) {
+                        setField("image", uri);
+                      }
+                    }}>
+
+                    <Text style={styles.photoActionText}>Gallery</Text>
+
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.photoActionButton}>
-                    
-                      
-                      <Text style={styles.photoActionText}>Camera</Text>
-                    
+                  <TouchableOpacity style={styles.photoActionButton}
+                    onPress={async () => {
+                      const uri = await openCamera();
+                      if (uri) {
+                        setField("image", uri);
+                      }
+                    }}>
+
+                    <Text style={styles.photoActionText}>Camera</Text>
+
                   </TouchableOpacity>
                 </View>
               </View>
@@ -296,7 +312,7 @@ const FindYourFitMaleScreen = () => {
             <View style={styles.infoSection}>
               <View style={styles.infoItem}>
                 <View style={styles.checkIcon}>
-                  <Image style={{width:18, height:18,}} source={require('@/assets/images/icons/tick-circle.png')} />
+                  <Image style={{ width: 18, height: 18, }} source={require('@/assets/images/icons/tick-circle.png')} />
                 </View>
                 <Text style={styles.infoText}>
                   Please keep the shooting environment clean and lighting appropriate for best fitting effect.
@@ -305,7 +321,7 @@ const FindYourFitMaleScreen = () => {
 
               <View style={styles.infoItem}>
                 <View style={styles.checkIcon}>
-                  <Image style={{width:18, height:18,}} source={require('@/assets/images/icons/tick-circle.png')} />
+                  <Image style={{ width: 18, height: 18, }} source={require('@/assets/images/icons/tick-circle.png')} />
                 </View>
                 <Text style={styles.infoText}>
                   Please wear fitted clothes and keep your hands out of your pockets.
@@ -314,7 +330,7 @@ const FindYourFitMaleScreen = () => {
 
               <View style={styles.infoItem}>
                 <View style={styles.checkIcon}>
-                  <Image style={{width:18, height:18,}} source={require('@/assets/images/icons/tick-circle.png')} />
+                  <Image style={{ width: 18, height: 18, }} source={require('@/assets/images/icons/tick-circle.png')} />
                 </View>
                 <Text style={styles.infoText}>
                   Your photo stays private and securely stored — never shared!
@@ -322,19 +338,19 @@ const FindYourFitMaleScreen = () => {
               </View>
             </View>
 
-            <View style={{gap:12,}}>
+            <View style={{ gap: 12, }}>
 
-            {/* Continue Button */}
-            <PrimaryButton 
-              title="Continue"
-              onPress={handleContinue}
-            />
-            
-            {/* Secondary Button */}
-            <SecondaryButton 
-              title="Skip for now"
-              onPress={() => router.push('/(home)')}
-            /></View>
+              {/* Continue Button */}
+              <PrimaryButton
+                title="Continue"
+                onPress={handleContinue}
+              />
+
+              {/* Secondary Button */}
+              <SecondaryButton
+                title="Skip for now"
+                onPress={() => router.push('/(home)')}
+              /></View>
           </View>
         </View>
       </ScrollView>
@@ -350,7 +366,7 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  
+
   // Progress Section
   progressSection: {
     paddingHorizontal: 20,
@@ -359,7 +375,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    top:48,
+    top: 48,
   },
   backButton: {
     position: 'absolute',
@@ -373,11 +389,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  
+
   backArrowIcon: {
     width: 8,
     height: 16,
-    left:-2
+    left: -2
   },
   progressBarContainer: {
     flex: 1,
@@ -410,7 +426,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     minWidth: 50,
     justifyContent: 'flex-end',
-    
+
   },
   progressCounterCurrent: {
     fontSize: 16,
@@ -657,7 +673,7 @@ const styles = StyleSheet.create({
   photoActions: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems:'center',
+    alignItems: 'center',
     gap: 12,
   },
   photoActionButton: {
@@ -669,7 +685,7 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     borderWidth: 1,
     borderColor: '#030318',
-    width:'49%'
+    width: '49%'
   },
   photoIconContainer: {
     alignItems: 'center',

@@ -16,30 +16,24 @@ import {
 const ValidateScreen = () => {
     const url = Linking.useLinkingURL();
     const router = useRouter();
-    const { userId, setField } = useOnboardingStore()
+    const { userId, fullName, setField } = useOnboardingStore()
     const [loading, setLoading] = useState(true);
-    const [email, setEmail] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const handleUrl = async () => {
             if (!url) {
-                setError("Validation URL not found.");
                 setLoading(false);
                 return;
             }
 
             try {
                 const session = await createSessionFromUrl(url);
-                const userEmail = session?.user?.email ?? null;
-
-                if (!userEmail || !session?.user?.id) {
+                if (!session?.user?.id) {
                     throw new Error("Email or User ID not found in session.");
                 }
-
-                setEmail(userEmail);
-
                 setField("userId", session.user.id);
+                console.log(userId)
             } catch (err) {
                 console.error(err);
                 setError("Failed to validate session.");
@@ -64,7 +58,7 @@ const ValidateScreen = () => {
     const handleNavigate = async () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-            router.replace('/(auth)/onboarding');
+            router.push('/(auth)/onboarding');
         } else {
             Alert.alert("You're not logged in");
         }
@@ -84,7 +78,7 @@ const ValidateScreen = () => {
     return (
         <View style={styles.container}>
             <Text style={styles.title}>You're logged in 🎉</Text>
-            <Text style={styles.email}>Email: {email}</Text>
+            <Text style={styles.email}>Email: {fullName}</Text>
 
             <TouchableOpacity style={styles.button} onPress={handleNavigate}>
                 <Text style={styles.buttonText}>Let’s get started →</Text>

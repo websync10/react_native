@@ -4,13 +4,15 @@ import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 
-import PageOne from '@/components/onboarding/PageOne';
 import { getUser } from '@/lib/services/handleusers/getUser';
+import { useOnboardingStore } from '@/lib/stores/onboardingStore';
+import AccountSetupScreen from './accountsetup';
 
 const Hello = () => {
     const [session, setSession] = useState<Session | null>(null);
     const [isOnboarded, setIsOnboarded] = useState<boolean | null>(null);
     const [loading, setLoading] = useState(true);
+    const { userId } = useOnboardingStore()
 
     useEffect(() => {
         const fetchSessionAndProfile = async () => {
@@ -23,8 +25,9 @@ const Hello = () => {
 
             setSession(session);
 
-            if (session?.user) {
-                const onboarded = await getUser(session.user.id)
+            if (userId) {
+                const onboarded = await getUser(userId)
+                console.log(userId)
 
                 if (onboarded) {
                     setIsOnboarded(onboarded ?? false);
@@ -46,7 +49,7 @@ const Hello = () => {
             authListener?.subscription?.unsubscribe();
         };
     }, []);
-
+    
     useEffect(() => {
         if (isOnboarded) {
             router.push('/(home)');
@@ -64,7 +67,7 @@ const Hello = () => {
     return (
         <ScrollView contentContainerStyle={styles.container}>
             <View style={{ flex: 1 }}>
-                <PageOne />
+                <AccountSetupScreen />
             </View>
         </ScrollView>
     );

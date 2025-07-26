@@ -52,12 +52,13 @@ export default function RootLayout() {
         <Stack.Protected guard={isLoggedIn}> 
           {/* true= valid !true= notvalid */}
           <Stack.Screen name="(auth)/onboarding" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)/pagetwo" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)/pagethree" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)/pagefour" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)/findYourFitMale" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)/findYourFitFemale" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)/yourStyleMale" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)/yourStyleFemale" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)/accountsetup" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)/FemalePickstyle" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)/MalePickstyle" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)/bodyShapemale" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)/bodyShapeFemale" options={{ headerShown: false }} />
           <Stack.Screen name="(home)" options={{ headerShown: false }} />
           <Stack.Screen name="edit" options={{ headerShown: false }} />
         </Stack.Protected>

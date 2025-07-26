@@ -1,10 +1,13 @@
 import PrimaryButton from '@/components/PrimaryButton'
 import SecondaryButton from '@/components/SecondaryButton'
 import { FontFamily } from '@/constants/Fonts'
+import { useOnboardingStore } from '@/lib/stores/onboardingStore'
+import { supabase } from '@/lib/supabase'
 import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
-import React, { useState } from 'react'
+import React from 'react'
 import {
+  Alert,
   Image,
   SafeAreaView,
   ScrollView,
@@ -15,20 +18,68 @@ import {
 } from 'react-native'
 
 const BodyShapeMale = () => {
-  const [selectedShape, setSelectedShape] = useState<string>('')
+  const {
+    userId,
+    fullName,
+    username,
+    dob,
+    skin_tone,
+    size,
+    image,
+    style,
+    gender,
+    body_shape,
+    setField
+  } = useOnboardingStore()
+
+  const handleSave = async () => {
+    const userData = {
+      user_id: userId,
+      full_name: fullName,
+      username: username,
+      gender: gender,
+      dob: dob,
+      skin_tone: skin_tone,
+      size: size,
+      image: image,
+      style: style,
+      body_shape: body_shape,
+    };
+
+    const { error } = await supabase
+      .from('users')
+      .insert([userData]);
+
+    setField("body_shape", "")
+    setField("username", "")
+    setField("gender", "")
+    setField("dob", "")
+    setField("skin_tone", "")
+    setField("size", "")
+    setField("style", "")
+    router.push("/(home)")
+
+    if (error) {
+      console.error('Error saving user:', error.message);
+      Alert.alert("Error Occured! in page four")
+    } else {
+      console.log('User saved successfully!');
+      Alert.alert("Data Saved Successfully!")
+    }
+  };
 
   const handleContinue = () => {
-    if (selectedShape) {
-      console.log('Selected body shape:', selectedShape)
+    if (body_shape) {
+      handleSave();
       router.push('/(home)')
     } else {
       console.log('Please select a body shape first')
     }
   }
 
-const handleGoBack = () => {
+  const handleGoBack = () => {
     router.push('/(auth)/yourStyleMale')
-}
+  }
 
   const bodyShapeOptions = [
     {
@@ -63,9 +114,9 @@ const handleGoBack = () => {
       key={shape.id}
       style={[
         styles.shapeCard,
-        selectedShape === shape.id && styles.shapeCardSelected
+        body_shape === shape.id && styles.shapeCardSelected
       ]}
-      onPress={() => setSelectedShape(shape.id)}
+      onPress={() => setField("body_shape", shape.id)}
     >
       <View style={styles.shapeCardContent}>
         <Text style={styles.shapeTitle}>{shape.title}</Text>
@@ -80,12 +131,12 @@ const handleGoBack = () => {
         {/* Progress Section */}
         <View style={styles.progressSection}>
           <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-            <Image 
-              source={require('@/assets/images/icons/leftarrow.png')} 
+            <Image
+              source={require('@/assets/images/icons/leftarrow.png')}
               style={styles.backArrowIcon}
             />
           </TouchableOpacity>
-          
+
           <View style={styles.progressBarContainer}>
             <View style={styles.progressBar}>
               <LinearGradient
@@ -96,7 +147,7 @@ const handleGoBack = () => {
               />
             </View>
           </View>
-          
+
           <View style={styles.progressCounterContainer}>
             <Text style={styles.progressCounterCurrent}>4</Text>
             <Text style={styles.progressCounterTotal}> of 4</Text>
@@ -120,13 +171,13 @@ const handleGoBack = () => {
 
             <View style={styles.buttonContainer}>
               {/* Continue Button */}
-              <PrimaryButton 
+              <PrimaryButton
                 title="Save"
-                onPress={handleContinue}
+                onPress={handleSave}
               />
-              
+
               {/* Secondary Button */}
-              <SecondaryButton 
+              <SecondaryButton
                 title="Cancel"
                 onPress={() => router.back()}
               />
@@ -146,7 +197,7 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  
+
   // Progress Section
   progressSection: {
     paddingHorizontal: 20,
@@ -243,7 +294,7 @@ const styles = StyleSheet.create({
   shapeList: {
     gap: 16,
   },
-  
+
   // Shape Card Styles
   shapeCard: {
     flexDirection: 'row',
