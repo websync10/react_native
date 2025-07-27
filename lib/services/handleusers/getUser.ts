@@ -7,7 +7,7 @@ export async function getUser(userId: string) {
         error,
     } = await supabase
         .from("users")
-        .select('isOnboarded')
+        .select('isOnboarded, image')
         .eq('user_id', userId)
         .limit(1)
         .single()

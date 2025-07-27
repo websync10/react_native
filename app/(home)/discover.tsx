@@ -1,4 +1,3 @@
-import LogoutButton from '@/components/home/LogoutUser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import React from 'react';
@@ -12,8 +11,7 @@ const explore = () => {
     };
     return (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Text>Welcome to Explore page!</Text>
-            <LogoutButton />
+            <Text>Welcome to Discover page!</Text>
         </View>
     )
 }

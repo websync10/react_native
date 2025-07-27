@@ -8,6 +8,7 @@ import { router } from 'expo-router'
 import React, { useState } from 'react'
 import {
   Image,
+  Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -272,7 +273,7 @@ const FindYourFitFemaleScreen = () => {
                         ? { uri: image }
                         : require('../../assets/images/femalevector.png')
                     }
-                    style={styles.humanFigure}
+                    style={image == "" ? styles.humanFigure : styles.imageFigure}
                     resizeMode="contain"
                   />
                 </View>
@@ -366,8 +367,14 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-
-  // Progress Section
+  imageFigure: {
+    backgroundColor: '#FFFFFF',
+    width: '100%',
+    height: 240,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
   progressSection: {
     paddingHorizontal: 20,
     paddingVertical: 16,
@@ -415,7 +422,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    width: '50%', // 2 of 4 = 50%
+    width: '50%',
     borderRadius: 50,
   },
   progressCounter: {
@@ -423,17 +430,20 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
     minWidth: 50,
-    textAlign: 'right',
+    textAlign: 'center',
+
   },
   progressCounterContainer: {
     flexDirection: 'row',
     minWidth: 50,
     justifyContent: 'flex-end',
+    alignItems: "center",
   },
   progressCounterCurrent: {
     fontSize: 16,
     fontFamily: FontFamily.HelveticaNeue.Bold,
     color: '#1F242D',
+    top: Platform.OS === 'ios' ? -2 : 0,
   },
   progressCounterTotal: {
     fontSize: 16,

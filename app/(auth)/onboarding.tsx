@@ -12,7 +12,7 @@ const Hello = () => {
     const [session, setSession] = useState<Session | null>(null);
     const [isOnboarded, setIsOnboarded] = useState<boolean | null>(null);
     const [loading, setLoading] = useState(true);
-    const { userId } = useOnboardingStore()
+    const { userId, setField } = useOnboardingStore()
 
     useEffect(() => {
         const fetchSessionAndProfile = async () => {
@@ -22,20 +22,17 @@ const Hello = () => {
                 setLoading(false);
                 return;
             }
-
             setSession(session);
-
+            console.log("session data", session)
             if (userId) {
                 const onboarded = await getUser(userId)
                 console.log(userId)
-
                 if (onboarded) {
                     setIsOnboarded(onboarded ?? false);
                 } else {
                     setIsOnboarded(false);
                 }
             }
-
             setLoading(false);
         };
 

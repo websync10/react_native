@@ -8,6 +8,7 @@ import { router } from 'expo-router'
 import React from 'react'
 import {
   Image,
+  Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -213,6 +214,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: FontFamily.HelveticaNeue.Regular,
     color: '#4E617B',
+    top: Platform.OS === 'ios' ? 3 : 0,
   },
   progressDivider: {
     height: 1,

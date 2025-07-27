@@ -1,3 +1,4 @@
+import { FontFamily } from '@/constants/Fonts';
 import { ChatMessage, useChatStore } from '@/lib/stores/chatStore';
 import { useImageStore } from '@/lib/stores/imageStore';
 import React, { useEffect, useRef, useState } from 'react';
@@ -34,8 +35,7 @@ const HomePage = ({
     const inputRef = useRef<TextInput>(null);
     const scrollRef = useRef<ScrollView>(null);
     const { bottom } = useSafeAreaInsets();
-    const { messages, addMessage, loadMessages, clearMessages } = useChatStore();
-    const { generatedImages } = useImageStore();
+    const { messages, addMessage, loadMessages } = useChatStore();
 
     const [chatStarted, setChatStarted] = useState(false);
     useEffect(() => {
@@ -60,7 +60,7 @@ const HomePage = ({
         console.log('[🔄] Connecting to backend...');
         setIsTyping(true);
         try {
-            const res = await fetch(`https://27b45700e3ac.ngrok-free.app/api/ai-chat/${userData?.id}`, {
+            const res = await fetch(`https://a92a9ed98095.ngrok-free.app/api/ai-chat/${userData?.id}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -118,9 +118,7 @@ const HomePage = ({
                         ))}
                     </View>
                 )}
-
             </View>
-
             {msg.role === 'user' && (
                 <View style={styles.avatar}>
                     <Text style={styles.avatarText}>🧑</Text>
@@ -204,17 +202,6 @@ const HomePage = ({
                         contentContainerStyle={{ padding: 16, paddingBottom: bottom + 100 }}
                     >
                         {messages.map(renderItem)}
-
-                        {isTyping && (
-                            <View style={[styles.messageRow, styles.alignStart]}>
-                                <View style={styles.avatar}>
-                                    <Text style={styles.avatarText}>🤖</Text>
-                                </View>
-                                <View style={styles.aiBubble}>
-                                    <Text style={styles.messageText}>Typing…</Text>
-                                </View>
-                            </View>
-                        )}
                         <ScrollView horizontal style={{ gap: 10 }}>
                             {messages.map((msg, index) => (
                                 <React.Fragment key={index}>
@@ -226,6 +213,17 @@ const HomePage = ({
                                 </React.Fragment>
                             ))}
                         </ScrollView>
+                        {isTyping && (
+                            <View style={[styles.messageRow, styles.alignStart]}>
+                                <View style={styles.avatar}>
+                                    <Text style={styles.avatarText}>🤖</Text>
+                                </View>
+                                <View style={styles.aiBubble}>
+                                    <Text style={styles.messageText}>Typing…</Text>
+                                </View>
+                            </View>
+                        )}
+
                     </ScrollView>
                 )}
 
@@ -334,8 +332,10 @@ const styles = StyleSheet.create({
     },
     subtitle: {
         fontSize: 16,
-        color: '#666',
+        color: '#8288A0',
         textAlign: 'center',
+        fontFamily: FontFamily.HelveticaNeue.Regular,
+        lineHeight: 22,
     },
     howcaniText: {
         color: '#00272E',

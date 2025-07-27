@@ -8,6 +8,7 @@ import { router } from 'expo-router'
 import React, { useState } from 'react'
 import {
   Image,
+  Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -270,9 +271,9 @@ const FindYourFitMaleScreen = () => {
                     source={
                       image
                         ? { uri: image }
-                        : require('../../assets/images/femalevector.png')
+                        : require('../../assets/images/MaleVector.png')
                     }
-                    style={styles.humanFigure}
+                    style={image == "" ?styles.humanFigure:styles.imageFigure }
                     resizeMode="contain"
                   />
                 </View>
@@ -377,6 +378,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     top: 48,
   },
+  imageFigure: {
+    backgroundColor: '#FFFFFF',
+    width: '100%',
+    height: 240,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
   backButton: {
     position: 'absolute',
     left: 20,
@@ -433,6 +442,7 @@ const styles = StyleSheet.create({
     // fontWeight: '600',
     fontFamily: FontFamily.HelveticaNeue.Bold,
     color: '#1F242D',
+    top: Platform.OS === 'ios' ? -3 : 0,
   },
   progressCounterTotal: {
     fontSize: 16,

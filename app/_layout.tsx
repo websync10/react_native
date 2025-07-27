@@ -1,3 +1,4 @@
+import { useOnboardingStore } from '@/lib/stores/onboardingStore';
 import { supabase } from '@/lib/supabase';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -13,6 +14,7 @@ if (typeof global.structuredClone === 'undefined') {
 
 export default function RootLayout() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const {setField} = useOnboardingStore();
   const [loaded] = useFonts({
     // Helvetica Neue font family variants
     'HelveticaNeue-Thin': require('../assets/fonts/HelveticaNeueThin.otf'),
@@ -39,6 +41,9 @@ export default function RootLayout() {
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
       console.log("Auth change:", _event, session);
       setIsLoggedIn(!!session);
+      if(session?.user){
+        setField("userId", session?.user?.id)
+      }
     });
 
     return () => subscription.subscription.unsubscribe();

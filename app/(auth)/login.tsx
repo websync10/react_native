@@ -11,6 +11,8 @@ import React, { useEffect, useState } from "react";
 import {
   Alert,
   Image,
+  KeyboardAvoidingView,
+  Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -51,6 +53,22 @@ const performOAuth = async (provider: "google" | "facebook") => {
   }
 };
 
+const sendMagicLink = async (email: string) => {
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: {
+      emailRedirectTo: Linking.createURL("/validate"),
+    },
+  });
+
+  if (error) {
+    console.error("Magic link error:", error.message);
+    Alert.alert("Error", error.message);
+  } else {
+    Alert.alert("Check your inbox", "Magic link sent to: " + email);
+  }
+};
+
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const url = Linking.useURL();
@@ -62,110 +80,113 @@ const LoginScreen = () => {
   }, [url]);
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <GradientBackground />
-      <ScrollView >
-        <View style={styles.content}> 
-          {/* Section 1: Logo and Header Text */}
-          <View style={styles.headerSection}>
-            <View style={styles.logoContainer}>
-              <Image
-                source={require("../../assets/images/baglogo.png")}
-                resizeMode="contain"
-                style={styles.bagLogo}
-              />
-              <Image
-                source={require("../../assets/images/Myuzetxtlogo.png")}
-                resizeMode="contain"
-                style={styles.textLogo}
-              />
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
+    >
+      <SafeAreaView style={{ flex: 1 }}>
+        <GradientBackground />
+        <ScrollView >
+          <View style={styles.content}>
+            {/* Section 1: Logo and Header Text */}
+            <View style={styles.headerSection}>
+              <View style={styles.logoContainer}>
+                <Image
+                  source={require("../../assets/images/baglogo.png")}
+                  resizeMode="contain"
+                  style={styles.bagLogo}
+                />
+                <Image
+                  source={require("../../assets/images/Myuzetxtlogo.png")}
+                  resizeMode="contain"
+                  style={styles.textLogo}
+                />
+              </View>
+              <Text style={styles.headerText}>
+                Find your style with AI.{"\n"}Try it on. Own it.
+              </Text>
             </View>
-            <Text style={styles.headerText}>
-              Find your style with AI.{"\n"}Try it on. Own it.
-            </Text>
-          </View>
 
-          {/* Section 2: Authentication Forms */}
-          <View style={styles.authSection}>
-            <View style={{gap:8}}>
-              <Text style={styles.headerboldText}>Sign in</Text>
-              <Text style={styles.headerText}>Enter your email address to complete sign in</Text>
+            {/* Section 2: Authentication Forms */}
+            <View style={styles.authSection}>
+              <View style={{ gap: 8 }}>
+                <Text style={styles.headerboldText}>Sign in</Text>
+                <Text style={styles.headerText}>Enter your email address to complete sign in</Text>
 
-            </View>
-            
-            {/* Section 2.1: Social Login Buttons */}
-            <View style={styles.socialLoginSection}>
-              <TouchableOpacity
-                onPress={() => performOAuth("google")}
-                style={styles.socialButton}
-              >
-                <View style={styles.socialButtonContent}>
-                  <Image
-                    source={{
-                      uri: "https://developers.google.com/identity/images/g-logo.png",
-                    }}
-                    style={styles.socialIcon}
-                  />
-                  <Text style={styles.socialButtonText}>
-                    Continue with Google
-                  </Text>
-                </View>
-              </TouchableOpacity>
+              </View>
 
-              <TouchableOpacity
-                onPress={() => performOAuth("facebook")}
-                style={[styles.socialButton, styles.facebookButton]}
-              >
-                <View style={styles.socialButtonContent}>
-                  <View style={styles.facebookIcon}>
-                    <Text style={styles.facebookIconText}>f</Text>
+              {/* Section 2.1: Social Login Buttons */}
+              <View style={styles.socialLoginSection}>
+                <TouchableOpacity
+                  onPress={() => performOAuth("google")}
+                  style={styles.socialButton}
+                >
+                  <View style={styles.socialButtonContent}>
+                    <Image
+                      source={{
+                        uri: "https://developers.google.com/identity/images/g-logo.png",
+                      }}
+                      style={styles.socialIcon}
+                    />
+                    <Text style={styles.socialButtonText}>
+                      Continue with Google
+                    </Text>
                   </View>
-                  <Text style={styles.socialButtonText}>
-                    Continue with Facebook
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-
-            {/* Section 2.2: Divider */}
-            <View style={styles.dividerContainer}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>Or sign in with</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            {/* Section 2.3: Email Input */}
-            <View>
-              <Text style={styles.inputLabel}>Email address</Text>
-              <TextInput
-                style={styles.textInput}
-                placeholder="Enter email address"
-                placeholderTextColor="#999"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
-
-            {/* Section 2.4: Continue Button and Sign Up Link */}
-            <View style={styles.actionSection}>
-
-              <PrimaryButton title="Sign in" onPress={()=>{}}/>
-
-              <View style={styles.signUpContainer}>
-                <Text style={styles.signUpText}>
-                  Don&apos;t have an account?{" "}
-                </Text>
-                <TouchableOpacity onPress={() => router.push("/accountsetup")}>
-                  <Text style={styles.signUpLink}>Sign up</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => performOAuth("facebook")}
+                  style={[styles.socialButton, styles.facebookButton]}
+                >
+                  <View style={styles.socialButtonContent}>
+                    <View style={styles.facebookIcon}>
+                      <Text style={styles.facebookIconText}>f</Text>
+                    </View>
+                    <Text style={styles.socialButtonText}>
+                      Continue with Facebook
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+
+              {/* Section 2.2: Divider */}
+              <View style={styles.dividerContainer}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>Or sign in with</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              <View>
+                <Text style={styles.inputLabel}>Email address</Text>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Enter email address"
+                  placeholderTextColor="#999"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+
+              {/* Section 2.4: Continue Button and Sign Up Link */}
+              <View style={styles.actionSection}>
+                <PrimaryButton title="Sign in" onPress={() => sendMagicLink(email)} />
+                <View style={styles.signUpContainer}>
+                  <Text style={styles.signUpText}>
+                    Don&apos;t have an account?{" "}
+                  </Text>
+                  <TouchableOpacity onPress={() => router.push("/accountsetup")}>
+                    <Text style={styles.signUpLink}>Sign up</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -187,7 +208,7 @@ const styles = StyleSheet.create({
   headerSection: {
     alignItems: "center",
     marginBottom: 32,
-    paddingTop:86,
+    paddingTop: 86,
     gap: 23,
   },
   logoContainer: {
@@ -211,7 +232,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.HelveticaNeue.Regular,
     fontSize: 16,
     letterSpacing: -0.24,
-    lineHeight:20,
+    lineHeight: 20,
     textAlign: "center",
   },
   // Section 2: Auth Section
@@ -221,7 +242,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     letterSpacing: -0.24,
     textAlign: "center",
-    marginTop:24
+    marginTop: 24
   },
 
   authSection: {
@@ -256,7 +277,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap:1
+    gap: 1
   },
   socialIcon: {
     width: 20,
@@ -326,7 +347,7 @@ const styles = StyleSheet.create({
   signUpContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop:24 ,
+    marginTop: 24,
   },
   signUpText: {
     fontSize: 14,

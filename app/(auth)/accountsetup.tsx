@@ -1,3 +1,4 @@
+import DatePickerField from '@/components/onboarding/DatePickerField'
 import PrimaryButton from '@/components/PrimaryButton'
 import SecondaryButton from '@/components/SecondaryButton'
 import { FontFamily } from '@/constants/Fonts'
@@ -20,7 +21,6 @@ import {
 
 const AccountSetupScreen = () => {
   const { fullName, username, gender, dob, setField } = useOnboardingStore();
-
   // Reset size when gender changes
   const handleGenderChange = (gender: string) => {
     setField("gender", gender)
@@ -28,13 +28,11 @@ const AccountSetupScreen = () => {
   const handleGoBack = () => {
     router.push('/(auth)/login')
   }
-
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      // keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
         <ScrollView
           style={styles.scrollView}
@@ -135,29 +133,7 @@ const AccountSetupScreen = () => {
               {/* Date of Birth Section */}
               <View style={styles.inputSection}>
                 <Text style={styles.inputLabel}>Date of birth</Text>
-                <View style={styles.dateInputContainer}>
-                  <TextInput
-                    style={styles.dateInput}
-                    keyboardType='numeric'
-                    placeholder="Enter your birth"
-                    placeholderTextColor="#999"
-                    value={dob}
-                    onChangeText={(dob) => setField("dob", dob)}
-                  />
-                  <TouchableOpacity style={styles.calendarButton}>
-                    <View style={styles.calendarIcon}>
-                      <View style={styles.calendarTop} />
-                      <View style={styles.calendarBody}>
-                        <View style={styles.calendarGrid}>
-                          <View style={styles.calendarDot} />
-                          <View style={styles.calendarDot} />
-                          <View style={styles.calendarDot} />
-                          <View style={styles.calendarDot} />
-                        </View>
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                </View>
+                  <DatePickerField styles={styles} />
               </View>
             </View>
           </View>
@@ -180,7 +156,7 @@ const AccountSetupScreen = () => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </SafeAreaView >
   )
 }
 
@@ -256,11 +232,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     minWidth: 50,
     justifyContent: 'flex-end',
+    alignItems: "center",
   },
   progressCounterCurrent: {
     fontSize: 16,
     color: '#1F242D',
     fontFamily: FontFamily.HelveticaNeue.Bold,
+    top: Platform.OS === 'ios' ? -2 : 0,
   },
   progressCounterTotal: {
     fontSize: 16,

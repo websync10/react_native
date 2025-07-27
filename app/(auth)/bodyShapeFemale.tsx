@@ -9,6 +9,7 @@ import React from 'react'
 import {
   Alert,
   Image,
+  Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -252,6 +253,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: FontFamily.HelveticaNeue.Bold,
     color: '#1F242D',
+    top: Platform.OS === 'ios' ? -3 : 0,
   },
   progressCounterTotal: {
     fontSize: 16,
