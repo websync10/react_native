@@ -5,7 +5,7 @@ import { FontFamily } from '@/constants/Fonts'
 import { useOnboardingStore } from '@/lib/stores/onboardingStore'
 import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
-import React from 'react'
+import React, { useState } from 'react'
 import {
   Image,
   Platform,
@@ -18,9 +18,11 @@ import {
 } from 'react-native'
 
 const FemalePickstyle = () => {
+  const [selectedStyle, setSelectedStyle] = useState<string[]>([])
   const { style, setField } = useOnboardingStore();
 
   const handleContinue = () => {
+    setField("style", selectedStyle)
     if (styles) {
       console.log('Selected style:', styles)
       router.replace('/(auth)/bodyShapeFemale')
@@ -113,14 +115,20 @@ const FemalePickstyle = () => {
           <View style={styles.formSection}>
             {/* Style Options */}
             <View style={styles.styleList}>
-              {styleOptions.map((s) => (
+              {styleOptions.map((style) => (
                 <StyleCardHorizontal
-                  key={s.id}
-                  title={s.title}
-                  description={s.description}
-                  imageSource={s.imageSource}
-                  isSelected={style === s.id}
-                  onPress={() => setField("style", s.id)}
+                  key={style.id}
+                  title={style.title}
+                  description={style.description}
+                  imageSource={style.imageSource}
+                  isSelected={selectedStyle.includes(style.id)}
+                  onPress={() => {
+                    if (selectedStyle.includes(style.id)) {
+                      setSelectedStyle(selectedStyle.filter((id) => id !== style.id))
+                    } else if (selectedStyle.length < 3) {
+                      setSelectedStyle([...selectedStyle, style.id])
+                    }
+                  }}
                 />
               ))}
             </View>

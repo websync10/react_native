@@ -2,9 +2,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 
 export type ChatMessage = {
+    id: string;
     role: 'user' | 'assistant';
     content: string;
     images?: string[];
+    type: string;
+    data: string;
 };
 
 interface ChatState {

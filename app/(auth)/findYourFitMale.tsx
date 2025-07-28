@@ -16,9 +16,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
+import Animated from 'react-native-reanimated'
+import Svg, { Circle, Defs, Filter, G, Path } from 'react-native-svg'
 
 const FindYourFitMaleScreen = () => {
-  const [showSkinToneDropdown, setShowSkinToneDropdown] = useState(false)
   const [showSizeDropdown, setShowSizeDropdown] = useState(false)
 
   const { image, skin_tone, size, setField } = useOnboardingStore()
@@ -48,6 +49,12 @@ const FindYourFitMaleScreen = () => {
   const getSizeOptions = () => {
     return ['XS', 'S', 'M', 'L', 'XL', 'XXL']
   }
+
+  const handleSkinToneSelect = (toneName: React.SetStateAction<string>) => {
+    setField("skin_tone", toneName.toString())
+  }
+
+  const selectedSkinToneData = getSkinToneOptions().find(tone => tone.name === skin_tone)
 
   const handleContinue = () => {
     router.push('/(auth)/yourStyleMale')
@@ -99,97 +106,72 @@ const FindYourFitMaleScreen = () => {
             {/* Skin Tone Section */}
             <View style={styles.inputSection}>
               <Text style={styles.inputLabel}>What&apos;s your skin tone?</Text>
-              <TouchableOpacity
+
+              {/* Selected Skin Tone Display */}
+              <Animated.View
                 style={[
-                  styles.dropdownButton,
-                  showSkinToneDropdown && styles.dropdownButtonActive
+                  styles.selectedSkinToneDisplay,
+
                 ]}
-                onPress={() => setShowSkinToneDropdown(!showSkinToneDropdown)}
-                activeOpacity={0.7}
               >
-                <View style={styles.dropdownContent}>
+                <View style={styles.selectedSkinToneContent}>
                   <View style={[
-                    styles.colorIndicator,
-                    { backgroundColor: getSkinToneOptions().find(tone => tone.name === skin_tone)?.color || '#F1C27D' }
+                    styles.selectedColorIndicator,
+                    { backgroundColor: selectedSkinToneData?.color || '#E0AC69' }
                   ]} />
-                  <Text style={styles.dropdownText}>
-                    {skin_tone || 'Limestone'}
+                  <Text style={styles.selectedSkinToneText}>
+                    {skin_tone}
                   </Text>
-                  <Image
-                    source={require('@/assets/images/icons/leftarrow.png')}
-                    style={[
-                      styles.dropdownArrowImage,
-                      showSkinToneDropdown && styles.dropdownArrowImageRotated
-                    ]}
-                  />
                 </View>
-              </TouchableOpacity>
+              </Animated.View>
 
-              {/* Skin Tone Slider/Options */}
-              <View style={styles.skinToneSlider}>
+              {/* Interactive Skin Tone Slider */}
+              <View style={styles.skinToneSliderContainer}>
                 <View style={styles.skinToneGradient}>
-                  {getSkinToneOptions().map((tone, index) => (
-                    <TouchableOpacity
-                      key={tone.name}
-                      style={[
-                        styles.skinToneOption,
-                        { backgroundColor: tone.color },
-                        skin_tone === tone.name && styles.skinToneOptionSelected
-                      ]}
-                      onPress={() => {
-                        setField("skin_tone", tone.name)
-                        setShowSkinToneDropdown(false)
-                      }}
-                    />
-                  ))}
-                </View>
-              </View>
-
-              {/* Skin Tone Options Dropdown */}
-              {showSkinToneDropdown && (
-                <View style={styles.dropdownOptions}>
-                  <ScrollView
-                    style={styles.dropdownScrollView}
-                    nestedScrollEnabled={true}
-                    showsVerticalScrollIndicator={true}
-                    scrollIndicatorInsets={{ right: 1 }}
-                    contentContainerStyle={{ flexGrow: 1 }}
-                    keyboardShouldPersistTaps="handled"
-                  >
-                    {getSkinToneOptions().map((tone, index) => (
+                  {getSkinToneOptions().map((tone, index) => {
+                    const isSelected = skin_tone === tone.name
+                    return (
                       <TouchableOpacity
                         key={tone.name}
                         style={[
-                          styles.dropdownOption,
-                          skin_tone === tone.name && styles.dropdownOptionSelected,
-                          index === getSkinToneOptions().length - 1 && styles.dropdownOptionLast
+                          styles.skinToneOption,
+                          { backgroundColor: tone.color },
+                          isSelected && styles.skinToneOptionSelected
                         ]}
-                        onPress={() => {
-                          setField("skin_tone", tone.name)
-                          setShowSkinToneDropdown(false)
-                        }}
-                        activeOpacity={0.7}
+                        onPress={() => handleSkinToneSelect(tone.name)}
+                        activeOpacity={0.8}
                       >
-                        <View style={styles.skinToneOptionContent}>
-                          <View style={[
-                            styles.skinToneColorIndicator,
-                            { backgroundColor: tone.color }
-                          ]} />
-                          <Text style={[
-                            styles.dropdownOptionText,
-                            skin_tone === tone.name && styles.dropdownOptionTextSelected
-                          ]}>
-                            {skin_tone}
-                          </Text>
-                        </View>
-                        {/* {selectedSkinTone === tone.name && (
-                          // <Text style={styles.checkMark}>✓</Text>
-                        )} */}
+                        {isSelected && (
+                          <View style={styles.selectedIndicator}>
+                            <Svg width={22} height={50} viewBox="0 0 22 50" fill="none">
+                              <Path d="M10.9561 1V49" strokeWidth={1.5} stroke="black" strokeLinecap="round" />
+                              <G filter="url(#filter0_d_100_1911)">
+                                <Circle cx={11} cy={25} r={8} fill="#030318" />
+                                <Circle cx={11} cy={25} r={8} stroke="white" />
+                              </G>
+                              <Defs>
+                                <Filter
+                                  id="filter0_d_100_1911"
+                                  x={0.5}
+                                  y={16.5}
+                                  width={21}
+                                  height={21}
+                                  filterUnits="userSpaceOnUse"
+                                // colorInterpolationFilters="sRGB"
+                                >
+                                </Filter>
+                              </Defs>
+                            </Svg>
+
+                            {/* <View style={styles.selectedDot} /> */}
+                          </View>
+                        )}
                       </TouchableOpacity>
-                    ))}
-                  </ScrollView>
+                    )
+                  })}
                 </View>
-              )}
+
+              </View>
             </View>
 
             {/* Size Section */}
@@ -273,7 +255,7 @@ const FindYourFitMaleScreen = () => {
                         ? { uri: image }
                         : require('../../assets/images/MaleVector.png')
                     }
-                    style={image == "" ?styles.humanFigure:styles.imageFigure }
+                    style={image == "" ? styles.humanFigure : styles.imageFigure}
                     resizeMode="contain"
                   />
                 </View>
@@ -366,6 +348,46 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+
+  selectedSkinToneDisplay: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#D9DBE2',
+    height: 56,
+    justifyContent: 'center',
+  },
+  selectedSkinToneContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  selectedColorIndicator: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    marginRight: 12,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  selectedSkinToneText: {
+    fontSize: 16,
+    color: '#333',
+    fontFamily: FontFamily.HelveticaNeue.Medium,
+  },
+  selectedIndicator: {
+    width: '1%',
+    height: '1%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'visible',
+  },
+  // Interactive Skin Tone Slider
+  skinToneSliderContainer: {
+    marginTop: 20,
+    // marginBottom: 8,
   },
 
   // Progress Section

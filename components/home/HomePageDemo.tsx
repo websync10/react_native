@@ -2,7 +2,6 @@ import { FontFamily } from '@/constants/Fonts';
 import { ChatMessage, useChatStore } from '@/lib/stores/chatStore';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
-import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
     Image,
@@ -27,8 +26,8 @@ import {
     OutfitRecommendationsMessage,
     PremiumUpgradeMessage
 } from '../chat/InteractiveMessageComponents';
-import HeaderWithLogo from '../headerwithlogo';
 import MobileSidebar from './Sidebar';
+
 
 interface HomePageProps {
     userData: User | null
@@ -37,7 +36,7 @@ interface HomePageProps {
 const HomePage = ({
     userData
 }: HomePageProps) => {
-    const [sidebarVisible, setSidebarVisible] = useState(false);
+    const [sidebarVisible, setSidebarVisible] = useState(true);
     const [input, setInput] = useState('');
     const inputRef = useRef<TextInput>(null);
     const scrollRef = useRef<ScrollView>(null);
@@ -125,20 +124,20 @@ const HomePage = ({
         const randomResponse = sampleResponses[Math.floor(Math.random() * sampleResponses.length)];
         // Generate unique IDs
         const userId = Date.now().toString() + Math.random().toString(36).slice(2);
-        addMessage({ id: userId, role: 'user', content: randomRequest });
+        addMessage({ id: userId, role: 'user', content: randomRequest, type: "", data: "" });
         setTimeout(() => {
             const aiId = (Date.now() + 1).toString() + Math.random().toString(36).slice(2);
-            
+
             // Handle both string and object responses
             if (typeof randomResponse === 'string') {
-                addMessage({ id: aiId, role: 'assistant', content: randomResponse });
+                addMessage({ id: aiId, role: 'assistant', content: randomResponse, type: "", data: "" });
             } else {
-                addMessage({ 
-                    id: aiId, 
-                    role: 'assistant', 
+                addMessage({
+                    id: aiId,
+                    role: 'assistant',
                     content: randomResponse.content,
                     type: randomResponse.type as any,
-                    data: randomResponse.data
+                    data: "randomResponse.data"
                 });
             }
         }, 1000);
@@ -172,7 +171,7 @@ const HomePage = ({
 
         setChatStarted(true);
         const userId = Date.now().toString() + Math.random().toString(36).slice(2);
-        const userMsg: ChatMessage = { id: userId, role: 'user', content: input };
+        const userMsg: ChatMessage = { id: userId, role: 'user', content: input, data: "", type: "" };
         addMessage(userMsg);
 
         setInput('');
@@ -183,20 +182,20 @@ const HomePage = ({
         setTimeout(() => {
             const randomResponse = sampleResponses[Math.floor(Math.random() * sampleResponses.length)];
             const aiId = (Date.now() + 1).toString() + Math.random().toString(36).slice(2);
-            
+
             // Handle both string and object responses
             if (typeof randomResponse === 'string') {
-                const aiMsg: ChatMessage = { id: aiId, role: 'assistant', content: randomResponse };
+                const aiMsg: ChatMessage = { id: aiId, role: 'assistant', content: randomResponse, type: "", data: "" };
                 setTimeout(() => {
                     addMessage(aiMsg);
                 }, 100);
             } else {
-                const aiMsg: ChatMessage = { 
-                    id: aiId, 
-                    role: 'assistant', 
+                const aiMsg: ChatMessage = {
+                    id: aiId,
+                    role: 'assistant',
                     content: randomResponse.content,
                     type: randomResponse.type as any,
-                    data: randomResponse.data
+                    data: ""
                 };
                 setTimeout(() => {
                     addMessage(aiMsg);
@@ -206,9 +205,9 @@ const HomePage = ({
     };
 
     // This component handles the typewriter text effect
-    const TypewriterText = ({ text, speed, textStyle, shouldStart = true }: { 
-        text: string; 
-        speed: number; 
+    const TypewriterText = ({ text, speed, textStyle, shouldStart = true }: {
+        text: string;
+        speed: number;
         textStyle: any;
         shouldStart?: boolean;
     }) => {
@@ -229,7 +228,7 @@ const HomePage = ({
 
             let currentIndex = 0;
             setDisplayText(''); // Start with empty text
-            
+
             const timer = setInterval(() => {
                 if (currentIndex < text.length) {
                     setDisplayText(prev => prev + text[currentIndex]);
@@ -267,41 +266,40 @@ const HomePage = ({
         );
     };
 
-    // Separate component for animated message content
     const AnimatedMessageContent = ({ msg }: { msg: ChatMessage }) => {
         const handleHeightSelect = (height: string) => {
             const responseId = Date.now().toString() + Math.random().toString(36).slice(2);
-            addMessage({ id: responseId, role: 'user', content: height });
+            addMessage({ id: responseId, role: 'user', content: height, type: "", data: "" });
         };
 
         const handleFitSelect = (fit: string) => {
             const responseId = Date.now().toString() + Math.random().toString(36).slice(2);
-            addMessage({ id: responseId, role: 'user', content: fit });
+            addMessage({ id: responseId, role: 'user', content: fit, type: "", data: "" });
         };
 
         const handleTryNow = (outfitId: string) => {
             const responseId = Date.now().toString() + Math.random().toString(36).slice(2);
-            addMessage({ id: responseId, role: 'user', content: `I want to try outfit ${outfitId}` });
+            addMessage({ id: responseId, role: 'user', content: `I want to try outfit ${outfitId}`, type: "", data: "" });
         };
 
         const handleRegenerate = () => {
             const responseId = Date.now().toString() + Math.random().toString(36).slice(2);
-            addMessage({ id: responseId, role: 'user', content: 'Generate new outfits' });
+            addMessage({ id: responseId, role: 'user', content: 'Generate new outfits', type: "", data: "" });
         };
 
         const handleViewVisuals = () => {
             const responseId = Date.now().toString() + Math.random().toString(36).slice(2);
-            addMessage({ id: responseId, role: 'user', content: 'Yes, please show me visuals' });
+            addMessage({ id: responseId, role: 'user', content: 'Yes, please show me visuals', type: "", data: "" });
         };
 
         const handleUpgrade = () => {
             const responseId = Date.now().toString() + Math.random().toString(36).slice(2);
-            addMessage({ id: responseId, role: 'user', content: 'I want to upgrade to premium' });
+            addMessage({ id: responseId, role: 'user', content: 'I want to upgrade to premium', type: "", data: "" });
         };
 
         const handleWaitUntilTomorrow = () => {
             const responseId = Date.now().toString() + Math.random().toString(36).slice(2);
-            addMessage({ id: responseId, role: 'user', content: 'I will wait until tomorrow' });
+            addMessage({ id: responseId, role: 'user', content: 'I will wait until tomorrow', type: "", data: "" });
         };
 
         return (
@@ -315,7 +313,7 @@ const HomePage = ({
                         />
                     </View>
                 )}
-                
+
                 {msg.type && msg.role === 'assistant' ? (
                     // Render interactive components without bubble wrapper
                     <>
@@ -326,27 +324,27 @@ const HomePage = ({
                             <FitPreferenceMessage onSelect={handleFitSelect} />
                         )}
                         {msg.type === 'outfit-carousel' && msg.data && (
-                            <OutfitCarouselMessage 
-                                outfits={msg.data.outfits}
+                            <OutfitCarouselMessage
+                                outfits={JSON.parse(msg.data)}
                                 onTryNow={handleTryNow}
                                 onRegenerate={handleRegenerate}
                             />
                         )}
                         {msg.type === 'outfit-recommendations' && msg.data && (
-                            <OutfitRecommendationsMessage 
-                                title={msg.data.title}
-                                description={msg.data.description}
-                                recommendations={msg.data.recommendations}
+                            <OutfitRecommendationsMessage
+                                title={msg.data}
+                                description={msg.data}
+                                recommendations={JSON.parse(msg.data)}
                             />
                         )}
                         {msg.type === 'capsule-wardrobe' && msg.data && (
-                            <CapsuleWardrobeMessage 
-                                wardrobeItems={msg.data.wardrobeItems}
+                            <CapsuleWardrobeMessage
+                                wardrobeItems={JSON.parse(msg.data)}
                                 onViewVisuals={handleViewVisuals}
                             />
                         )}
                         {msg.type === 'premium-upgrade' && (
-                            <PremiumUpgradeMessage 
+                            <PremiumUpgradeMessage
                                 onUpgrade={handleUpgrade}
                                 onWaitUntilTomorrow={handleWaitUntilTomorrow}
                             />
@@ -358,8 +356,8 @@ const HomePage = ({
                         styles.messageBubble,
                         msg.role === 'user' ? styles.userBubble : styles.aiBubble,
                     ]}>
-                        <TypewriterText 
-                            text={msg.content} 
+                        <TypewriterText
+                            text={msg.content}
                             speed={0}
                             shouldStart={true}
                             textStyle={[
@@ -377,46 +375,48 @@ const HomePage = ({
     const OptionsDropdown = () => {
         const addTestMessage = (type: string) => {
             const aiId = Date.now().toString() + Math.random().toString(36).slice(2);
-            
+
             switch (type) {
                 case 'height':
-                    addMessage({ 
-                        id: aiId, 
-                        role: 'assistant', 
+                    addMessage({
+                        id: aiId,
+                        role: 'assistant',
                         content: 'Let me help you find the perfect fit!',
-                        type: 'height-selection'
+                        type: 'height-selection',
+                        data: ""
                     });
                     break;
                 case 'fit':
-                    addMessage({ 
-                        id: aiId, 
-                        role: 'assistant', 
+                    addMessage({
+                        id: aiId,
+                        role: 'assistant',
                         content: 'Tell me about your style preferences!',
-                        type: 'fit-preference'
+                        type: 'fit-preference',
+                        data: ""
                     });
                     break;
                 case 'carousel':
-                    addMessage({ 
-                        id: aiId, 
-                        role: 'assistant', 
+                    addMessage({
+                        id: aiId,
+                        role: 'assistant',
                         content: 'Check out these amazing looks!',
                         type: 'outfit-carousel',
-                        data: {
+                        data: JSON.stringify({
                             outfits: [
                                 { id: '1', name: 'Concert Look 1', image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=300&h=400&fit=crop' },
                                 { id: '2', name: 'Concert Look 2', image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=300&h=400&fit=crop' },
                                 { id: '3', name: 'Concert Look 3', image: 'https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=300&h=400&fit=crop' }
                             ]
-                        }
+                        })
                     });
                     break;
                 case 'recommendations':
-                    addMessage({ 
-                        id: aiId, 
-                        role: 'assistant', 
+                    addMessage({
+                        id: aiId,
+                        role: 'assistant',
                         content: 'Here are some curated outfit ideas for you!',
                         type: 'outfit-recommendations',
-                        data: {
+                        data: JSON.stringify({
                             title: 'Got it! Bali + warm = comfy + cute.',
                             description: 'Here are 3 outfit ideas that scream: "Cool but effortless traveler." 🌴',
                             recommendations: [
@@ -429,15 +429,16 @@ const HomePage = ({
                                     items: ['Sleeveless maxi dress', 'Statement earrings', 'Flat sandals']
                                 }
                             ]
-                        }
+                        })
                     });
                     break;
                 case 'premium':
-                    addMessage({ 
-                        id: aiId, 
-                        role: 'assistant', 
+                    addMessage({
+                        id: aiId,
+                        role: 'assistant',
                         content: 'Ready to unlock more styling magic?',
-                        type: 'premium-upgrade'
+                        type: 'premium-upgrade',
+                        data: ""
                     });
                     break;
             }
@@ -447,7 +448,7 @@ const HomePage = ({
 
         return showOptions ? (
             <View style={styles.optionsDropdown}>
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={styles.optionItem}
                     onPress={() => {
                         generateRandomMessage();
@@ -457,35 +458,35 @@ const HomePage = ({
                 >
                     <Text style={styles.optionText}>Random Message</Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={styles.optionItem}
                     onPress={() => addTestMessage('height')}
                     activeOpacity={0.7}
                 >
                     <Text style={styles.optionText}>Height Selection</Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={styles.optionItem}
                     onPress={() => addTestMessage('carousel')}
                     activeOpacity={0.7}
                 >
                     <Text style={styles.optionText}>Outfit Carousel</Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={styles.optionItem}
                     onPress={() => addTestMessage('recommendations')}
                     activeOpacity={0.7}
                 >
                     <Text style={styles.optionText}>Recommendations</Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={styles.optionItem}
                     onPress={() => addTestMessage('premium')}
                     activeOpacity={0.7}
                 >
                     <Text style={styles.optionText}>Premium Upgrade</Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={styles.optionItem}
                     onPress={() => {
                         clearMessages();
@@ -506,20 +507,12 @@ const HomePage = ({
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
             <SafeAreaView style={styles.container}>
-                <StatusBar 
-                    barStyle="dark-content" 
-                    backgroundColor="#ffffff" 
+                <StatusBar
+                    barStyle="dark-content"
+                    backgroundColor="#ffffff"
                     translucent={false}
                     hidden={false}
                     animated={true}
-                />
-
-                <HeaderWithLogo 
-                    onMenuPress={() => setSidebarVisible(true)}
-                    onNotificationPress={() => {
-                        router.push('/pages/notification');
-                    }}
-                    notificationCount={4}
                 />
 
                 <MobileSidebar
@@ -547,15 +540,15 @@ const HomePage = ({
                                         onChangeText={setInput}
                                         onSubmitEditing={sendMessage}
                                     />
-                                    <TouchableOpacity 
+                                    <TouchableOpacity
                                         style={styles.optionsButton}
                                         onPress={() => setShowOptions(!showOptions)}
                                         activeOpacity={0.7}
                                     >
                                         <Text style={styles.optionsButtonText}>⋯</Text>
                                     </TouchableOpacity>
-                                    <TouchableOpacity 
-                                        style={styles.sendButton} 
+                                    <TouchableOpacity
+                                        style={styles.sendButton}
                                         onPress={sendMessage}
                                         activeOpacity={0.8}
                                     >
@@ -590,15 +583,15 @@ const HomePage = ({
                                     onChangeText={setInput}
                                     onSubmitEditing={sendMessage}
                                 />
-                                <TouchableOpacity 
+                                <TouchableOpacity
                                     style={styles.optionsButton}
                                     onPress={() => setShowOptions(!showOptions)}
                                     activeOpacity={0.7}
                                 >
                                     <Text style={styles.optionsButtonText}>⋯</Text>
                                 </TouchableOpacity>
-                                <TouchableOpacity 
-                                    style={styles.sendButton} 
+                                <TouchableOpacity
+                                    style={styles.sendButton}
                                     onPress={sendMessage}
                                     activeOpacity={0.8}
                                 >
@@ -617,7 +610,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#ffffff',
-        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+        paddingTop: 16,
     },
     testButton: {
         backgroundColor: '#007AFF',
@@ -657,25 +650,17 @@ const styles = StyleSheet.create({
     shoppingBag: {
         width: 120,
         height: 120,
-        // backgroundColor: '#007AFF',
         borderRadius: 20,
         justifyContent: 'center',
         alignItems: 'center',
-        // shadowColor: '#007AFF',
-        // shadowOffset: {
-        //     width: 0,
-        //     height: 4,
-        // },
-        // shadowOpacity: 0.3,
-        // shadowRadius: 8,
-        // elevation: 8,
     },
-    
+
     greeting: {
         fontSize: 28,
         fontFamily: FontFamily.HelveticaNeue.Medium,
-        textAlign: 'center',    
+        textAlign: 'center',
         color: '#343640',
+        paddingHorizontal: 18,
         lineHeight: 34,
         marginBottom: 4,
     },
@@ -687,7 +672,7 @@ const styles = StyleSheet.create({
         lineHeight: 22,
     },
     bottomSection: {
-        paddingBottom: 20,
+        paddingBottom: 30,
         paddingTop: 20,
         position: 'absolute',
         bottom: 0,
@@ -712,7 +697,7 @@ const styles = StyleSheet.create({
         borderColor: 'rgba(238, 238, 238, 0.8)',
         paddingHorizontal: 20,
         paddingVertical: 4,
-        width:"100%",
+        width: "100%",
         shadowColor: '#000',
         shadowOffset: {
             width: 0,

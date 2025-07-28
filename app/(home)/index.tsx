@@ -1,4 +1,4 @@
-import HomePage from '@/components/home/HomePage';
+import HomePage from '@/components/home/HomePageDemo';
 import { getUserProfile } from '@/lib/services/handleusers/getProfile';
 import { getUser } from '@/lib/services/handleusers/getUser';
 import { supabase } from '@/lib/supabase';
