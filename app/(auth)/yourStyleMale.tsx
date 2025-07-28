@@ -16,10 +16,10 @@ import {
 } from 'react-native'
 
 const MalePickstyle = () => {
-  const [selectedStyle, setSelectedStyle] = useState<string>('')
+  const [selectedStyle, setSelectedStyle] = useState<string[]>([])
 
   const handleContinue = () => {
-    if (selectedStyle) {
+    if (selectedStyle.length > 0) {
       console.log('Selected style:', selectedStyle)
       router.push('/(auth)/bodyShapeMale')
     } else {
@@ -111,8 +111,14 @@ const MalePickstyle = () => {
                   title={style.title}
                   description={style.description}
                   imageSource={style.imageSource}
-                  isSelected={selectedStyle === style.id}
-                  onPress={() => setSelectedStyle(style.id)}
+                isSelected={selectedStyle.includes(style.id)}
+                onPress={() => {
+                  if (selectedStyle.includes(style.id)) {
+                    setSelectedStyle(selectedStyle.filter((id) => id !== style.id))
+                  } else if (selectedStyle.length < 3) {
+                    setSelectedStyle([...selectedStyle, style.id])
+                  }
+                }}
                 />
               ))}
             </View>
@@ -150,12 +156,12 @@ const styles = StyleSheet.create({
   // Progress Section
   progressSection: {
     paddingHorizontal: 20,
-    paddingVertical: 16,
-    marginBottom: 42,
+    paddingVertical: 16, 
+    // marginBottom: 42,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    top: 48,
+    top:6
   },
   backButton: {
     position: 'absolute',

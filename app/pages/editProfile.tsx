@@ -1,115 +1,97 @@
-import PrimaryButton from '@/components/PrimaryButton'
-import SecondaryButton from '@/components/SecondaryButton'
-import { FontFamily } from '@/constants/Fonts'
-import { LinearGradient } from 'expo-linear-gradient'
-import { router } from 'expo-router'
-import React, { useState } from 'react'
+
+import Header from '@/components/Header';
+import PrimaryButton from '@/components/PrimaryButton';
+import { FontFamily } from '@/constants/Fonts';
+import { router } from 'expo-router';
+import React, { useState } from 'react';
 import {
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
-} from 'react-native'
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 
-const AccountSetupScreen = () => {
-  const [fullName, setFullName] = useState('')
-  const [username, setUsername] = useState('')
-  const [selectedGender, setSelectedGender] = useState('')
-  const [dateOfBirth, setDateOfBirth] = useState('')
+const EditProfileScreen = () => {
+  const [fullName, setFullName] = useState('Robert Lowsky');
+  const [username, setUsername] = useState('robertlowsky');
+  const [selectedGender, setSelectedGender] = useState('Male');
+  const [dateOfBirth, setDateOfBirth] = useState('November 27, 2000');
 
-  // Reset size when gender changes
   const handleGenderChange = (gender: string) => {
-    setSelectedGender(gender)
-  }
+    setSelectedGender(gender);
+  };
 
-  const handleGoBack = () => {
-      router.push('/(auth)/login')
-  }
+  const handleSave = () => {
+    // Save logic here
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        // keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
-        <ScrollView 
-          style={styles.scrollView} 
+        <ScrollView
+          style={styles.scrollView}
           contentContainerStyle={styles.scrollContentContainer}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Header Section */}
-          {/* <HeaderWithLogo /> */}
+          {/* Header */}
 
-          {/* Progress Section */}
-        <View style={styles.progressSection}>
-          <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-            <Image 
-              source={require('@/assets/images/icons/leftarrow.png')} 
-              style={styles.backArrowIcon}
-            />
-          </TouchableOpacity>
-          
-          <View style={styles.progressBarContainer}>
-            <View style={styles.progressBar}>
-              <LinearGradient
-                colors={['#595CFF', '#C6F8FF']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.progressFill}
+          <Header title='Edit Profile' />
+
+          {/* Avatar Section */}
+          <View style={styles.avatarSection}>
+            <View style={styles.avatarContainer}>
+              <Image
+                source={{ uri: 'https://picsum.photos/120/120' }}
+                style={styles.avatar}
               />
+              <TouchableOpacity style={styles.cameraButton}>
+                <View style={styles.cameraIconBg}>
+                  <Image
+                    source={require('@/assets/images/icons/camera.png')}
+                    style={styles.cameraIcon}
+                  />
+                </View>
+              </TouchableOpacity>
             </View>
           </View>
-          
-          <View style={styles.progressCounterContainer}>
-            <Text style={styles.progressCounterCurrent}>1</Text>
-            <Text style={styles.progressCounterTotal}> of 4</Text>
-          </View>
-        </View>
-
-        {/* Progress Divider */}
-        <View style={styles.progressDivider} />
-
-        {/* Content Section */}
-        <View style={styles.contentSection}>
-          <Text style={styles.title}>Let&apos;s Get to Know You</Text>
-          <Text style={styles.subtitle}>Please complete your try-on information</Text>
 
           {/* Form Section */}
           <View style={styles.formSection}>
-            {/* Full Name Section */}
+            {/* Full Name */}
             <View style={styles.inputSection}>
-              <Text style={styles.inputLabel}>Full Name</Text>
+              <Text style={styles.inputLabel}>Full name</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder="Enter Full Name"
+                placeholder="Full name"
                 placeholderTextColor="#999"
                 value={fullName}
                 onChangeText={setFullName}
                 autoCapitalize="words"
               />
             </View>
-            {/* Username Section */}
+            {/* Username */}
             <View style={styles.inputSection}>
               <Text style={styles.inputLabel}>Username</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder="Enter username"
+                placeholder="Username"
                 placeholderTextColor="#999"
                 value={username}
                 onChangeText={setUsername}
                 autoCapitalize="none"
               />
             </View>
-
-            {/* Gender Section */}
+            {/* Gender */}
             <View style={styles.genderSection}>
               <Text style={styles.inputLabel}>Gender</Text>
               <View style={styles.genderOptions}>
@@ -122,7 +104,6 @@ const AccountSetupScreen = () => {
                 >
                   <Text style={styles.genderText}>Male</Text>
                 </TouchableOpacity>
-
                 <TouchableOpacity
                   style={[
                     styles.genderOption,
@@ -134,14 +115,13 @@ const AccountSetupScreen = () => {
                 </TouchableOpacity>
               </View>
             </View>
-
-            {/* Date of Birth Section */}
+            {/* Date of Birth */}
             <View style={styles.inputSection}>
               <Text style={styles.inputLabel}>Date of birth</Text>
               <View style={styles.dateInputContainer}>
                 <TextInput
                   style={styles.dateInput}
-                  placeholder="Enter your birth"
+                  placeholder="Date of birth"
                   placeholderTextColor="#999"
                   value={dateOfBirth}
                   onChangeText={setDateOfBirth}
@@ -162,142 +142,74 @@ const AccountSetupScreen = () => {
               </View>
             </View>
           </View>
-        </View>
-        
-        {/* Fixed Bottom Buttons */}
-        <View style={styles.buttons}>
-          <PrimaryButton 
-            title="Save"
-            onPress={() => {
-              if (selectedGender === 'Male') {
-                router.push('/(auth)/findYourFitMale')
-              } else if (selectedGender === 'Female') {
-                router.push('/(auth)/findYourFitFemale')
-              } else {
-                // Optional: Show alert or validation message if no gender is selected
-                console.log('Please select a gender first')
-              }
-            }} 
-          />
-          <SecondaryButton title='Cancel' onPress={() => {}} />
-        </View>
-      </ScrollView>
+
+          {/* Save Button */}
+          <View style={styles.buttons}>
+            {/* onPress={handleSave} */}
+            <PrimaryButton title="Save" onPress={()=>{router.push('/findYourFitMale')}} />
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
+    paddingTop: 8,
   },
   scrollView: {
     flex: 1,
   },
   scrollContentContainer: {
     flexGrow: 1,
+    paddingBottom: 32,
   },
-  
-  // Progress Section
-  progressSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 16, 
-    // marginBottom: 42,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    top:6
-  },
-  backButton: {
-    position: 'absolute',
-    left: 20,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  
-  backArrowIcon: {
-    width: 8,
-    height: 16,
-    left:-2
-  },
-  progressBarContainer: {
-    flex: 1,
-    marginLeft: 60,
-    marginRight: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  progressBar: {
-    height: 10,
-    width: '100%',
-    backgroundColor: '#F5F6F8',
-    borderRadius: 50,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    width: '25%', // 1 of 4 = 25%
-    backgroundColor: '#4A90E2',
-    borderRadius: 50,
-  },
-  progressCounter: {
-    fontSize: 16,
-    // fontWeight: '600',
-    color: '#333',
-    minWidth: 50,
-    textAlign: 'right',
-    fontFamily: FontFamily.HelveticaNeue.Regular,
-  },
-  progressCounterContainer: {
-    flexDirection: 'row',
-    minWidth: 50,
-    justifyContent: 'flex-end',
-  },
-  progressCounterCurrent: {
-    fontSize: 16,
-    color: '#1F242D',
-    fontFamily: FontFamily.HelveticaNeue.Bold,
-  },
-  progressCounterTotal: {
-    fontSize: 16,
-    color: '#4E617B',
-    fontFamily: FontFamily.HelveticaNeue.Regular,
-  },
-  progressDivider: {
-    height: 1,
-    backgroundColor: '#F0F0F0',
-    marginTop: 10,
-  },
-  // Content
-  contentSection: {
-    paddingHorizontal: 20,
-    flex: 1,
-  },
-  title: {
-    fontSize: 26,
-    color: '#343640',
-    textAlign: 'center',
-    marginTop: 24,
-    marginBottom: 2,
+  headerTitle: {
+    fontSize: 20,
+    color: '#00332E',
     fontFamily: FontFamily.HelveticaNeue.Medium,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#8288A0',
     textAlign: 'center',
-    marginBottom: 36,
-    fontFamily: FontFamily.HelveticaNeue.Regular,
+    marginTop: 16,
+    marginBottom: 32,
+  },
+  avatarSection: {
+    alignItems: 'center',
+    marginBottom: 24,
+    marginTop:8,
+  },
+  avatarContainer: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatar: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: '#f0f0f0',
+  },
+  cameraButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+  },
+  cameraIconBg: {
+    backgroundColor: '#0A0A0A',
+    borderRadius: 20,
+    padding: 6,
+  },
+  cameraIcon: {
+    width: 20,
+    height: 20,
+    tintColor: '#fff',
   },
   formSection: {
-    gap: 30,
-    marginBottom: 60, // Extra space before buttons
+    gap: 20,
+    marginBottom: 60,
+    paddingHorizontal: 20,
   },
   inputSection: {
     gap: 8,
@@ -320,7 +232,6 @@ const styles = StyleSheet.create({
     height: 56,
     fontFamily: FontFamily.HelveticaNeue.Regular,
   },
-  // Gender
   genderSection: {
     gap: 16,
   },
@@ -331,9 +242,9 @@ const styles = StyleSheet.create({
   genderOption: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent:'center',
+    justifyContent: 'center',
     paddingVertical: 16,
-    paddingHorizontal:16,
+    paddingHorizontal: 16,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#D9DBE2',
@@ -350,8 +261,6 @@ const styles = StyleSheet.create({
     color: '#000',
     fontFamily: FontFamily.HelveticaNeue.Regular,
   },
-
-  // Date of Birth
   dateInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -411,8 +320,8 @@ const styles = StyleSheet.create({
   buttons: {
     gap: 12,
     marginHorizontal: 20,
-    paddingBottom: 64, // Safe area bottom padding
-  }
-})
+    paddingTop: 104,
+  },
+});
 
-export default AccountSetupScreen
+export default EditProfileScreen;

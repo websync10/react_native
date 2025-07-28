@@ -129,8 +129,8 @@ const styles = StyleSheet.create({
   },
   notificationBadge: {
     position: 'absolute',
-    top: -2,
-    right: -2,
+    top: -4,
+    right: -6,
     backgroundColor: '#FF3B30',
     borderRadius: 10,
     minWidth: 20,
@@ -143,8 +143,9 @@ const styles = StyleSheet.create({
   badgeText: {
     color: '#FFF',
     fontSize: 12,
-    fontFamily: FontFamily.HelveticaNeue.Bold,
+    fontFamily: FontFamily.HelveticaNeue.Medium,
     textAlign: 'center',
+    top:-2,
   },
 })
 

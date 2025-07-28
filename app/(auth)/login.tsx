@@ -230,8 +230,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     marginHorizontal: -24,
     paddingHorizontal: 24,
-    marginTop: 'auto',
-    paddingBottom: 60,
+    marginTop: -16,
+    paddingBottom: 20,
   },
   socialLoginSection: {
     flexDirection: "column",

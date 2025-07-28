@@ -16,7 +16,7 @@ import {
 } from 'react-native'
 
 const FemalePickstyle = () => {
-  const [selectedStyle, setSelectedStyle] = useState<string>('')
+  const [selectedStyle, setSelectedStyle] = useState<string[]>([])
 
   const handleContinue = () => {
     if (selectedStyle) {
@@ -108,18 +108,24 @@ const FemalePickstyle = () => {
           <Text style={styles.subtitle}>Select up to 3 styles — AI will suggest outfits that match.</Text>
 
           {/* Form Section */}
-          <View style={styles.formSection}>
+            <View style={styles.formSection}>
             {/* Style Options */}
             <View style={styles.styleList}>
               {styleOptions.map((style) => (
-                <StyleCardHorizontal
-                  key={style.id}
-                  title={style.title}
-                  description={style.description}
-                  imageSource={style.imageSource}
-                  isSelected={selectedStyle === style.id}
-                  onPress={() => setSelectedStyle(style.id)}
-                />
+              <StyleCardHorizontal
+                key={style.id}
+                title={style.title}
+                description={style.description}
+                imageSource={style.imageSource}
+                isSelected={selectedStyle.includes(style.id)}
+                onPress={() => {
+                if (selectedStyle.includes(style.id)) {
+                  setSelectedStyle(selectedStyle.filter((id) => id !== style.id))
+                } else if (selectedStyle.length < 3) {
+                  setSelectedStyle([...selectedStyle, style.id])
+                }
+                }}
+              />
               ))}
             </View>
 
@@ -156,12 +162,13 @@ const styles = StyleSheet.create({
   // Progress Section
   progressSection: {
     paddingHorizontal: 20,
-    paddingVertical: 16,
-    marginBottom: 42,
+    paddingVertical: 16, 
+    // marginBottom: 42,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    top: 48,
+    top:6
+
   },
   backButton: {
     position: 'absolute',

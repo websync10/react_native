@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
 import React, { useState } from 'react'
 import {
+  Animated,
   Image,
   SafeAreaView,
   ScrollView,
@@ -13,37 +14,38 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native'
+import Svg, { Circle, Defs, Filter, G, Path } from 'react-native-svg'
 
 const FindYourFitFemaleScreen = () => {
-  const [selectedSkinTone, setSelectedSkinTone] = useState('')
+  const [selectedSkinTone, setSelectedSkinTone] = useState('Medium')
   const [selectedSize, setSelectedSize] = useState('')
-  const [showSkinToneDropdown, setShowSkinToneDropdown] = useState(false)
   const [showSizeDropdown, setShowSizeDropdown] = useState(false)
 
   // Skin tone options with colors
   const getSkinToneOptions = () => {
     return [
-      { name: 'Very Light', color: '#F2C69E' },
-      { name: 'Light', color: '#EDA46D' },
-      { name: 'Fair', color: '#FDBCB4' },
-      { name: 'Medium Light', color: '#EDD1A9' },
-      { name: 'Medium', color: '#E0AC69' },
-      { name: 'Medium Dark', color: '#D0AA82' },
-      { name: 'Olive', color: '#C68642' },
-      { name: 'Tan', color: '#C28847' },
-      { name: 'Brown', color: '#E5A189' },
-      { name: 'Golden', color: '#A9571F' },
-      { name: 'Dark Brown', color: '#814929' },
-      { name: 'Deep Brown', color: '#C17733' },
-      { name: 'Very Dark', color: '#8D5524' },
-      { name: 'Espresso', color: '#814829' },
-      { name: 'Ebony', color: '#512E17' }
+      { name: 'Very Light', color: '#efd1c8' },
+      { name: 'Light', color: '#e9b697' },
+      { name: 'Fair', color: '#e5a189' },
+      { name: 'Medium Light', color: '#edd1a9' },
+      { name: 'Medium', color: '#f2c69e' },
+      { name: 'Medium Dark', color: '#eda46d' },
+      { name: 'Olive', color: '#d0aa82' },
+      { name: 'Tan', color: '#c28847' },
+      { name: 'Brown', color: '#c17733' },
+      { name: 'Golden Brown', color: '#a9571f' },
+      { name: 'Dark', color: '#814829' },
+      { name: 'Deep Brown', color: '#512e17' },
     ]
   }
 
   // Female size options
   const getSizeOptions = () => {
     return ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL']
+  }
+
+  const handleSkinToneSelect = (toneName: React.SetStateAction<string>) => {
+    setSelectedSkinTone(toneName)
   }
 
   const handleContinue = () => {
@@ -54,6 +56,8 @@ const FindYourFitFemaleScreen = () => {
   const handleGoBack = () => {
     router.push('/(auth)/accountsetup')
   }
+
+  const selectedSkinToneData = getSkinToneOptions().find(tone => tone.name === selectedSkinTone)
 
   return (
     <SafeAreaView style={styles.container}>
@@ -94,100 +98,75 @@ const FindYourFitFemaleScreen = () => {
 
           {/* Form Section */}
           <View style={styles.formSection}>
-            {/* Skin Tone Section */}
+            {/* Enhanced Skin Tone Section */}
             <View style={styles.inputSection}>
               <Text style={styles.inputLabel}>What&apos;s your skin tone?</Text>
-              <TouchableOpacity 
+              
+              {/* Selected Skin Tone Display */}
+              <Animated.View 
                 style={[
-                  styles.dropdownButton,
-                  showSkinToneDropdown && styles.dropdownButtonActive
+                  styles.selectedSkinToneDisplay,
+                  
                 ]}
-                onPress={() => setShowSkinToneDropdown(!showSkinToneDropdown)}
-                activeOpacity={0.7}
               >
-                <View style={styles.dropdownContent}>
+                <View style={styles.selectedSkinToneContent}>
                   <View style={[
-                    styles.colorIndicator,
-                    { backgroundColor: getSkinToneOptions().find(tone => tone.name === selectedSkinTone)?.color || '#F1C27D' }
+                    styles.selectedColorIndicator,
+                    { backgroundColor: selectedSkinToneData?.color || '#E0AC69' }
                   ]} />
-                  <Text style={styles.dropdownText}>
-                    {selectedSkinTone || 'Limestone'}
+                  <Text style={styles.selectedSkinToneText}>
+                    {selectedSkinTone}
                   </Text>
-                  <Image 
-                    source={require('@/assets/images/icons/leftarrow.png')} 
-                    style={[
-                      styles.dropdownArrowImage,
-                      showSkinToneDropdown && styles.dropdownArrowImageRotated
-                    ]} 
-                  />
                 </View>
-              </TouchableOpacity>
+              </Animated.View>
 
-              {/* Skin Tone Slider/Options */}
-              <View style={styles.skinToneSlider}>
+              {/* Interactive Skin Tone Slider */}
+              <View style={styles.skinToneSliderContainer}>
                 <View style={styles.skinToneGradient}>
-                  {getSkinToneOptions().map((tone, index) => (
-                    <TouchableOpacity
-                      key={tone.name}
-                      style={[
-                        styles.skinToneOption,
-                        { backgroundColor: tone.color },
-                        selectedSkinTone === tone.name && styles.skinToneOptionSelected
-                      ]}
-                      onPress={() => {
-                        setSelectedSkinTone(tone.name)
-                        setShowSkinToneDropdown(false)
-                      }}
-                    />
-                  ))}
-                </View>
-              </View>
-
-              {/* Skin Tone Options Dropdown */}
-              {showSkinToneDropdown && (
-                <View style={styles.dropdownOptions}>
-                  <ScrollView 
-                    style={styles.dropdownScrollView}
-                    nestedScrollEnabled={true}
-                    showsVerticalScrollIndicator={true}
-                    scrollIndicatorInsets={{ right: 1 }}
-                    contentContainerStyle={{ flexGrow: 1 }}
-                    keyboardShouldPersistTaps="handled"
-                  >
-                    {getSkinToneOptions().map((tone, index) => (
+                  {getSkinToneOptions().map((tone, index) => {
+                    const isSelected = selectedSkinTone === tone.name
+                    return (
                       <TouchableOpacity
                         key={tone.name}
                         style={[
-                          styles.dropdownOption,
-                          selectedSkinTone === tone.name && styles.dropdownOptionSelected,
-                          index === getSkinToneOptions().length - 1 && styles.dropdownOptionLast
+                          styles.skinToneOption,
+                          { backgroundColor: tone.color },
+                          isSelected && styles.skinToneOptionSelected
                         ]}
-                        onPress={() => {
-                          setSelectedSkinTone(tone.name)
-                          setShowSkinToneDropdown(false)
-                        }}
-                        activeOpacity={0.7}
+                        onPress={() => handleSkinToneSelect(tone.name)}
+                        activeOpacity={0.8}
                       >
-                        <View style={styles.skinToneOptionContent}>
-                          <View style={[
-                            styles.skinToneColorIndicator,
-                            { backgroundColor: tone.color }
-                          ]} />
-                          <Text style={[
-                            styles.dropdownOptionText,
-                            selectedSkinTone === tone.name && styles.dropdownOptionTextSelected
-                          ]}>
-                            {tone.name}
-                          </Text>
-                        </View>
-                        {selectedSkinTone === tone.name && (
-                          <Text style={styles.checkMark}>✓</Text>
+                        {isSelected && (
+                          <View style={styles.selectedIndicator}>
+                            <Svg width={22} height={50} viewBox="0 0 22 50" fill="none">
+                              <Path d="M10.9561 1V49" strokeWidth={1.5} stroke="black" strokeLinecap="round" />
+                              <G filter="url(#filter0_d_100_1911)">
+                                <Circle cx={11} cy={25} r={8} fill="#030318" />
+                                <Circle cx={11} cy={25} r={8} stroke="white" />
+                              </G>
+                              <Defs>
+                                <Filter
+                                  id="filter0_d_100_1911"
+                                  x={0.5}
+                                  y={16.5}
+                                  width={21}
+                                  height={21}
+                                  filterUnits="userSpaceOnUse"
+                                  // colorInterpolationFilters="sRGB"
+                                >
+                                </Filter>
+                              </Defs>
+                            </Svg>
+
+                            {/* <View style={styles.selectedDot} /> */}
+                          </View>
                         )}
                       </TouchableOpacity>
-                    ))}
-                  </ScrollView>
+                    )
+                  })}
                 </View>
-              )}
+                
+              </View>
             </View>
 
             {/* Size Section */}
@@ -278,16 +257,11 @@ const FindYourFitFemaleScreen = () => {
                 {/* Camera and Gallery Icons */}
                 <View style={styles.photoActions}>
                   <TouchableOpacity style={styles.photoActionButton}>
-                                      
-                                        <Text style={styles.photoActionText}>Gallery</Text>
-                                      
-                                    </TouchableOpacity>
-                                    <TouchableOpacity style={styles.photoActionButton}>
-                                      
-                                        
-                                        <Text style={styles.photoActionText}>Camera</Text>
-                                      
-                                    </TouchableOpacity>
+                    <Text style={styles.photoActionText}>Gallery</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.photoActionButton}>
+                    <Text style={styles.photoActionText}>Camera</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
             </View>
@@ -323,18 +297,18 @@ const FindYourFitFemaleScreen = () => {
             </View>
 
             <View style={{gap:12,}}>
-
-            {/* Continue Button */}
-            <PrimaryButton 
-              title="Continue"
-              onPress={handleContinue}
-            />
-            
-            {/* Secondary Button */}
-            <SecondaryButton 
-              title="Skip for now"
-              onPress={() => router.push('/(home)')}
-            /></View>
+              {/* Continue Button */}
+              <PrimaryButton 
+                title="Continue"
+                onPress={handleContinue}
+              />
+              
+              {/* Secondary Button */}
+              <SecondaryButton 
+                title="Skip for now"
+                onPress={() => router.push('/(home)')}
+              />
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -354,12 +328,12 @@ const styles = StyleSheet.create({
   // Progress Section
   progressSection: {
     paddingHorizontal: 20,
-    paddingVertical: 16,
-    marginBottom: 42,
+    paddingVertical: 16, 
+    // marginBottom: 42,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    top:48,
+    top:6
   },
   backButton: {
     position: 'absolute',
@@ -372,11 +346,6 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  backArrow: {
-    fontSize: 24,
-    color: '#333',
-    fontWeight: 'bold',
   },
   backArrowIcon: {
     width: 8,
@@ -400,14 +369,8 @@ const styles = StyleSheet.create({
   progressFill: {
     height: '100%',
     width: '50%', // 2 of 4 = 50%
+    backgroundColor: '#4A90E2',
     borderRadius: 50,
-  },
-  progressCounter: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    minWidth: 50,
-    textAlign: 'right',
   },
   progressCounterContainer: {
     flexDirection: 'row',
@@ -452,7 +415,7 @@ const styles = StyleSheet.create({
   },
   formSection: {
     gap: 30,
-    marginBottom: 60, // Extra space before buttons
+    marginBottom: 60,
   },
   inputSection: {
     gap: 8,
@@ -464,30 +427,85 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
 
-  // Skin Tone Slider
-  skinToneSlider: {
-    marginTop: 16,
-    marginBottom: 8,
+  // Enhanced Skin Tone Selection
+  selectedSkinToneDisplay: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#D9DBE2',
+    height: 56,
+    justifyContent: 'center',
+  },
+  selectedSkinToneContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  selectedColorIndicator: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    marginRight: 12,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  selectedSkinToneText: {
+    fontSize: 16,
+    color: '#333',
+    fontFamily: FontFamily.HelveticaNeue.Medium,
+  },
+
+  // Interactive Skin Tone Slider
+  skinToneSliderContainer: {
+    marginTop: 20,
+    // marginBottom: 8,
   },
   skinToneGradient: {
     flexDirection: 'row',
-    height: 40,
-    borderRadius: 20,
+    height: 50,
+    borderRadius: 25,
     overflow: 'hidden',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   skinToneOption: {
     flex: 1,
     height: '100%',
-    borderWidth: 2,
-    borderColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 0,
+    minWidth: 0,
+    margin: 0,
+    padding: 0,
   },
   skinToneOptionSelected: {
-    borderColor: '#000',
-    transform: [{ scale: 1.1 }],
+    borderWidth: 0,
+    // borderColor: '#000',
+    transform: [{ scale: 1.05 }],
+    zIndex: 10,
+    // borderRadius: 25,
+    // margin: -1.5,
+  },
+  selectedIndicator: {
+    width: '1%',
+    height: '1%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow:'visible',
+  },
+  selectedDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 4,
+    backgroundColor: '#000',
+    shadowColor: '#FFFFFF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 2,
+    elevation: 5,
   },
 
-  // Dropdown
+  // Dropdown (for size selection)
   dropdownButton: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
@@ -506,13 +524,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  colorIndicator: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#F1C27D',
-    marginRight: 12,
   },
   dropdownText: {
     fontSize: 16,
@@ -591,24 +602,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 
-  // Skin Tone Specific Styles
-  skinToneOptionContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    gap: 12,
-  },
-  skinToneColorIndicator: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#E0E0E0',
-  },
-
   // Profile Photo
   photoUploadContainer: {
-    borderRadius: 12,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: '#D9DBE2',
     backgroundColor: '#FFFFFF',
@@ -630,18 +626,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#D9DBE2',
     marginVertical: 16,
   },
-  dashedBorder: {
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#D9DBE2',
-    borderStyle: 'dashed',
-    backgroundColor: '#FFFFFF',
-    width: '100%',
-    height: 240,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
   humanFigure: {
     width: 115,
     height: 226,
@@ -654,7 +638,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   photoActionButton: {
-
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
@@ -663,15 +646,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#030318',
     width:'49%'
-  },
-  photoIconContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  photoActionImage: {
-    width: 32,
-    height: 32,
   },
   photoActionText: {
     fontSize: 14,
@@ -695,11 +669,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 2,
-  },
-  bulletPoint: {
-    fontSize: 16,
-    color: '#333',
-    fontFamily: FontFamily.HelveticaNeue.Regular,
   },
   infoText: {
     fontSize: 14,

@@ -119,13 +119,12 @@ export default function HomeLayout() {
                   width: 36,
                   height: 2,
                   backgroundColor: '#000000',
-                  // borderRadius: 2,
-                  borderBottomRightRadius:2,
-                  borderBottomLeftRadius:2,
+                  borderBottomRightRadius: 2,
+                  borderBottomLeftRadius: 2,
                 }} />
               )}
               <Image 
-                style={{width:24, height:24}} 
+                style={{ width: 24, height: 24, ...(focused ? { tintColor: '#000000' } : {}) }} 
                 source={focused 
                   ? require('@/assets/images/icons/activeDiscoverIcon.png')
                   : require('@/assets/images/icons/inactiveDiscoverIcon.png')

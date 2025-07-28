@@ -150,12 +150,12 @@ const styles = StyleSheet.create({
   // Progress Section
   progressSection: {
     paddingHorizontal: 20,
-    paddingVertical: 16,
-    marginBottom: 42,
+    paddingVertical: 16, 
+    // marginBottom: 42,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    top: 48,
+    top:6
   },
   backButton: {
     position: 'absolute',

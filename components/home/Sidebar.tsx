@@ -100,6 +100,7 @@ const MobileSidebar: React.FC<SidebarProps> = ({ visible, onClose, userData }) =
                             </TouchableOpacity>
                         </View>
 
+                        <TouchableOpacity onPress={()=>{router.push('/pages/myProfile')}}>
                         <View style={styles.profileSection}>
                             <View style={styles.profileContainer}>
                                 <Image
@@ -114,7 +115,7 @@ const MobileSidebar: React.FC<SidebarProps> = ({ visible, onClose, userData }) =
                                     <Ionicons name="chevron-forward" size={20} color="#999" />
                                 </TouchableOpacity>
                             </View>
-                        </View>
+                        </View></TouchableOpacity>
 
                         <View style={styles.menuSection}>
                             <MenuItem
@@ -125,12 +126,12 @@ const MobileSidebar: React.FC<SidebarProps> = ({ visible, onClose, userData }) =
                             <MenuItem
                                 icon={<MaterialIcons name="history" size={20} color="#666" />}
                                 label="Try on History"
-                                onPress={() => { }}
+                                onPress={() => {router.push('/pages/tryOnHistory') }}
                             />
                             <MenuItem
                                 icon={<MaterialIcons name="privacy-tip" size={20} color="#666" />}
                                 label="Privacy Policy"
-                                onPress={() => { }}
+                                onPress={() => {router.push('/pages/privacyPolicy')}}
                             />
                             <MenuItem
                                 icon={<MaterialIcons name="help-outline" size={20} color="#666" />}

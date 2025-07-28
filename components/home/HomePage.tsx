@@ -618,7 +618,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#ffffff',
-        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+        paddingTop: 16,
     },
     testButton: {
         backgroundColor: '#007AFF',
@@ -677,6 +677,7 @@ const styles = StyleSheet.create({
         fontFamily: FontFamily.HelveticaNeue.Medium,
         textAlign: 'center',    
         color: '#343640',
+        paddingHorizontal:18,
         lineHeight: 34,
         marginBottom: 4,
     },
@@ -688,7 +689,7 @@ const styles = StyleSheet.create({
         lineHeight: 22,
     },
     bottomSection: {
-        paddingBottom: 20,
+        paddingBottom: 30,
         paddingTop: 20,
         position: 'absolute',
         bottom: 0,
