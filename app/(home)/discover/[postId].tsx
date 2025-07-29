@@ -1,4 +1,4 @@
-import HeaderWithLogo from "@/components/headerwithlogo";
+import Header from "@/components/Header";
 import MobileSidebar from "@/components/home/Sidebar";
 import UnfollowConfirmationModal from "@/components/UnfollowConfirmationModal";
 import { FontFamily } from "@/constants/Fonts";
@@ -6,18 +6,15 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
-  Dimensions,
   Image,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
-
-const { width } = Dimensions.get("window");
 
 type Post = {
   id: string;
@@ -77,13 +74,13 @@ const DiscoverPostDetail = () => {
   const [sidebarVisible, setSidebarVisible] = useState(false);
 
   const userData = {
-  id: 'user1',
-  name: 'Jacklaw_',
-  fullName: 'Jack Law',
-  avatar: require('@/assets/images/styles/businesscasual-male.png'),
-  profileImage: require('@/assets/images/styles/businesscasual-male.png'),
-  followers: [require('@/assets/images/styles/bohemian-female.png'), require('@/assets/images/styles/businesscasual-male.png')],
-};
+    id: 'user1',
+    name: 'Jacklaw_',
+    fullName: 'Jack Law',
+    avatar: require('@/assets/images/styles/businesscasual-male.png'),
+    profileImage: require('@/assets/images/styles/businesscasual-male.png'),
+    followers: [require('@/assets/images/styles/bohemian-female.png'), require('@/assets/images/styles/businesscasual-male.png')],
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -93,41 +90,37 @@ const DiscoverPostDetail = () => {
       >
         {/* Header */}
         <View style={styles.header}>
-          <HeaderWithLogo 
-        onMenuPress={() => setSidebarVisible(true)}
-        onNotificationPress={() => {
-          router.push("./notifications")
-        }}
-        notificationCount={4}
-      />
-      <MobileSidebar
-        visible={sidebarVisible}
-        onClose={() => setSidebarVisible(false)}
-        userData={userData}
-      />
+          <Header
+            title=""
+          />
+          <MobileSidebar
+            visible={sidebarVisible}
+            onClose={() => setSidebarVisible(false)}
+            userData={userData}
+          />
         </View>
 
         {/* User Info and Follow Button */}
         <View style={styles.userSection}>
-          <TouchableOpacity onPress={()=>{router.push('./pages/profileDetails')}} >
-          <View style={styles.userInfo}>
-            <Image source={post.user.avatar} style={styles.avatar} />
-            <Text style={styles.username}>{post.user.name}</Text>
-          </View></TouchableOpacity>
+          <TouchableOpacity onPress={() => { router.push('./pages/profileDetails') }} >
+            <View style={styles.userInfo}>
+              <Image source={post.user.avatar} style={styles.avatar} />
+              <Text style={styles.username}>{post.user.name}</Text>
+            </View></TouchableOpacity>
           <TouchableOpacity
             style={[styles.followBtn, isFollowed && styles.followBtnFollowing]}
             onPress={() => {
               if (isFollowed) {
-          setShowUnfollowModal(true);
+                setShowUnfollowModal(true);
               } else {
-          setIsFollowed(true);
+                setIsFollowed(true);
               }
             }}
           >
             <Text
               style={[
-          styles.followBtnText,
-          isFollowed && styles.followBtnTextFollowing,
+                styles.followBtnText,
+                isFollowed && styles.followBtnTextFollowing,
               ]}
             >
               {isFollowed ? "Following" : "Follow"}
@@ -142,10 +135,10 @@ const DiscoverPostDetail = () => {
             onConfirm={() => {
               setIsFollowed(false);
               setShowUnfollowModal(false);
-            } } user={{
+            }} user={{
               name: "",
               avatar: undefined
-            }}          />
+            }} />
         )}
 
         {/* Main Image */}
@@ -192,25 +185,25 @@ const DiscoverPostDetail = () => {
                   | bigint
                   | boolean
                   | React.ReactElement<
-                      unknown,
-                      string | React.JSXElementConstructor<any>
-                    >
+                    unknown,
+                    string | React.JSXElementConstructor<any>
+                  >
                   | Iterable<React.ReactNode>
                   | React.ReactPortal
                   | Promise<
-                      | string
-                      | number
-                      | bigint
-                      | boolean
-                      | React.ReactPortal
-                      | React.ReactElement<
-                          unknown,
-                          string | React.JSXElementConstructor<any>
-                        >
-                      | Iterable<React.ReactNode>
-                      | null
-                      | undefined
+                    | string
+                    | number
+                    | bigint
+                    | boolean
+                    | React.ReactPortal
+                    | React.ReactElement<
+                      unknown,
+                      string | React.JSXElementConstructor<any>
                     >
+                    | Iterable<React.ReactNode>
+                    | null
+                    | undefined
+                  >
                   | null
                   | undefined,
                 index: React.Key | null | undefined
@@ -457,8 +450,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 50,
     paddingHorizontal: 10,
-    paddingTop:6,
-    paddingBottom:6,
+    paddingTop: 6,
+    paddingBottom: 6,
   },
   tagText: {
     fontSize: 14,

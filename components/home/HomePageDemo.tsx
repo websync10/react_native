@@ -1,6 +1,10 @@
 import { FontFamily } from '@/constants/Fonts';
 import { ChatMessage, useChatStore } from '@/lib/stores/chatStore';
+import { useOnboardingStore } from '@/lib/stores/onboardingStore';
+import { sampleRequests } from '@/lib/utils/SampleRequests';
+import { sampleResponses } from '@/lib/utils/SampleResponses';
 import { Feather, Ionicons } from '@expo/vector-icons';
+import axios from "axios";
 import { BlurView } from 'expo-blur';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -26,6 +30,7 @@ import {
     OutfitRecommendationsMessage,
     PremiumUpgradeMessage
 } from '../chat/InteractiveMessageComponents';
+import HeaderWithLogo from '../headerwithlogo';
 import MobileSidebar from './Sidebar';
 
 
@@ -36,7 +41,7 @@ interface HomePageProps {
 const HomePage = ({
     userData
 }: HomePageProps) => {
-    const [sidebarVisible, setSidebarVisible] = useState(true);
+    const [sidebarVisible, setSidebarVisible] = useState(false);
     const [input, setInput] = useState('');
     const inputRef = useRef<TextInput>(null);
     const scrollRef = useRef<ScrollView>(null);
@@ -48,96 +53,25 @@ const HomePage = ({
     const [initialMessageCount, setInitialMessageCount] = useState(0);
     const [showOptions, setShowOptions] = useState(false);
     const hasLoadedInitialMessages = useRef(false);
+    const { userId } = useOnboardingStore()
 
-    // Sample messages for testing UI
-    const sampleRequests = [
-        "Hello",
-        "What should I wear to a business meeting?",
-        "Can you suggest a casual weekend outfit?",
-        "I need something for a date night",
-        "What's trendy for summer 2024?",
-        "Help me style a black dress",
-        "What accessories go with this outfit?",
-        "I'm looking for workout clothes",
-        "Suggest formal wear for a wedding",
-        "What colors look good on me?",
-        "How do I style denim jackets?"
-    ];
-
-    const sampleResponses = [
-        "Hello! I'm Myuze, your personal style assistant. I'm here to help you with all your fashion and outfit questions. What would you like to know about today?",
-        "For a business meeting, I'd recommend a crisp white shirt with tailored trousers or a pencil skirt. Add a blazer for extra professionalism and finish with comfortable yet stylish shoes.",
-        { type: 'height-selection', content: 'Let me help you find the perfect fit!' },
-        { type: 'fit-preference', content: 'Tell me about your style preferences!' },
-        {
-            type: 'outfit-carousel',
-            content: 'Check out these amazing looks!',
-            data: {
-                outfits: [
-                    { id: '1', name: 'Concert Look 1', image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=300&h=400&fit=crop' },
-                    { id: '2', name: 'Concert Look 2', image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=300&h=400&fit=crop' },
-                    { id: '3', name: 'Concert Look 3', image: 'https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=300&h=400&fit=crop' }
-                ]
-            }
-        },
-        {
-            type: 'outfit-recommendations',
-            content: 'Here are some curated outfit ideas for you!',
-            data: {
-                title: 'Got it! Bali + warm = comfy + cute.',
-                description: 'Here are 3 outfit ideas that scream: "Cool but effortless traveler." 🌴',
-                recommendations: [
-                    {
-                        title: 'Outfit 1: Day Explorer',
-                        items: ['Breezy linen shirt', 'Khaki shorts', 'Slide sandals', 'Straw tote']
-                    },
-                    {
-                        title: 'Outfit 2: Sunset Dinner',
-                        items: ['Sleeveless maxi dress', 'Statement earrings', 'Flat sandals']
-                    },
-                    {
-                        title: 'Outfit 3: Beach Rider',
-                        items: ['Graphic tee', 'Wide-leg pants', 'Bucket hat']
-                    }
-                ]
-            }
-        },
-        {
-            type: 'capsule-wardrobe',
-            content: 'Your perfect travel wardrobe!',
-            data: {
-                wardrobeItems: {
-                    dayLook: ['Linen shirt (white or sage green)', 'Relaxed-fit shorts', 'Leather sandals or canvas sneakers'],
-                    eveningVibe: ['Light short-sleeve shirt (bold pattern)', 'Chino pants', 'Casual loafers or sandals'],
-                    extras: ['Sunglasses', 'Woven bag', 'Optional: Light scarf or bucket hat']
-                }
-            }
-        },
-        { type: 'premium-upgrade', content: 'Ready to unlock more styling magic?' },
-        "Date night calls for something that makes you feel confident! Consider a midi dress in a flattering silhouette, paired with heels and delicate jewelry. A leather jacket adds an edgy touch.",
-        "Summer 2024 trends include vibrant colors, flowy fabrics, and sustainable fashion. Think linen sets, bright florals, and statement accessories that pop against neutral bases.",
-        "A black dress is incredibly versatile! Dress it up with heels and statement jewelry for evening, or down with white sneakers and a denim jacket for day. Add a colorful belt to define your waist."
-    ];
 
     const generateRandomMessage = () => {
         const randomRequest = sampleRequests[Math.floor(Math.random() * sampleRequests.length)];
         const randomResponse = sampleResponses[Math.floor(Math.random() * sampleResponses.length)];
-        // Generate unique IDs
-        const userId = Date.now().toString() + Math.random().toString(36).slice(2);
-        addMessage({ id: userId, role: 'user', content: randomRequest, type: "", data: "" });
+        addMessage({ id: userId, role: 'user', content: randomRequest });
         setTimeout(() => {
             const aiId = (Date.now() + 1).toString() + Math.random().toString(36).slice(2);
 
-            // Handle both string and object responses
             if (typeof randomResponse === 'string') {
-                addMessage({ id: aiId, role: 'assistant', content: randomResponse, type: "", data: "" });
+                addMessage({ id: aiId, role: 'assistant', content: randomResponse });
             } else {
                 addMessage({
                     id: aiId,
                     role: 'assistant',
                     content: randomResponse.content,
                     type: randomResponse.type as any,
-                    data: "randomResponse.data"
+                    data: randomResponse.data
                 });
             }
         }, 1000);
@@ -154,7 +88,6 @@ const HomePage = ({
     }, [loadMessages]);
 
     useEffect(() => {
-        // Set initial message count only once when messages are first loaded
         if (hasLoadedInitialMessages.current && initialMessageCount === 0) {
             setInitialMessageCount(messages.length);
         }
@@ -170,41 +103,35 @@ const HomePage = ({
         if (!input.trim()) return;
 
         setChatStarted(true);
-        const userId = Date.now().toString() + Math.random().toString(36).slice(2);
-        const userMsg: ChatMessage = { id: userId, role: 'user', content: input, data: "", type: "" };
+        const userMsg: ChatMessage = { id: userId, role: 'user', content: input };
         addMessage(userMsg);
 
         setInput('');
         inputRef.current?.blur();
+        const generateId = () => (Date.now() + Math.random().toString(36).slice(2));
+        try {
+            const res = await axios.post(`https://4d55d7cbcf7b.ngrok-free.app/api/ai-chat/${userId}`, {
+                messages: [{ role: 'user', content: input }],
+            });
 
-        console.log('[🔄] Generating random response for UI testing...');
-
-        setTimeout(() => {
-            const randomResponse = sampleResponses[Math.floor(Math.random() * sampleResponses.length)];
-            const aiId = (Date.now() + 1).toString() + Math.random().toString(36).slice(2);
-
-            // Handle both string and object responses
-            if (typeof randomResponse === 'string') {
-                const aiMsg: ChatMessage = { id: aiId, role: 'assistant', content: randomResponse, type: "", data: "" };
-                setTimeout(() => {
-                    addMessage(aiMsg);
-                }, 100);
-            } else {
-                const aiMsg: ChatMessage = {
-                    id: aiId,
-                    role: 'assistant',
-                    content: randomResponse.content,
-                    type: randomResponse.type as any,
-                    data: ""
-                };
-                setTimeout(() => {
-                    addMessage(aiMsg);
-                }, 100);
-            }
-        }, 1500);
+            const aiMsg: ChatMessage = {
+                id: generateId(),
+                role: 'assistant',
+                content: res.data.reply,
+                type: res.data.type,
+                data: res.data.data,
+            };
+            addMessage(aiMsg);
+        } catch (err) {
+            console.error('[❌] Backend error:', err);
+            addMessage({
+                id: generateId(),
+                role: 'assistant',
+                content: 'Oops! Something went wrong. Try again later.',
+            });
+        }
     };
 
-    // This component handles the typewriter text effect
     const TypewriterText = ({ text, speed, textStyle, shouldStart = true }: {
         text: string;
         speed: number;
@@ -224,10 +151,10 @@ const HomePage = ({
                 return;
             }
 
-            const typingSpeed = 50; // ms per character
+            const typingSpeed = 50;
 
             let currentIndex = 0;
-            setDisplayText(''); // Start with empty text
+            setDisplayText('');
 
             const timer = setInterval(() => {
                 if (currentIndex < text.length) {
@@ -244,7 +171,6 @@ const HomePage = ({
         return <Text style={textStyle}>{displayText}</Text>;
     };
 
-    // This component handles the message bubble animation (fade, slide, scale)
     const AnimatedBubble = ({ msg, children }: { msg: ChatMessage; children: React.ReactNode }) => {
         return (
             <View
@@ -260,7 +186,7 @@ const HomePage = ({
 
     const renderItem = (msg: ChatMessage, index: number) => {
         return (
-            <AnimatedBubble key={msg.id || index} msg={msg}>
+            <AnimatedBubble key={index} msg={msg}>
                 <AnimatedMessageContent msg={msg} />
             </AnimatedBubble>
         );
@@ -269,37 +195,37 @@ const HomePage = ({
     const AnimatedMessageContent = ({ msg }: { msg: ChatMessage }) => {
         const handleHeightSelect = (height: string) => {
             const responseId = Date.now().toString() + Math.random().toString(36).slice(2);
-            addMessage({ id: responseId, role: 'user', content: height, type: "", data: "" });
+            addMessage({ id: responseId, role: 'user', content: height });
         };
 
         const handleFitSelect = (fit: string) => {
             const responseId = Date.now().toString() + Math.random().toString(36).slice(2);
-            addMessage({ id: responseId, role: 'user', content: fit, type: "", data: "" });
+            addMessage({ id: responseId, role: 'user', content: fit });
         };
 
         const handleTryNow = (outfitId: string) => {
             const responseId = Date.now().toString() + Math.random().toString(36).slice(2);
-            addMessage({ id: responseId, role: 'user', content: `I want to try outfit ${outfitId}`, type: "", data: "" });
+            addMessage({ id: responseId, role: 'user', content: `I want to try outfit ${outfitId}` });
         };
 
         const handleRegenerate = () => {
             const responseId = Date.now().toString() + Math.random().toString(36).slice(2);
-            addMessage({ id: responseId, role: 'user', content: 'Generate new outfits', type: "", data: "" });
+            addMessage({ id: responseId, role: 'user', content: 'Generate new outfits' });
         };
 
         const handleViewVisuals = () => {
             const responseId = Date.now().toString() + Math.random().toString(36).slice(2);
-            addMessage({ id: responseId, role: 'user', content: 'Yes, please show me visuals', type: "", data: "" });
+            addMessage({ id: responseId, role: 'user', content: 'Yes, please show me visuals' });
         };
 
         const handleUpgrade = () => {
             const responseId = Date.now().toString() + Math.random().toString(36).slice(2);
-            addMessage({ id: responseId, role: 'user', content: 'I want to upgrade to premium', type: "", data: "" });
+            addMessage({ id: responseId, role: 'user', content: 'I want to upgrade to premium' });
         };
 
         const handleWaitUntilTomorrow = () => {
             const responseId = Date.now().toString() + Math.random().toString(36).slice(2);
-            addMessage({ id: responseId, role: 'user', content: 'I will wait until tomorrow', type: "", data: "" });
+            addMessage({ id: responseId, role: 'user', content: 'I will wait until tomorrow' });
         };
 
         return (
@@ -315,7 +241,6 @@ const HomePage = ({
                 )}
 
                 {msg.type && msg.role === 'assistant' ? (
-                    // Render interactive components without bubble wrapper
                     <>
                         {msg.type === 'height-selection' && (
                             <HeightSelectionMessage onSelect={handleHeightSelect} />
@@ -325,21 +250,21 @@ const HomePage = ({
                         )}
                         {msg.type === 'outfit-carousel' && msg.data && (
                             <OutfitCarouselMessage
-                                outfits={JSON.parse(msg.data)}
+                                outfits={msg.data.outfits}
                                 onTryNow={handleTryNow}
                                 onRegenerate={handleRegenerate}
                             />
                         )}
                         {msg.type === 'outfit-recommendations' && msg.data && (
                             <OutfitRecommendationsMessage
-                                title={msg.data}
-                                description={msg.data}
-                                recommendations={JSON.parse(msg.data)}
+                                title={msg.data.title}
+                                description={msg.data.description}
+                                recommendations={msg.data.recommendations}
                             />
                         )}
                         {msg.type === 'capsule-wardrobe' && msg.data && (
                             <CapsuleWardrobeMessage
-                                wardrobeItems={JSON.parse(msg.data)}
+                                wardrobeItems={msg.data.wardrobeItems}
                                 onViewVisuals={handleViewVisuals}
                             />
                         )}
@@ -351,7 +276,6 @@ const HomePage = ({
                         )}
                     </>
                 ) : (
-                    // Render regular text message with bubble wrapper
                     <View style={[
                         styles.messageBubble,
                         msg.role === 'user' ? styles.userBubble : styles.aiBubble,
@@ -371,7 +295,6 @@ const HomePage = ({
         );
     };
 
-    // Options dropdown component
     const OptionsDropdown = () => {
         const addTestMessage = (type: string) => {
             const aiId = Date.now().toString() + Math.random().toString(36).slice(2);
@@ -382,8 +305,7 @@ const HomePage = ({
                         id: aiId,
                         role: 'assistant',
                         content: 'Let me help you find the perfect fit!',
-                        type: 'height-selection',
-                        data: ""
+                        type: 'height-selection'
                     });
                     break;
                 case 'fit':
@@ -391,8 +313,7 @@ const HomePage = ({
                         id: aiId,
                         role: 'assistant',
                         content: 'Tell me about your style preferences!',
-                        type: 'fit-preference',
-                        data: ""
+                        type: 'fit-preference'
                     });
                     break;
                 case 'carousel':
@@ -401,13 +322,13 @@ const HomePage = ({
                         role: 'assistant',
                         content: 'Check out these amazing looks!',
                         type: 'outfit-carousel',
-                        data: JSON.stringify({
+                        data: {
                             outfits: [
                                 { id: '1', name: 'Concert Look 1', image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=300&h=400&fit=crop' },
                                 { id: '2', name: 'Concert Look 2', image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=300&h=400&fit=crop' },
                                 { id: '3', name: 'Concert Look 3', image: 'https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=300&h=400&fit=crop' }
                             ]
-                        })
+                        }
                     });
                     break;
                 case 'recommendations':
@@ -416,7 +337,7 @@ const HomePage = ({
                         role: 'assistant',
                         content: 'Here are some curated outfit ideas for you!',
                         type: 'outfit-recommendations',
-                        data: JSON.stringify({
+                        data: {
                             title: 'Got it! Bali + warm = comfy + cute.',
                             description: 'Here are 3 outfit ideas that scream: "Cool but effortless traveler." 🌴',
                             recommendations: [
@@ -429,7 +350,7 @@ const HomePage = ({
                                     items: ['Sleeveless maxi dress', 'Statement earrings', 'Flat sandals']
                                 }
                             ]
-                        })
+                        }
                     });
                     break;
                 case 'premium':
@@ -437,8 +358,7 @@ const HomePage = ({
                         id: aiId,
                         role: 'assistant',
                         content: 'Ready to unlock more styling magic?',
-                        type: 'premium-upgrade',
-                        data: ""
+                        type: 'premium-upgrade'
                     });
                     break;
             }
@@ -514,6 +434,7 @@ const HomePage = ({
                     hidden={false}
                     animated={true}
                 />
+                <HeaderWithLogo userData={userData} />
 
                 <MobileSidebar
                     visible={sidebarVisible}

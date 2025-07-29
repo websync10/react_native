@@ -146,8 +146,8 @@ const FindYourFitMaleScreen = () => {
                             <Svg width={22} height={50} viewBox="0 0 22 50" fill="none">
                               <Path d="M10.9561 1V49" strokeWidth={1.5} stroke="black" strokeLinecap="round" />
                               <G filter="url(#filter0_d_100_1911)">
-                                <Circle cx={11} cy={25} r={8} fill="#030318" />
-                                <Circle cx={11} cy={25} r={8} stroke="white" />
+                                <Circle cx={11} cy={35} r={8} fill="#030318" />
+                                <Circle cx={11} cy={45} r={8} stroke="white" />
                               </G>
                               <Defs>
                                 <Filter
@@ -157,13 +157,11 @@ const FindYourFitMaleScreen = () => {
                                   width={21}
                                   height={21}
                                   filterUnits="userSpaceOnUse"
-                                // colorInterpolationFilters="sRGB"
                                 >
                                 </Filter>
                               </Defs>
                             </Svg>
 
-                            {/* <View style={styles.selectedDot} /> */}
                           </View>
                         )}
                       </TouchableOpacity>
@@ -386,7 +384,7 @@ const styles = StyleSheet.create({
   },
   // Interactive Skin Tone Slider
   skinToneSliderContainer: {
-    marginTop: 20,
+    marginTop: 10,
     // marginBottom: 8,
   },
 

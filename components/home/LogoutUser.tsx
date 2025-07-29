@@ -29,7 +29,7 @@ export default function LogoutButton() {
 
 const styles = StyleSheet.create({
     button: {
-        padding: 12,
+        padding: 0,
         backgroundColor: '#FF3B30',
         borderRadius: 8,
         alignItems: 'center',

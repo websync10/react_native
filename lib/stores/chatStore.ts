@@ -6,8 +6,8 @@ export type ChatMessage = {
     role: 'user' | 'assistant';
     content: string;
     images?: string[];
-    type: string;
-    data: string;
+    type?: string;
+    data?: any
 };
 
 interface ChatState {

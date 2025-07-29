@@ -304,10 +304,9 @@ const styles = StyleSheet.create({
         fontFamily: 'HelveticaNeue',
     },
     logoutSection: {
-        // position: 'absolute',
-        top: 250,
+        top: 180,
         paddingHorizontal: 34,
-        paddingTop: 16,
+        paddingTop: 6,
         paddingBottom: 32,
         left: -10,
         backgroundColor: 'transparent',

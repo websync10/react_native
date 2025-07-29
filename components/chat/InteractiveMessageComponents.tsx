@@ -245,7 +245,6 @@ export const CapsuleWardrobeMessage = ({
     );
 };
 
-// Premium Upgrade Message
 export const PremiumUpgradeMessage = ({ 
     onUpgrade,
     onWaitUntilTomorrow 
