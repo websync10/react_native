@@ -2,13 +2,13 @@ import { FontFamily } from '@/constants/Fonts';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import {
+  Dimensions,
+  Image,
   Modal,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  Image,
-  Dimensions,
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
@@ -17,10 +17,10 @@ interface UnfollowConfirmationModalProps {
   visible: boolean;
   onClose: () => void;
   onConfirm: () => void;
-user: {
+  user: {
     name: string;
-    avatar: any; // Use 'any' for static image imports or require()
-};
+    avatar: any;
+  };
 }
 
 const UnfollowConfirmationModal: React.FC<UnfollowConfirmationModalProps> = ({
@@ -39,7 +39,7 @@ const UnfollowConfirmationModal: React.FC<UnfollowConfirmationModalProps> = ({
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
           {/* Close Button */}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.closeButton}
             onPress={onClose}
             activeOpacity={0.7}
@@ -50,7 +50,7 @@ const UnfollowConfirmationModal: React.FC<UnfollowConfirmationModalProps> = ({
           {/* User Avatar */}
           <View style={styles.avatarContainer}>
             {/* <Image source={user.avatar} style={styles.avatar} /> */}
-            <Image source={require('@/assets/images/profileImgs/bohemian-female.png')} style={styles.avatar} />
+            <Image source={{ uri: user.avatar }} style={styles.avatar} />
           </View>
 
           {/* Title */}
@@ -88,98 +88,98 @@ const UnfollowConfirmationModal: React.FC<UnfollowConfirmationModalProps> = ({
 };
 
 const styles = StyleSheet.create({
-    overlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        justifyContent: 'flex-end', // Changed from 'center' to 'flex-end'
-        alignItems: 'center',
-        // paddingHorizontal: 20,
-        // paddingBottom: 32, // Add some bottom padding for spacing
-    },
-    modalContainer: {
-        backgroundColor: '#FFFFFF',
-        borderTopLeftRadius: 20, // Only top corners rounded for bottom sheet style
-        borderTopRightRadius: 20,
-        borderBottomLeftRadius: 0,
-        borderBottomRightRadius: 0,
-        paddingVertical: 32,
-        paddingHorizontal: 24,
-        width: width,
-        // maxWidth: 400,
-        alignItems: 'center',
-        position: 'relative',
-    },
-    closeButton: {
-        position: 'absolute',
-        top: 16,
-        right: 16,
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: '#F6F7F9',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    avatarContainer: {
-        marginBottom: 24,
-    },
-    avatar: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-    },
-    title: {
-        fontSize: 18,
-        fontFamily: FontFamily.HelveticaNeue.Medium,
-        color: '#000',
-        textAlign: 'center',
-        marginBottom: 12,
-        lineHeight: 24,
-    },
-    subtitle: {
-        fontSize: 14,
-        fontFamily: FontFamily.HelveticaNeue.Regular,
-        color: '#8288A0',
-        textAlign: 'center',
-        marginBottom: 32,
-        lineHeight: 20,
-    },
-    buttonContainer: {
-        width: '100%',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        gap: 12,
-    },
-    confirmButton: {
-        flex: 1,
-        backgroundColor: '#FFFFFF',
-        borderRadius: 50,
-        borderWidth: 1,
-        borderColor: '#000',
-        paddingVertical: 14,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    confirmButtonText: {
-        fontSize: 16,
-        fontFamily: FontFamily.HelveticaNeue.Medium,
-        color: '#000',
-        top:-2
-    },
-    cancelButton: {
-        flex: 1,
-        backgroundColor: '#000000',
-        borderRadius: 50,
-        paddingVertical: 14,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    cancelButtonText: {
-        fontSize: 16,
-        fontFamily: FontFamily.HelveticaNeue.Medium,
-        color: '#FFFFFF',
-        top: -2,
-    },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end', // Changed from 'center' to 'flex-end'
+    alignItems: 'center',
+    // paddingHorizontal: 20,
+    // paddingBottom: 32, // Add some bottom padding for spacing
+  },
+  modalContainer: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 20, // Only top corners rounded for bottom sheet style
+    borderTopRightRadius: 20,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    paddingVertical: 32,
+    paddingHorizontal: 24,
+    width: width,
+    // maxWidth: 400,
+    alignItems: 'center',
+    position: 'relative',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F6F7F9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarContainer: {
+    marginBottom: 24,
+  },
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+  },
+  title: {
+    fontSize: 18,
+    fontFamily: FontFamily.HelveticaNeue.Medium,
+    color: '#000',
+    textAlign: 'center',
+    marginBottom: 12,
+    lineHeight: 24,
+  },
+  subtitle: {
+    fontSize: 14,
+    fontFamily: FontFamily.HelveticaNeue.Regular,
+    color: '#8288A0',
+    textAlign: 'center',
+    marginBottom: 32,
+    lineHeight: 20,
+  },
+  buttonContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  confirmButton: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 50,
+    borderWidth: 1,
+    borderColor: '#000',
+    paddingVertical: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  confirmButtonText: {
+    fontSize: 16,
+    fontFamily: FontFamily.HelveticaNeue.Medium,
+    color: '#000',
+    top: -2
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: '#000000',
+    borderRadius: 50,
+    paddingVertical: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontFamily: FontFamily.HelveticaNeue.Medium,
+    color: '#FFFFFF',
+    top: -2,
+  },
 });
 
 export default UnfollowConfirmationModal;

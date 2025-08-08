@@ -30,12 +30,13 @@ const BodyShapeMale = () => {
     style,
     gender,
     body_shape,
+    isOnobarded,
     setField
   } = useOnboardingStore()
 
   const handleSave = async () => {
+    console.log("isOnboaarded state", isOnobarded)
     const userData = {
-      user_id: userId,
       full_name: fullName,
       username: username,
       gender: gender,
@@ -46,37 +47,39 @@ const BodyShapeMale = () => {
       style: style,
       body_shape: body_shape,
     };
+    let error;
 
-    const { error } = await supabase
-      .from('users')
-      .insert([userData]);
+    if (!isOnobarded) {
+      const { error: insertError } = await supabase
+        .from('users')
+        .insert([{ ...userData, user_id: userId }]);
+      error = insertError;
+      setField("isOnobarded", true)
+      Alert.alert("Data Saved Successfully!");
+    } else {
+      console.log(userData)
+      const { error: updateError } = await supabase
+        .from('users')
+        .update(userData)
+        .eq('user_id', userId);
+      error = updateError;
+
+      Alert.alert("User updated successfully")
+    }
 
     setField("body_shape", "")
-    setField("username", "")
-    setField("gender", "")
-    setField("dob", "")
     setField("skin_tone", "")
     setField("size", "")
-    setField("style", "")
-    router.push("/(home)")
+    setField("style", [])
+    router.push("/(home)");
 
     if (error) {
       console.error('Error saving user:', error.message);
-      Alert.alert("Error Occured! in page four")
+      Alert.alert("Error occurred while saving data");
     } else {
       console.log('User saved successfully!');
-      Alert.alert("Data Saved Successfully!")
     }
   };
-
-  const handleContinue = () => {
-    if (body_shape) {
-      handleSave();
-      router.push('/(home)')
-    } else {
-      console.log('Please select a body shape first')
-    }
-  }
 
   const handleGoBack = () => {
     router.push('/(auth)/yourStyleMale')

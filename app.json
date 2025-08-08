@@ -31,7 +31,12 @@
         }
       ],
       "package": "com.myuze.app",
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "MANAGE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -57,9 +62,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "73d59d9c-490a-4d01-ae5a-a7bd9f716adb"
+        "projectId": "377057ba-ab4d-452c-a376-7951dff0a4b3"
       }
     },
-    "owner": "zoroverse12"
+    "owner": "zoroverse123"
   }
 }

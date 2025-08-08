@@ -13,6 +13,7 @@ interface OnboardingState {
     image: string;
     style: string[];
     body_shape: string;
+    isOnobarded: boolean;
 
     setField: <K extends keyof OnboardingState>(
         key: K,
@@ -35,6 +36,7 @@ export const useOnboardingStore = create<OnboardingState>()(
             image: "",
             style: [""],
             body_shape: "",
+            isOnobarded: false,
 
             setField: (key, value) => set((state) => ({ ...state, [key]: value })),
             reset: () =>
@@ -49,6 +51,7 @@ export const useOnboardingStore = create<OnboardingState>()(
                     image: "",
                     style: [""],
                     body_shape: "",
+                    isOnobarded: false,
                 }),
         }),
         {

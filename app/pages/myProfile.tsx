@@ -1,39 +1,83 @@
 
 import Header from '@/components/Header';
+import LikedPostsList from '@/components/profile/LikedPost';
 import { FontFamily } from '@/constants/Fonts';
+import { getProfile } from '@/lib/actions/users/getProfile';
+import { getLikedPosts } from '@/lib/actions/users/post/getLikePosts';
+import { useOnboardingStore } from '@/lib/stores/onboardingStore';
+import { Post } from '@/lib/types/posts';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
-import { Dimensions, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Plus } from 'lucide-react-native';
+import React, {
+  useEffect,
+  useState
+} from 'react';
+import {
+  Dimensions,
+  Image,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
 
 const { width } = Dimensions.get('window');
 const imageWidth = (width - 60) / 2;
 
-const myProfileData = {
-  name: 'Robert L',
-  username: '@robertlowsky',
-  avatar: { uri: 'https://picsum.photos/120/120' },
-  posts: 127,
-  followers: '1.2K',
-  following: 465,
-  outfits: [
-    { id: '1', image: { uri: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80' } },
-    { id: '2', image: { uri: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=400&q=80' } },
-    { id: '3', image: { uri: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=400&q=80' } },
-    { id: '4', image: { uri: 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80' } },
-    { id: '5', image: { uri: 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80' } },
-    { id: '6', image: { uri: 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80' } },
-    { id: '7', image: { uri: 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80' } },
-    { id: '8', image: { uri: 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80' } },
-    { id: '9', image: { uri: 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80' } },
-  ],
-  likedOutfits: [
-    { id: 'l1', image: { uri: 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80' } },
-    { id: 'l2', image: { uri: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=400&q=80' } },
-  ],
+export type Outfit = {
+  id: string;
+  user_id: string;
+  image_url: string;
+  created_at: string;
+};
+
+export type MyProfileData = {
+  id: string;
+  name: string | null;
+  username: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  outfits: Outfit[] | null;
+  posts: number,
+  liked_outfits: Post[] | null;
+  followers_count: number;
+  following_count: number;
 };
 
 const MyProfile = () => {
   const [activeTab, setActiveTab] = useState('Outfits');
+  const { userId } = useOnboardingStore()
+  const [myProfileData, setMyProfileData] = useState<MyProfileData | null>(null);
+  const [likedPosts, setLikedPosts] = useState<Post[]>([]);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const data = await getProfile(userId);
+      if (!data) {
+        console.error("Failed to load profile");
+      } else {
+        console.log("user data: ", data)
+        setMyProfileData(data[0]);
+      }
+    };
+
+    const fetchLikedPosts = async () => {
+      const res = await getLikedPosts(userId);
+      if (res?.success && res.data) {
+        setLikedPosts(res.data);
+      } else {
+        console.error("Failed to fetch liked posts");
+      }
+    };
+
+
+    if (userId) {
+      fetchProfile();
+      fetchLikedPosts()
+    }
+  }, [userId]);
 
   const renderOutfitGrid = (outfits: any[]) => (
     <View style={styles.outfitsGrid}>
@@ -45,64 +89,96 @@ const MyProfile = () => {
     </View>
   );
 
+  if (!myProfileData) {
+    return <Text>helloworld...</Text>;
+  }
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-
-
-        {/* Remove borderBottom for Header on this page */}
-        <Header title='Profile' />
-
+        <Header title="Profile" />
 
         <View style={styles.profileSection}>
           <View style={styles.profileHeader}>
-            <Image source={myProfileData.avatar} style={styles.profileAvatar} />
+            <Image
+              source={
+                myProfileData?.avatar_url
+                  ? { uri: myProfileData.avatar_url }
+                  : require('../../assets/images/logo.png')
+              }
+              style={styles.profileAvatar}
+            />
+            <TouchableOpacity
+              onPress={() => {
+                try {
+                  router.push("/pages/createPost");
+                } catch (err) {
+                  console.error("Navigation failed:", err);
+                }
+              }}
+              style={{ top: 35, right: 60, backgroundColor: "white", borderRadius: "50%" }}
+            >
+              <Plus />
+            </TouchableOpacity>
             <View style={styles.profileText}>
-              <Text style={styles.profileName}>{myProfileData.name}</Text>
-              <Text style={styles.profileUsername}>{myProfileData.username}</Text>
+              <Text style={styles.profileName}>{myProfileData?.name ?? 'No Name'}</Text>
+              <Text style={styles.profileUsername}>{myProfileData?.username ?? '@unknown'}</Text>
             </View>
-            <TouchableOpacity onPress={()=>{router.push('/pages/editProfile')}} style={styles.editProfileButton}>
+            <TouchableOpacity
+              onPress={() => {
+                router.push('/pages/editProfile');
+              }}
+              style={styles.editProfileButton}
+            >
               <Text style={styles.editProfileText}>Edit profile</Text>
             </TouchableOpacity>
           </View>
+
           <View style={styles.statsSection}>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{myProfileData.posts}</Text>
+              {/* Posts count fallback to 0 */}
+              <Text style={styles.statNumber}>{myProfileData?.posts ?? 0}</Text>
               <Text style={styles.statLabel}>Posts</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{myProfileData.followers}</Text>
+              <Text style={styles.statNumber}>{myProfileData?.followers_count ?? 0}</Text>
               <Text style={styles.statLabel}>Followers</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{myProfileData.following}</Text>
+              <Text style={styles.statNumber}>{myProfileData?.following_count ?? 0}</Text>
               <Text style={styles.statLabel}>Following</Text>
             </View>
           </View>
+
           <View style={styles.tabsSection}>
             <TouchableOpacity
               style={[styles.tabButton, activeTab === 'Outfits' && styles.activeTabButton]}
               onPress={() => setActiveTab('Outfits')}
             >
-              <Text style={[styles.tabButtonText, activeTab === 'Outfits' && styles.activeTabButtonText]}>Outfits</Text>
+              <Text style={[styles.tabButtonText, activeTab === 'Outfits' && styles.activeTabButtonText]}>
+                Outfits
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.tabButton, activeTab === 'Likes' && styles.activeTabButton]}
               onPress={() => setActiveTab('Likes')}
             >
-              <Text style={[styles.tabButtonText, activeTab === 'Likes' && styles.activeTabButtonText]}>Likes</Text>
+              <Text style={[styles.tabButtonText, activeTab === 'Likes' && styles.activeTabButtonText]}>
+                Likes
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
+
         <View style={styles.contentSection}>
           {activeTab === 'Outfits'
-            ? renderOutfitGrid(myProfileData.outfits)
-            : renderOutfitGrid(myProfileData.likedOutfits)}
+            ? renderOutfitGrid(myProfileData?.outfits ?? [])
+            : <LikedPostsList posts={likedPosts} />}
         </View>
       </ScrollView>
     </SafeAreaView>
+
   );
 };
 

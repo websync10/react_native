@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
 import React, { useState } from 'react'
 import {
+  ActivityIndicator,
   Image,
   Platform,
   SafeAreaView,
@@ -23,7 +24,6 @@ const FindYourFitMaleScreen = () => {
   const [showSizeDropdown, setShowSizeDropdown] = useState(false)
 
   const { image, skin_tone, size, setField } = useOnboardingStore()
-
   // Skin tone options with colors
   const getSkinToneOptions = () => {
     return [
@@ -63,6 +63,25 @@ const FindYourFitMaleScreen = () => {
   const handleGoBack = () => {
     router.push('/(auth)/accountsetup')
   }
+
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleImagePick = async (source: string) => {
+    setIsUploading(true);
+
+    let uri;
+    if (source === 'gallery') {
+      uri = await pickFromGallery();
+    } else {
+      uri = await openCamera();
+    }
+
+    if (uri) {
+      setField("image", uri);
+    }
+
+    setIsUploading(false);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -168,7 +187,6 @@ const FindYourFitMaleScreen = () => {
                     )
                   })}
                 </View>
-
               </View>
             </View>
 
@@ -262,7 +280,7 @@ const FindYourFitMaleScreen = () => {
                 <View style={styles.horizontalLine} />
 
                 {/* Camera and Gallery Icons */}
-                <View style={styles.photoActions}>
+                {/* <View style={styles.photoActions}>
                   <TouchableOpacity style={styles.photoActionButton}
                     onPress={async () => {
                       const uri = await pickFromGallery();
@@ -285,6 +303,31 @@ const FindYourFitMaleScreen = () => {
                     <Text style={styles.photoActionText}>Camera</Text>
 
                   </TouchableOpacity>
+                </View> */}
+
+                <View style={styles.photoActions}>
+                  {isUploading ? (
+                    <View style={styles.uploadingContainer}>
+                      <ActivityIndicator size="small" color="#000" />
+                      <Text style={styles.uploadingText}>Uploading...</Text>
+                    </View>
+                  ) : (
+                    <>
+                      <TouchableOpacity
+                        style={styles.photoActionButton}
+                        onPress={() => handleImagePick('gallery')}
+                      >
+                        <Text style={styles.photoActionText}>Gallery</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.photoActionButton}
+                        onPress={() => handleImagePick('camera')}
+                      >
+                        <Text style={styles.photoActionText}>Camera</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
                 </View>
               </View>
             </View>
@@ -346,6 +389,17 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  uploadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+  },
+  uploadingText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#555',
   },
 
   selectedSkinToneDisplay: {

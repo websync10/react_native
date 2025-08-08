@@ -1,3 +1,4 @@
+import { useOnboardingStore } from '@/lib/stores/onboardingStore';
 import { supabase } from '@/lib/supabase';
 import {
     Feather,
@@ -5,7 +6,11 @@ import {
     MaterialIcons,
 } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
+import React, {
+    useEffect,
+    useRef,
+    useState
+} from 'react';
 import {
     Alert,
     Animated,
@@ -31,6 +36,7 @@ interface SidebarProps {
 const MobileSidebar: React.FC<SidebarProps> = ({ visible, onClose, userData }) => {
     const slideAnim = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
     const [showModal, setShowModal] = useState(visible);
+    const {image} = useOnboardingStore()
 
     const handleLogout = async () => {
         const { error } = await supabase.auth.signOut();
@@ -96,7 +102,6 @@ const MobileSidebar: React.FC<SidebarProps> = ({ visible, onClose, userData }) =
                         resizeMode="cover"
                     />
                     <SafeAreaView style={styles.container}>
-                        {/* Header with back arrow */}
                         <View style={styles.header}>
                             <TouchableOpacity style={styles.backButton} onPress={onClose}>
                             </TouchableOpacity>
@@ -105,12 +110,12 @@ const MobileSidebar: React.FC<SidebarProps> = ({ visible, onClose, userData }) =
                         <View style={styles.profileSection}>
                             <View style={styles.profileContainer}>
                                 <Image
-                                    source={{ uri: userData?.profileImage }}
+                                    source={{ uri: image ? image : userData?.profileImage }}
                                     style={styles.profileImage}
                                 />
                                 <View style={styles.profileInfo}>
                                     <Text style={styles.profileName}>{userData?.fullName}</Text>
-                                    <TouchableOpacity style={styles.editProfileContainer} onPress={() => router.push("/edit")}>
+                                    <TouchableOpacity style={styles.editProfileContainer} onPress={() => router.push("/pages/editProfile")}>
                                         <Text style={styles.editProfileText}>Edit Profile</Text>
                                         <Feather name="edit-2" size={12} color="#999" />
                                     </TouchableOpacity>
@@ -120,24 +125,24 @@ const MobileSidebar: React.FC<SidebarProps> = ({ visible, onClose, userData }) =
 
                         <View style={styles.menuSection}>
                             <MenuItem
-                                icon={<MaterialIcons name="checkroom" size={20} color="#666" />}
-                                label="Fit Preferences"
-                                onPress={() => { }}
+                                icon={<MaterialIcons name="person" size={20} color="#666" />}
+                                label="Profile"
+                                onPress={() => { router.push("/pages/myProfile") }}
                             />
                             <MenuItem
                                 icon={<MaterialIcons name="history" size={20} color="#666" />}
-                                label="Try on History"
-                                onPress={() => { }}
+                                label="Try Outfits"
+                                onPress={() => { router.push("/pages/tryOnHistory") }}
                             />
                             <MenuItem
                                 icon={<MaterialIcons name="privacy-tip" size={20} color="#666" />}
                                 label="Privacy Policy"
-                                onPress={() => { }}
+                                onPress={() => { router.push("/pages/privacyPolicy") }}
                             />
                             <MenuItem
                                 icon={<MaterialIcons name="help-outline" size={20} color="#666" />}
                                 label="Help & Support"
-                                onPress={() => { }}
+                                onPress={() => { router.push("/pages/help-support") }}
                             />
                         </View>
 
@@ -273,7 +278,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 32,
         left: -8,
         backgroundColor: 'transparent',
-        gap:16
+        gap: 16
     },
     menuItem: {
         flexDirection: 'row',

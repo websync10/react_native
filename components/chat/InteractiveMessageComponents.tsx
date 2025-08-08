@@ -70,7 +70,7 @@ export const FitPreferenceMessage = ({ onSelect }: { onSelect: (fit: string) => 
     
     const handleSelect = (fit: string) => {
         setSelectedFit(fit);
-        setTimeout(() => onSelect(fit), 100);
+        onSelect(fit)
     };
 
     return (

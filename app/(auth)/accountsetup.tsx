@@ -21,7 +21,6 @@ import {
 
 const AccountSetupScreen = () => {
   const { fullName, username, gender, dob, setField } = useOnboardingStore();
-  // Reset size when gender changes
   const handleGenderChange = (gender: string) => {
     setField("gender", gender)
   }

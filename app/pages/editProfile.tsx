@@ -1,9 +1,12 @@
 
 import Header from '@/components/Header';
+import DatePickerField from '@/components/onboarding/DatePickerField';
 import PrimaryButton from '@/components/PrimaryButton';
+import SecondaryButton from '@/components/SecondaryButton';
 import { FontFamily } from '@/constants/Fonts';
+import { useOnboardingStore } from '@/lib/stores/onboardingStore';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Image,
   KeyboardAvoidingView,
@@ -18,17 +21,10 @@ import {
 } from 'react-native';
 
 const EditProfileScreen = () => {
-  const [fullName, setFullName] = useState('Robert Lowsky');
-  const [username, setUsername] = useState('robertlowsky');
-  const [selectedGender, setSelectedGender] = useState('Male');
-  const [dateOfBirth, setDateOfBirth] = useState('November 27, 2000');
+  const { fullName, username, gender, image, setField } = useOnboardingStore()
 
   const handleGenderChange = (gender: string) => {
-    setSelectedGender(gender);
-  };
-
-  const handleSave = () => {
-    // Save logic here
+    setField("gender", gender);
   };
 
   return (
@@ -44,14 +40,13 @@ const EditProfileScreen = () => {
           showsVerticalScrollIndicator={false}
         >
           {/* Header */}
-
           <Header title='Edit Profile' />
 
           {/* Avatar Section */}
           <View style={styles.avatarSection}>
             <View style={styles.avatarContainer}>
               <Image
-                source={{ uri: 'https://picsum.photos/120/120' }}
+                source={{ uri: image }}
                 style={styles.avatar}
               />
               <TouchableOpacity style={styles.cameraButton}>
@@ -75,7 +70,7 @@ const EditProfileScreen = () => {
                 placeholder="Full name"
                 placeholderTextColor="#999"
                 value={fullName}
-                onChangeText={setFullName}
+                onChangeText={(text) => setField("fullName", text)}
                 autoCapitalize="words"
               />
             </View>
@@ -87,7 +82,7 @@ const EditProfileScreen = () => {
                 placeholder="Username"
                 placeholderTextColor="#999"
                 value={username}
-                onChangeText={setUsername}
+                onChangeText={(text) => setField("username", text)}
                 autoCapitalize="none"
               />
             </View>
@@ -98,7 +93,7 @@ const EditProfileScreen = () => {
                 <TouchableOpacity
                   style={[
                     styles.genderOption,
-                    selectedGender === 'Male' && styles.genderOptionSelected,
+                    gender === 'Male' && styles.genderOptionSelected,
                   ]}
                   onPress={() => handleGenderChange('Male')}
                 >
@@ -107,7 +102,7 @@ const EditProfileScreen = () => {
                 <TouchableOpacity
                   style={[
                     styles.genderOption,
-                    selectedGender === 'Female' && styles.genderOptionSelected,
+                    gender === 'Female' && styles.genderOptionSelected,
                   ]}
                   onPress={() => handleGenderChange('Female')}
                 >
@@ -118,35 +113,25 @@ const EditProfileScreen = () => {
             {/* Date of Birth */}
             <View style={styles.inputSection}>
               <Text style={styles.inputLabel}>Date of birth</Text>
-              <View style={styles.dateInputContainer}>
-                <TextInput
-                  style={styles.dateInput}
-                  placeholder="Date of birth"
-                  placeholderTextColor="#999"
-                  value={dateOfBirth}
-                  onChangeText={setDateOfBirth}
-                />
-                <TouchableOpacity style={styles.calendarButton}>
-                  <View style={styles.calendarIcon}>
-                    <View style={styles.calendarTop} />
-                    <View style={styles.calendarBody}>
-                      <View style={styles.calendarGrid}>
-                        <View style={styles.calendarDot} />
-                        <View style={styles.calendarDot} />
-                        <View style={styles.calendarDot} />
-                        <View style={styles.calendarDot} />
-                      </View>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              </View>
+              <DatePickerField styles={styles} />
             </View>
           </View>
 
           {/* Save Button */}
           <View style={styles.buttons}>
-            {/* onPress={handleSave} */}
-            <PrimaryButton title="Save" onPress={()=>{router.push('/findYourFitMale')}} />
+            <PrimaryButton
+              title="Save"
+              onPress={() => {
+                if (gender === 'Male') {
+                  router.push('/(auth)/findYourFitMale')
+                } else if (gender === 'Female') {
+                  router.push('/(auth)/findYourFitFemale')
+                } else {
+                  console.log('Please select a gender first')
+                }
+              }}
+            />
+            <SecondaryButton title='Cancel' onPress={() => { router.push("/pages/myProfile") }} />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -178,7 +163,7 @@ const styles = StyleSheet.create({
   avatarSection: {
     alignItems: 'center',
     marginBottom: 24,
-    marginTop:8,
+    marginTop: 8,
   },
   avatarContainer: {
     position: 'relative',

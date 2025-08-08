@@ -1,46 +1,72 @@
 import HeaderWithShare from '@/components/headerwithShare';
 import PrimaryButton from '@/components/PrimaryButton';
 import { FontFamily } from '@/constants/Fonts';
-import { router } from 'expo-router';
-import React from 'react';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { supabase } from '@/lib/supabase';
+import { router, useLocalSearchParams } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import {
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import { Path, Svg } from 'react-native-svg';
-
-const productImage = require('../../assets/images/lookDetail1.png'); // Replace with your actual image path
-const avatar1 = require('../../assets/images/lookDetail2.png'); // Replace with your actual image path
-const avatar2 = require('../../assets/images/lookDetail3.png'); // Replace with your actual image path
-const avatar3 = require('../../assets/images/lookDetail4.png'); // Replace with your actual image path
-
+import { TryOnLook } from './tryOnHistory';
 export default function MyLookDetails() {
   const [selectedThumb, setSelectedThumb] = React.useState(0);
-  const [selectedColor, setSelectedColor] = React.useState(0);
-  const thumbnails = [productImage, avatar1, avatar2, avatar3];
+  const [looksData, setLooksData] = useState<TryOnLook[]>([]);
+  const [loading, setLoading] = useState(true);
+  const params = useLocalSearchParams();
+  const initialImage = params.image as string;
+
+  const fetchLooks = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from('tryondb').select('*').order('created_at', { ascending: true }).limit(3)
+
+    if (error) {
+      console.error('Error fetching looks:', error.message);
+    } else {
+      setLooksData(data);
+    }
+    setLoading(false);
+  };
+  useEffect(() => {
+    fetchLooks();
+  }, []);
+  console.log(initialImage)
+  const thumbnails = [{ uri: initialImage }, ...looksData.map((look) => ({ uri: look.image }))];
   return (
     <ScrollView style={styles.container}>
-      {/* Header with Share Button */}
       <HeaderWithShare title='Details' onBack={() => { router.push('/(home)/lookbook'); }} />
 
-<View style={{ paddingHorizontal: 16 }}>
-        {/* Main Image */}
+      <View style={{ paddingHorizontal: 16 }}>
         <View style={styles.imageContainer}>
           <Image source={thumbnails[selectedThumb]} style={styles.mainImage} />
-          {/* Try On Look Button */}
-          <TouchableOpacity style={styles.tryOnButton} onPress={()=>{
-            router.push('/pages/tryLookPage')
-          }}>
-            <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-<Path d="M13.6603 21.1438C14.5575 16.9657 17.8212 13.702 21.9993 12.8048C17.8212 11.9076 14.5575 8.64387 13.6603 4.46578C12.7631 8.64387 9.49938 11.9076 5.32129 12.8048C9.49938 13.702 12.7631 16.9657 13.6603 21.1438Z" fill="black"/>
-<Path d="M5.32294 9.50195C5.68045 7.83707 6.98098 6.53653 8.64587 6.17902C6.98099 5.8215 5.68045 4.52097 5.32294 2.85608C4.96542 4.52097 3.66489 5.8215 2 6.17902C3.66489 6.53653 4.96542 7.83707 5.32294 9.50195Z" fill="black"/>
-</Svg>
-            <Text style={styles.tryOnText}>Try On Look</Text>
-          </TouchableOpacity>
+          {
+            selectedThumb !== 0 && (
+              <TouchableOpacity style={styles.tryOnButton}
+                onPress={() => router.push({
+                  pathname: '/pages/tryLookPage',
+                  params: { outfitImage: thumbnails[selectedThumb]?.uri }
+                })}
+              >
+                <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <Path d="M13.6603 21.1438C14.5575 16.9657 17.8212 13.702 21.9993 12.8048C17.8212 11.9076 14.5575 8.64387 13.6603 4.46578C12.7631 8.64387 9.49938 11.9076 5.32129 12.8048C9.49938 13.702 12.7631 16.9657 13.6603 21.1438Z" fill="black" />
+                  <Path d="M5.32294 9.50195C5.68045 7.83707 6.98098 6.53653 8.64587 6.17902C6.98099 5.8215 5.68045 4.52097 5.32294 2.85608C4.96542 4.52097 3.66489 5.8215 2 6.17902C3.66489 6.53653 4.96542 7.83707 5.32294 9.50195Z" fill="black" />
+                </Svg>
+                <Text style={styles.tryOnText}>Try On Look</Text>
+              </TouchableOpacity>
+            )
+          }
         </View>
 
         <View style={styles.thumbnailStickyWrapper}>
           <View style={styles.thumbnailContainer}>
             {thumbnails.map((img, idx) => (
-              <TouchableOpacity 
-                key={idx} 
+              <TouchableOpacity
+                key={idx}
                 onPress={() => setSelectedThumb(idx)}
                 style={styles.thumbnailTouchable}
               >
@@ -48,9 +74,9 @@ export default function MyLookDetails() {
                   styles.thumbnailWrapper,
                   selectedThumb === idx && styles.selectedThumbnailWrapper
                 ]}>
-                  <Image 
-                    source={img} 
-                    style={styles.thumbnail} 
+                  <Image
+                    source={img}
+                    style={styles.thumbnail}
                   />
                 </View>
               </TouchableOpacity>
@@ -61,21 +87,21 @@ export default function MyLookDetails() {
         {/* Product Details */}
         <View style={styles.detailsSection}>
           <View style={styles.titleRow}>
-            <Text style={styles.productTitle}>Men’s Oversized Cotton Crewneck Tee</Text>
-            <Text style={styles.productPrice}>USD $40.77</Text>
+            <Text style={styles.productTitle}>{looksData[selectedThumb]?.type}</Text>
+            {/* <Text style={styles.productPrice}>USD $40.77</Text> */}
           </View>
           <Text style={styles.productDesc}>AI-generated based on your travel prompt and streetwear style</Text>
         </View>
 
         {/* Color Options */}
-        <View style={styles.colorSec}>
+        {/* <View style={styles.colorSec}>
           <Text style={styles.chooseColor}>Choose Color</Text>
           <View style={styles.colorRow}>
             {['#6B4F3D', '#4FC3F7', '#FF8A65', '#FF5252', '#9575CD'].map((color, idx) => (
               <TouchableOpacity key={color} onPress={() => setSelectedColor(idx)}>
                 <View style={styles.colorCircleWrapper}>
                   {selectedColor === idx ? (
-                    <View style={[styles.selectedColorCircle, { borderColor: color }]}> 
+                    <View style={[styles.selectedColorCircle, { borderColor: color }]}>
                       <View style={[styles.innerColorCircle, { backgroundColor: color }]} />
                     </View>
                   ) : (
@@ -85,10 +111,9 @@ export default function MyLookDetails() {
               </TouchableOpacity>
             ))}
           </View>
-        </View>
-
+        </View> */}
         {/* Shop Now Button */}
-        <PrimaryButton title='Shop Now' onPress={()=>{}} />
+        <PrimaryButton title='See More' onPress={() => {router.push("/pages/tryOnHistory")}} />
       </View>
     </ScrollView>
   );
@@ -126,7 +151,7 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     // backgroundColor: '#F5F6F7',
-    borderWidth:1,
+    borderWidth: 1,
     borderColor: '#D9D9D9',
     alignItems: 'center',
     justifyContent: 'center',
@@ -158,8 +183,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent:'center',
-    gap:8,
+    justifyContent: 'center',
+    gap: 8,
     shadowColor: '#000',
     shadowOpacity: 0.08,
     shadowRadius: 4,
@@ -223,7 +248,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.HelveticaNeue.Medium,
     color: '#000000',
     marginBottom: 4,
-    lineHeight:24,
+    lineHeight: 24,
     flex: 1,
   },
   productPrice: {
@@ -237,9 +262,9 @@ const styles = StyleSheet.create({
   productDesc: {
     fontSize: 14,
     color: '#8288A0',
-    fontFamily:FontFamily.HelveticaNeue.Regular,
+    fontFamily: FontFamily.HelveticaNeue.Regular,
     marginBottom: 16,
-    lineHeight:21,
+    lineHeight: 21,
     width: 300,
   },
   chooseColor: {
@@ -252,7 +277,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: 24,
   },
-  colorSec:{
+  colorSec: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingBottom: 42,

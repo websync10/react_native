@@ -1,10 +1,13 @@
 import Header from "@/components/Header";
-import MobileSidebar from "@/components/home/Sidebar";
 import UnfollowConfirmationModal from "@/components/UnfollowConfirmationModal";
 import { FontFamily } from "@/constants/Fonts";
+import { getPostById } from "@/lib/actions/users/post/getPostById";
+import { dislikePost, hasUserDislikedPost, hasUserLikedPost, likePost, undislikePost, unlikePost } from "@/lib/actions/users/post/postInteractions";
+import { useOnboardingStore } from "@/lib/stores/onboardingStore";
+import { Post } from "@/lib/types/posts";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Image,
   SafeAreaView,
@@ -16,71 +19,148 @@ import {
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
-type Post = {
-  id: string;
-  user: {
-    name: string;
-    avatar: any;
-  };
-  styleImage: any;
-  title: string;
-  description: string;
-  tags: string[];
-  likes: number;
-  dislike: number;
-  comments: number;
-};
-
-const mockPosts: { [key: string]: Post } = {
-  "1": {
-    id: "1",
-    user: {
-      name: "Jacklaw_",
-      avatar: require("@/assets/images/styles/businesscasual-male.png"),
-    },
-    styleImage: require("@/assets/images/styles/streetwear-male.png"),
-    title: "Stylish Urban Fashion",
-    description: "Simply dummy text of the printing and typesetting industry.",
-    tags: ["#Summer", "#Casual", "#Urban"],
-    likes: 120,
-    dislike: 17,
-    comments: 0,
-  },
-  "2": {
-    id: "2",
-    user: {
-      name: "Stevee_",
-      avatar: require("@/assets/images/styles/bohemian-female.png"),
-    },
-    styleImage: require("@/assets/images/styles/casual-female.png"),
-    title: "Stylish Woman in Urban Setting",
-    description: "Simply dummy text of the printing and typesetting industry.",
-    tags: ["#Woman", "#Urban", "#Casual"],
-    likes: 90,
-    dislike: 2,
-    comments: 12,
-  },
-};
-
 const DiscoverPostDetail = () => {
-  const { postId } = useLocalSearchParams();
+  const params = useLocalSearchParams();
+  const postId = params.postId as string;
   const [liked, setLiked] = useState(false);
   const [disliked, setDisliked] = useState(false);
   const [isFollowed, setIsFollowed] = useState(false);
   const [showUnfollowModal, setShowUnfollowModal] = useState(false);
+  const { userId } = useOnboardingStore();
+  const currentUserId = userId;
+  const [post, setPost] = useState<Post | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [likesCount, setLikesCount] = useState<number>(
+    Array.isArray(post?.likes) ? post.likes.length : typeof post?.likes === 'number' ? post.likes : 0
+  );
+  const [dislikesCount, setDislikesCount] = useState<number>(
+    Array.isArray(post?.disLikes) ? post.disLikes.length : typeof post?.disLikes === 'number' ? post.disLikes : 0
+  );
 
-  // Get post data based on postId
-  const post = mockPosts[postId as string] || mockPosts["1"];
-  const [sidebarVisible, setSidebarVisible] = useState(false);
 
-  const userData = {
-    id: 'user1',
-    name: 'Jacklaw_',
-    fullName: 'Jack Law',
-    avatar: require('@/assets/images/styles/businesscasual-male.png'),
-    profileImage: require('@/assets/images/styles/businesscasual-male.png'),
-    followers: [require('@/assets/images/styles/bohemian-female.png'), require('@/assets/images/styles/businesscasual-male.png')],
+  const isCurrentUserPost = post?.user?.id === currentUserId;
+
+  useEffect(() => {
+    const fetchPost = async () => {
+      try {
+        console.log("postid", postId)
+        const res = await getPostById(postId, currentUserId);
+        if (!res.success) throw new Error("Post fetch failed");
+
+        const postData = res?.data as Post
+        setPost(postData);
+        setIsFollowed(postData.isFollowing || false);
+      } catch (err) {
+        console.error("Error loading post:", err);
+      }
+    };
+
+    if (postId && currentUserId) fetchPost();
+  }, [postId, currentUserId]);
+
+
+  useEffect(() => {
+    const initializeReactionStatus = async () => {
+      if (!userId) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const [likedStatus, dislikedStatus] = await Promise.all([
+          hasUserLikedPost(postId, userId),
+          hasUserDislikedPost(postId, userId)
+        ]);
+
+        setLiked(likedStatus);
+        setDisliked(dislikedStatus);
+      } catch (error) {
+        console.error('Failed to initialize reaction status:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeReactionStatus();
+  }, [post?.id, userId]);
+
+  const handleLike = async () => {
+    if (!userId || loading) return;
+
+    const wasLiked = liked;
+    const wasDisliked = disliked;
+    const prevLikesCount = likesCount;
+    const prevDislikesCount = dislikesCount;
+
+    try {
+      if (liked) {
+        setLiked(false);
+        setLikesCount(prev => prev - 1);
+        await unlikePost(postId, userId);
+      } else {
+        setLiked(true);
+        setLikesCount(prev => prev + 1);
+
+        if (disliked) {
+          setDisliked(false);
+          setDislikesCount(prev => prev - 1);
+          await undislikePost(postId, userId);
+        }
+
+        await likePost(postId, userId);
+      }
+    } catch (error) {
+      setLiked(wasLiked);
+      setDisliked(wasDisliked);
+      setLikesCount(prevLikesCount);
+      setDislikesCount(prevDislikesCount);
+      console.error('Error handling like:', error);
+    }
   };
+
+  useEffect(() => {
+    if (post) {
+      setLikesCount(Array.isArray(post.likes) ? post.likes.length : typeof post.likes === 'number' ? post.likes : 0);
+      setDislikesCount(Array.isArray(post.disLikes) ? post.disLikes.length : typeof post.disLikes === 'number' ? post.disLikes : 0);
+    }
+  }, [post]);
+
+
+  const handleDislike = async () => {
+    if (!userId || loading) return;
+
+    const wasLiked = liked;
+    const wasDisliked = disliked;
+    const prevLikesCount = likesCount;
+    const prevDislikesCount = dislikesCount;
+
+    try {
+      if (disliked) {
+        setDisliked(false);
+        setDislikesCount(prev => prev - 1);
+        await undislikePost(postId, userId);
+      } else {
+        setDisliked(true);
+        setDislikesCount(prev => prev + 1);
+
+        if (liked) {
+          setLiked(false);
+          setLikesCount(prev => prev - 1);
+          await unlikePost(postId, userId);
+        }
+
+        await dislikePost(postId, userId);
+      }
+    } catch (error) {
+      setLiked(wasLiked);
+      setDisliked(wasDisliked);
+      setLikesCount(prevLikesCount);
+      setDislikesCount(prevDislikesCount);
+
+      console.error('Error handling dislike:', error);
+    }
+  };
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -91,12 +171,7 @@ const DiscoverPostDetail = () => {
         {/* Header */}
         <View style={styles.header}>
           <Header
-            title=""
-          />
-          <MobileSidebar
-            visible={sidebarVisible}
-            onClose={() => setSidebarVisible(false)}
-            userData={userData}
+            title="Discover Looks"
           />
         </View>
 
@@ -104,28 +179,32 @@ const DiscoverPostDetail = () => {
         <View style={styles.userSection}>
           <TouchableOpacity onPress={() => { router.push('./pages/profileDetails') }} >
             <View style={styles.userInfo}>
-              <Image source={post.user.avatar} style={styles.avatar} />
-              <Text style={styles.username}>{post.user.name}</Text>
+              <Image source={{ uri: post?.user.avatar_url }} style={styles.avatar} />
+              <Text style={styles.username}>{post?.user.full_name}</Text>
             </View></TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.followBtn, isFollowed && styles.followBtnFollowing]}
-            onPress={() => {
-              if (isFollowed) {
-                setShowUnfollowModal(true);
-              } else {
-                setIsFollowed(true);
-              }
-            }}
-          >
-            <Text
-              style={[
-                styles.followBtnText,
-                isFollowed && styles.followBtnTextFollowing,
-              ]}
-            >
-              {isFollowed ? "Following" : "Follow"}
-            </Text>
-          </TouchableOpacity>
+          {
+            !isCurrentUserPost && (
+              <TouchableOpacity
+                style={[styles.followBtn, isFollowed && styles.followBtnFollowing]}
+                onPress={() => {
+                  if (isFollowed) {
+                    setShowUnfollowModal(true);
+                  } else {
+                    setIsFollowed(true);
+                  }
+                }}
+              >
+                <Text
+                  style={[
+                    styles.followBtnText,
+                    isFollowed && styles.followBtnTextFollowing,
+                  ]}
+                >
+                  {isFollowed ? "Following" : "Follow"}
+                </Text>
+              </TouchableOpacity>
+            )
+          }
         </View>
         {/* Unfollow Confirmation Modal */}
         {isFollowed && showUnfollowModal && (
@@ -136,24 +215,26 @@ const DiscoverPostDetail = () => {
               setIsFollowed(false);
               setShowUnfollowModal(false);
             }} user={{
-              name: "",
-              avatar: undefined
+              name: post?.user.full_name ?? "",
+              avatar: post?.user.avatar_url
             }} />
         )}
 
         {/* Main Image */}
         <View style={styles.imageContainer}>
           <Image
-            source={post.styleImage}
+            source={{ uri: post?.image }}
             style={styles.mainImage}
             resizeMode="cover"
           />
 
-          {/* Try On Look Button */}
           <TouchableOpacity
             style={styles.tryOnButton}
             onPress={() => {
-              router.push("/pages/tryLookPage");
+              router.push({
+                pathname: "/pages/tryLookPage",
+                params: { outfitImage: post?.image }
+              });
             }}
           >
             <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -172,12 +253,12 @@ const DiscoverPostDetail = () => {
 
         {/* Content Section */}
         <View style={styles.contentSection}>
-          <Text style={styles.postTitle}>{post.title}</Text>
-          <Text style={styles.postDescription}>{post.description}</Text>
+          <Text style={styles.postTitle}>{post?.title}</Text>
+          <Text style={styles.postDescription}>{post?.description}</Text>
 
           {/* Tags */}
           <View style={styles.tagsContainer}>
-            {post.tags.map(
+            {post?.tags.map(
               (
                 tag:
                   | string
@@ -209,7 +290,7 @@ const DiscoverPostDetail = () => {
                 index: React.Key | null | undefined
               ) => (
                 <TouchableOpacity key={index} style={styles.tagBtn}>
-                  <Text style={styles.tagText}>{tag}</Text>
+                  <Text style={styles.tagText}>#{tag}</Text>
                 </TouchableOpacity>
               )
             )}
@@ -218,10 +299,7 @@ const DiscoverPostDetail = () => {
           {/* Stats Row */}
           <View style={styles.statsRow}>
             <TouchableOpacity
-              onPress={() => {
-                setLiked(!liked);
-                if (disliked) setDisliked(false);
-              }}
+              onPress={handleLike}
               activeOpacity={0.7}
               style={styles.statButton}
             >
@@ -253,13 +331,10 @@ const DiscoverPostDetail = () => {
                 </Svg>
               )}
             </TouchableOpacity>
-            <Text style={styles.statText}>{post.likes}</Text>
+            <Text style={styles.statText}>{likesCount}</Text>
 
             <TouchableOpacity
-              onPress={() => {
-                setDisliked(!disliked);
-                if (liked) setLiked(false);
-              }}
+              onPress={handleDislike}
               activeOpacity={0.7}
               style={[styles.statButton, { marginLeft: 16 }]}
             >
@@ -275,7 +350,7 @@ const DiscoverPostDetail = () => {
                     fillRule="evenodd"
                     clipRule="evenodd"
                     d="M12.7111 21H15.8769C17.7124 21 19.3123 19.7508 19.7575 17.9701L21.3788 11.4851C21.6943 10.2228 20.7396 9 19.4385 9H14.5L15.8069 6.75968C16.7791 5.09303 15.5769 3 13.6474 3H12.5L8.63178 9.76943C8.54543 9.92052 8.50002 10.0915 8.50002 10.2656V18.4648C8.50002 18.7992 8.66712 19.1114 8.94532 19.2969L10.4923 20.3282C11.1494 20.7662 11.9214 21 12.7111 21ZM4 9H5C6.10457 9 7 9.89543 7 11V18C7 19.1046 6.10457 20 5 20H4C2.89543 20 2 19.1046 2 18V11C2 9.89543 2.89543 9 4 9Z"
-                    fill="#000000"
+                     fill="#FF3B30"
                   />
                 </Svg>
               ) : (
@@ -303,12 +378,12 @@ const DiscoverPostDetail = () => {
                 </Svg>
               )}
             </TouchableOpacity>
-            <Text style={styles.statText}>{post.dislike}</Text>
+            <Text style={styles.statText}>{dislikesCount}</Text>
 
             <TouchableOpacity style={[styles.statButton, { marginLeft: 16 }]}>
               <Ionicons name="chatbubble-outline" size={20} color="#000" />
             </TouchableOpacity>
-            <Text style={styles.statText}>{post.comments}</Text>
+            <Text style={styles.statText}>{post?.comments.length ?? 0}</Text>
           </View>
         </View>
       </ScrollView>

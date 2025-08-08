@@ -1,6 +1,8 @@
 import Header from '@/components/Header';
 import PrimaryButton from '@/components/PrimaryButton';
 import { FontFamily } from '@/constants/Fonts';
+import { createHelp } from '@/lib/actions/help&support/createHelp';
+import { useOnboardingStore } from '@/lib/stores/onboardingStore';
 import React, { useState } from 'react';
 import {
     Alert,
@@ -19,6 +21,7 @@ export default function HelpSupportScreen() {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const { userId } = useOnboardingStore()
 
     const handleSubmit = async () => {
         if (!title.trim() || !description.trim()) {
@@ -26,13 +29,16 @@ export default function HelpSupportScreen() {
             return;
         }
 
-        setIsSubmitting(true);
-
-        // Simulate API call
-        setTimeout(() => {
+        const helpData = {
+            userId: userId,
+            title: title,
+            problem: description,
+        }
+        const response = await createHelp({ helpData })
+        if (response.success) {
             setIsSubmitting(false);
             Alert.alert(
-                'Success', 
+                'Success',
                 'Your support request has been submitted successfully. We will get back to you soon.',
                 [
                     {
@@ -44,7 +50,7 @@ export default function HelpSupportScreen() {
                     }
                 ]
             );
-        }, 1000);
+        }
     };
 
     return (
@@ -53,16 +59,16 @@ export default function HelpSupportScreen() {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
             <SafeAreaView style={styles.container}>
-                <StatusBar 
-                    barStyle="dark-content" 
-                    backgroundColor="#ffffff" 
+                <StatusBar
+                    barStyle="dark-content"
+                    backgroundColor="#ffffff"
                     translucent={false}
                 />
 
                 {/* Header */}
                 <Header title='Help & Support' />
 
-                <ScrollView 
+                <ScrollView
                     style={styles.content}
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
@@ -110,8 +116,8 @@ export default function HelpSupportScreen() {
                 </ScrollView>
 
                 {/* Submit Button */}
-                <View style={{padding:24}}>
-                <PrimaryButton title='Submit' onPress={()=>{}} />
+                <View style={{ padding: 24 }}>
+                    <PrimaryButton title='Submit' onPress={handleSubmit} />
                 </View>
             </SafeAreaView>
         </KeyboardAvoidingView>
@@ -166,7 +172,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         lineHeight: 22,
     },
-    inputSection: {     
+    inputSection: {
         marginBottom: 24,
     },
     inputLabel: {

@@ -1,13 +1,13 @@
 import { FontFamily } from '@/constants/Fonts';
+import { uploadToCloudinary } from '@/lib/services/upload-images/uploadToCloudinary';
 import { ChatMessage, useChatStore } from '@/lib/stores/chatStore';
 import { useOnboardingStore } from '@/lib/stores/onboardingStore';
-import { sampleRequests } from '@/lib/utils/SampleRequests';
-import { sampleResponses } from '@/lib/utils/SampleResponses';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import axios from "axios";
 import { BlurView } from 'expo-blur';
 import React, { useEffect, useRef, useState } from 'react';
 import {
+    Dimensions,
     Image,
     KeyboardAvoidingView,
     Platform,
@@ -22,17 +22,14 @@ import {
 } from 'react-native';
 import 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-    CapsuleWardrobeMessage,
-    FitPreferenceMessage,
-    HeightSelectionMessage,
-    OutfitCarouselMessage,
-    OutfitRecommendationsMessage,
-    PremiumUpgradeMessage
-} from '../chat/InteractiveMessageComponents';
+import { CapsuleWardrobeMessage, FitPreferenceMessage, HeightSelectionMessage, OutfitCarouselMessage, OutfitRecommendationsMessage, PremiumUpgradeMessage } from '../chat/InteractiveMessageComponents';
 import HeaderWithLogo from '../headerwithlogo';
 import MobileSidebar from './Sidebar';
 
+// Extended ChatMessage interface to include images
+interface ExtendedChatMessage extends ChatMessage {
+    images?: string[];
+}
 
 interface HomePageProps {
     userData: User | null
@@ -51,32 +48,27 @@ const HomePage = ({
 
     const [chatStarted, setChatStarted] = useState(false);
     const [initialMessageCount, setInitialMessageCount] = useState(0);
-    const [showOptions, setShowOptions] = useState(false);
+    const [showDropdown, setShowDropdown] = useState(false);
     const hasLoadedInitialMessages = useRef(false);
-    const { userId } = useOnboardingStore()
+    const { userId } = useOnboardingStore();
 
+    const [typingMessageId, setTypingMessageId] = useState<string | null>(null);
+    const [isFirstInteraction, setIsFirstInteraction] = useState(true);
+    const [optionsShown, setOptionsShown] = useState(false);
+    const [userPreferences, setUserPreferences] = useState<{
+        height?: string;
+        fit?: string;
+        weather?: string;
+        location?: string;
+        initialRequest?: string;
+    }>({});
+    const [isTyping, setIsTyping] = useState(false);
 
-    const generateRandomMessage = () => {
-        const randomRequest = sampleRequests[Math.floor(Math.random() * sampleRequests.length)];
-        const randomResponse = sampleResponses[Math.floor(Math.random() * sampleResponses.length)];
-        addMessage({ id: userId, role: 'user', content: randomRequest });
-        setTimeout(() => {
-            const aiId = (Date.now() + 1).toString() + Math.random().toString(36).slice(2);
+    // New state to track which message options should be shown
+    const [showOptionsForMessage, setShowOptionsForMessage] = useState<string | null>(null);
 
-            if (typeof randomResponse === 'string') {
-                addMessage({ id: aiId, role: 'assistant', content: randomResponse });
-            } else {
-                addMessage({
-                    id: aiId,
-                    role: 'assistant',
-                    content: randomResponse.content,
-                    type: randomResponse.type as any,
-                    data: randomResponse.data
-                });
-            }
-        }, 1000);
-        setChatStarted(true);
-    };
+    const { width: screenWidth } = Dimensions.get('window');
+
     useEffect(() => {
         const loadInitialMessages = async () => {
             if (!hasLoadedInitialMessages.current) {
@@ -90,6 +82,10 @@ const HomePage = ({
     useEffect(() => {
         if (hasLoadedInitialMessages.current && initialMessageCount === 0) {
             setInitialMessageCount(messages.length);
+            if (messages.length > 0) {
+                setIsFirstInteraction(false);
+                setOptionsShown(true);
+            }
         }
     }, [messages.length, initialMessageCount]);
 
@@ -99,79 +95,194 @@ const HomePage = ({
         }
     }, [messages]);
 
+    const generateId = () => (Date.now() + Math.random().toString(36).slice(2));
+
+    const handleClearChat = () => {
+        clearMessages();
+        setChatStarted(false);
+        setIsFirstInteraction(true);
+        setOptionsShown(false);
+        setUserPreferences({});
+        setTypingMessageId(null);
+        setShowDropdown(false);
+        setShowOptionsForMessage(null);
+    };
+
     const sendMessage = async () => {
         if (!input.trim()) return;
 
         setChatStarted(true);
-        const userMsg: ChatMessage = { id: userId, role: 'user', content: input };
+        const userMsg: ChatMessage = { id: generateId(), role: 'user', content: input };
         addMessage(userMsg);
 
+        const userInput = input;
         setInput('');
         inputRef.current?.blur();
-        const generateId = () => (Date.now() + Math.random().toString(36).slice(2));
-        try {
-            const res = await axios.post(`https://4d55d7cbcf7b.ngrok-free.app/api/ai-chat/${userId}`, {
-                messages: [{ role: 'user', content: input }],
-            });
 
-            const aiMsg: ChatMessage = {
-                id: generateId(),
-                role: 'assistant',
-                content: res.data.reply,
-                type: res.data.type,
-                data: res.data.data,
-            };
-            addMessage(aiMsg);
+        if (isFirstInteraction && !optionsShown) {
+            setUserPreferences(prev => ({ ...prev, initialRequest: userInput }));
+            setIsFirstInteraction(false);
+
+            setTimeout(() => {
+                const aiMsgId = generateId();
+                const optionsMsg: ChatMessage = {
+                    id: aiMsgId,
+                    role: 'assistant',
+                    content: "Hey! I'd love to help you put together the perfect outfit. Let me start by getting to know you better:",
+                    type: 'height-selection'
+                };
+                setTypingMessageId(aiMsgId);
+                addMessage(optionsMsg);
+                setIsTyping(true);
+                setOptionsShown(true);
+            }, 800);
+            return;
+        }
+
+        await callAPI(userInput);
+    };
+
+    const callAPI = async (userInput: string, includePreferences = false) => {
+        try {
+            console.log("connecting to backend!")
+            let messages = [{ role: 'user', content: userInput }];
+
+            if (includePreferences && userPreferences.initialRequest) {
+                messages = [
+                    { role: 'user', content: userPreferences.initialRequest },
+                    { role: 'assistant', content: 'I understand you need outfit help. Let me use your preferences.' },
+                    { role: 'user', content: `My height is ${userPreferences.height} and I prefer ${userPreferences.fit} fit. ${userInput}` }
+                ];
+            }
+
+            const res = await axios.post(`https://953f2cc7882f.ngrok-free.app/api/ai-chat/${userId}`, {
+                messages: messages,
+            });
+            const savedImage = await uploadToCloudinary(res.data.images)
+
+            setTimeout(() => {
+                const aiMsgId = generateId();
+                const aiMsg: ChatMessage = {
+                    id: aiMsgId,
+                    role: 'assistant',
+                    content: res.data.reply,
+                    type: res.data.type,
+                    data: res.data.data,
+                    images: res.data.images
+                };
+
+                setTypingMessageId(aiMsgId);
+                addMessage(aiMsg);
+            }, 500);
+
         } catch (err) {
             console.error('[❌] Backend error:', err);
-            addMessage({
-                id: generateId(),
-                role: 'assistant',
-                content: 'Oops! Something went wrong. Try again later.',
-            });
+            setTimeout(() => {
+                const errorMsgId = generateId();
+                setTypingMessageId(errorMsgId);
+                addMessage({
+                    id: errorMsgId,
+                    role: 'assistant',
+                    content: 'Oops! Something went wrong. Try again later.',
+                });
+            }, 500);
         }
     };
 
-    const TypewriterText = ({ text, speed, textStyle, shouldStart = true }: {
+    const TypewriterText = ({
+        text,
+        textStyle,
+        shouldAnimate = false,
+        onComplete
+    }: {
         text: string;
-        speed: number;
         textStyle: any;
-        shouldStart?: boolean;
+        shouldAnimate?: boolean;
+        onComplete?: () => void;
     }) => {
-        const [displayText, setDisplayText] = useState(speed === 0 ? text : '');
+        const [displayText, setDisplayText] = useState(shouldAnimate ? '' : text);
+        const [isTyping, setIsTyping] = useState(false);
+        const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
         useEffect(() => {
-            if (speed === 0) {
+            if (!shouldAnimate) {
                 setDisplayText(text);
+                setIsTyping(false);
                 return;
             }
 
-            if (!shouldStart) {
+            if (!text || text.length === 0) {
                 setDisplayText('');
+                setIsTyping(false);
                 return;
             }
 
-            const typingSpeed = 50;
-
-            let currentIndex = 0;
             setDisplayText('');
+            setIsTyping(true);
 
-            const timer = setInterval(() => {
+            const typingSpeed = 25;
+            let currentIndex = 0;
+
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
+
+            intervalRef.current = setInterval(() => {
                 if (currentIndex < text.length) {
-                    setDisplayText(prev => prev + text[currentIndex]);
+                    setDisplayText(text.substring(0, currentIndex + 1));
                     currentIndex++;
                 } else {
-                    clearInterval(timer);
+                    if (intervalRef.current) {
+                        clearInterval(intervalRef.current);
+                        intervalRef.current = null;
+                    }
+                    setIsTyping(false);
+                    onComplete?.();
                 }
             }, typingSpeed);
 
-            return () => clearInterval(timer);
-        }, [text, speed, shouldStart]);
+            return () => {
+                if (intervalRef.current) {
+                    clearInterval(intervalRef.current);
+                    intervalRef.current = null;
+                }
+            };
+        }, [text, shouldAnimate, onComplete]);
 
-        return <Text style={textStyle}>{displayText}</Text>;
+        return (
+            <Text style={textStyle}>
+                {displayText}
+                {isTyping && <Text style={{ opacity: 0.6, color: '#666' }}>▎</Text>}
+            </Text>
+        );
     };
 
-    const AnimatedBubble = ({ msg, children }: { msg: ChatMessage; children: React.ReactNode }) => {
+    const ImageGallery = ({ images }: { images: string[] }) => {
+        if (!images || images.length === 0) return null;
+        console.log("images", images)
+        return (
+            <View style={styles.imageGallery}>
+                {images.map((imageUrl, index) => (
+                    <TouchableOpacity
+                        key={index}
+                        style={styles.imageContainer}
+                        activeOpacity={0.8}
+                    >
+                        <Image
+                            source={{ uri: imageUrl }}
+                            style={[
+                                styles.messageImage,
+                                { width: images.length === 1 ? screenWidth * 0.7 : screenWidth * 0.45 }
+                            ]}
+                            resizeMode="cover"
+                        />
+                    </TouchableOpacity>
+                ))}
+            </View>
+        );
+    };
+
+    const AnimatedBubble = ({ msg, children }: { msg: ExtendedChatMessage; children: React.ReactNode }) => {
         return (
             <View
                 style={[
@@ -184,7 +295,7 @@ const HomePage = ({
         );
     };
 
-    const renderItem = (msg: ChatMessage, index: number) => {
+    const renderItem = (msg: ExtendedChatMessage, index: number) => {
         return (
             <AnimatedBubble key={index} msg={msg}>
                 <AnimatedMessageContent msg={msg} />
@@ -193,38 +304,125 @@ const HomePage = ({
     };
 
     const AnimatedMessageContent = ({ msg }: { msg: ChatMessage }) => {
+        const shouldShowTyping = msg.role === 'assistant' && msg.id === typingMessageId;
+        const shouldShowOptions = showOptionsForMessage === msg.id;
+
+        const handleTypewriterComplete = () => {
+            if (shouldShowTyping) {
+                setTypingMessageId(null);
+                if (msg.type) {
+                    setShowOptionsForMessage(msg.id); 
+                }
+            }
+        };
+
         const handleHeightSelect = (height: string) => {
-            const responseId = Date.now().toString() + Math.random().toString(36).slice(2);
+            const responseId = generateId();
             addMessage({ id: responseId, role: 'user', content: height });
+
+            setUserPreferences(prev => ({ ...prev, height }));
+            setShowOptionsForMessage(null);
+
+            setTimeout(() => {
+                const aiMsgId = generateId();
+                const fitMsg: ChatMessage = {
+                    id: aiMsgId,
+                    role: 'assistant',
+                    content: 'Perfect! Now tell me about your style preferences:',
+                    type: 'fit-preference'
+                };
+                setTypingMessageId(aiMsgId);
+                addMessage(fitMsg);
+            }, 800);
         };
 
         const handleFitSelect = (fit: string) => {
-            const responseId = Date.now().toString() + Math.random().toString(36).slice(2);
+            const responseId = generateId();
             addMessage({ id: responseId, role: 'user', content: fit });
+
+            setUserPreferences(prev => ({ ...prev, fit }));
+            setShowOptionsForMessage(null);
+
+            setTimeout(() => {
+                const aiMsgId = generateId();
+                const weatherMsg: ChatMessage = {
+                    id: aiMsgId,
+                    role: 'assistant',
+                    content: 'Great! What\'s the weather like where you are?',
+                    type: 'weather-selection'
+                };
+                setTypingMessageId(aiMsgId);
+                addMessage(weatherMsg);
+            }, 800);
+        };
+
+        const handleWeatherSelect = (weather: string) => {
+            const responseId = generateId();
+            addMessage({ id: responseId, role: 'user', content: weather });
+
+            setUserPreferences(prev => ({ ...prev, weather }));
+            setShowOptionsForMessage(null);
+
+            setTimeout(() => {
+                const aiMsgId = generateId();
+                const locationMsg: ChatMessage = {
+                    id: aiMsgId,
+                    role: 'assistant',
+                    content: 'Almost done! Where are you located?',
+                    type: 'location-selection'
+                };
+                setTypingMessageId(aiMsgId);
+                addMessage(locationMsg);
+            }, 800);
+        };
+
+        const handleLocationSelect = (location: string) => {
+            const responseId = generateId();
+            addMessage({ id: responseId, role: 'user', content: location });
+
+            const updatedPreferences = { ...userPreferences, location };
+            setUserPreferences(updatedPreferences);
+            setShowOptionsForMessage(null);
+
+            setTimeout(() => {
+                const aiMsgId = generateId();
+                const continueMsg: ChatMessage = {
+                    id: aiMsgId,
+                    role: 'assistant',
+                    content: 'Perfect! Let me create some outfit suggestions for you...',
+                };
+                setTypingMessageId(aiMsgId);
+                addMessage(continueMsg);
+
+                setTimeout(() => {
+                    const contextMessage = `Based on my preferences: I'm ${updatedPreferences.height} tall, prefer ${updatedPreferences.fit} fit clothing, it's ${updatedPreferences.weather} weather, and I'm located in ${location}. ${updatedPreferences.initialRequest}`;
+                    callAPI(contextMessage, true);
+                }, 1500);
+            }, 800);
         };
 
         const handleTryNow = (outfitId: string) => {
-            const responseId = Date.now().toString() + Math.random().toString(36).slice(2);
+            const responseId = generateId();
             addMessage({ id: responseId, role: 'user', content: `I want to try outfit ${outfitId}` });
         };
 
         const handleRegenerate = () => {
-            const responseId = Date.now().toString() + Math.random().toString(36).slice(2);
+            const responseId = generateId();
             addMessage({ id: responseId, role: 'user', content: 'Generate new outfits' });
         };
 
         const handleViewVisuals = () => {
-            const responseId = Date.now().toString() + Math.random().toString(36).slice(2);
+            const responseId = generateId();
             addMessage({ id: responseId, role: 'user', content: 'Yes, please show me visuals' });
         };
 
         const handleUpgrade = () => {
-            const responseId = Date.now().toString() + Math.random().toString(36).slice(2);
+            const responseId = generateId();
             addMessage({ id: responseId, role: 'user', content: 'I want to upgrade to premium' });
         };
 
         const handleWaitUntilTomorrow = () => {
-            const responseId = Date.now().toString() + Math.random().toString(36).slice(2);
+            const responseId = generateId();
             addMessage({ id: responseId, role: 'user', content: 'I will wait until tomorrow' });
         };
 
@@ -241,184 +439,131 @@ const HomePage = ({
                 )}
 
                 {msg.type && msg.role === 'assistant' ? (
-                    <>
-                        {msg.type === 'height-selection' && (
-                            <HeightSelectionMessage onSelect={handleHeightSelect} />
-                        )}
-                        {msg.type === 'fit-preference' && (
-                            <FitPreferenceMessage onSelect={handleFitSelect} />
-                        )}
-                        {msg.type === 'outfit-carousel' && msg.data && (
-                            <OutfitCarouselMessage
-                                outfits={msg.data.outfits}
-                                onTryNow={handleTryNow}
-                                onRegenerate={handleRegenerate}
+                    <View>
+                        <View style={[styles.messageBubble, styles.aiBubble]}>
+                            <TypewriterText
+                                text={msg.content}
+                                shouldAnimate={shouldShowTyping}
+                                onComplete={handleTypewriterComplete}
+                                textStyle={[styles.messageText, { color: '#000000' }]}
                             />
+                        </View>
+
+                        {shouldShowOptions && msg.images && (
+                            <ImageGallery images={msg.images} />
                         )}
-                        {msg.type === 'outfit-recommendations' && msg.data && (
-                            <OutfitRecommendationsMessage
-                                title={msg.data.title}
-                                description={msg.data.description}
-                                recommendations={msg.data.recommendations}
-                            />
+
+                        {shouldShowOptions && (
+                            <>
+                                {msg.type === 'height-selection' && (
+                                    <HeightSelectionMessage onSelect={handleHeightSelect} />
+                                )}
+                                {msg.type === 'fit-preference' && (
+                                    <FitPreferenceMessage onSelect={handleFitSelect} />
+                                )}
+                                {msg.type === 'weather-selection' && (
+                                    <WeatherSelectionMessage onSelect={handleWeatherSelect} />
+                                )}
+                                {msg.type === 'location-selection' && (
+                                    <LocationSelectionMessage onSelect={handleLocationSelect} />
+                                )}
+                                {msg.type === 'outfit-carousel' && msg.data && (
+                                    <OutfitCarouselMessage
+                                        outfits={msg.data.outfits}
+                                        onTryNow={handleTryNow}
+                                        onRegenerate={handleRegenerate}
+                                    />
+                                )}
+                                {msg.type === 'outfit-recommendations' && msg.data && (
+                                    <OutfitRecommendationsMessage
+                                        title={msg.data.title}
+                                        description={msg.data.description}
+                                        recommendations={msg.data.recommendations}
+                                    />
+                                )}
+                                {msg.type === 'capsule-wardrobe' && msg.data && (
+                                    <CapsuleWardrobeMessage
+                                        wardrobeItems={msg.data.wardrobeItems}
+                                        onViewVisuals={handleViewVisuals}
+                                    />
+                                )}
+                                {msg.type === 'premium-upgrade' && (
+                                    <PremiumUpgradeMessage
+                                        onUpgrade={handleUpgrade}
+                                        onWaitUntilTomorrow={handleWaitUntilTomorrow}
+                                    />
+                                )}
+                            </>
                         )}
-                        {msg.type === 'capsule-wardrobe' && msg.data && (
-                            <CapsuleWardrobeMessage
-                                wardrobeItems={msg.data.wardrobeItems}
-                                onViewVisuals={handleViewVisuals}
-                            />
-                        )}
-                        {msg.type === 'premium-upgrade' && (
-                            <PremiumUpgradeMessage
-                                onUpgrade={handleUpgrade}
-                                onWaitUntilTomorrow={handleWaitUntilTomorrow}
-                            />
-                        )}
-                    </>
+                    </View>
                 ) : (
-                    <View style={[
-                        styles.messageBubble,
-                        msg.role === 'user' ? styles.userBubble : styles.aiBubble,
-                    ]}>
-                        <TypewriterText
-                            text={msg.content}
-                            speed={0}
-                            shouldStart={true}
-                            textStyle={[
-                                styles.messageText,
-                                { color: msg.role === 'user' ? '#FFFFFF' : '#000000' }
-                            ]}
-                        />
+                    <View>
+                        <View style={[
+                            styles.messageBubble,
+                            msg.role === 'user' ? styles.userBubble : styles.aiBubble,
+                        ]}>
+                            <TypewriterText
+                                text={msg.content}
+                                shouldAnimate={shouldShowTyping}
+                                onComplete={handleTypewriterComplete}
+                                textStyle={[
+                                    styles.messageText,
+                                    { color: msg.role === 'user' ? '#FFFFFF' : '#000000' }
+                                ]}
+                            />
+                        </View>
+
+                        {msg.images && msg.role === 'assistant' && (
+                            <ImageGallery images={msg.images} />
+                        )}
                     </View>
                 )}
             </>
         );
     };
 
+    const WeatherSelectionMessage = ({ onSelect }: { onSelect: (weather: string) => void }) => (
+        <View style={styles.optionsContainer}>
+            {['Hot & Sunny ☀️', 'Warm & Pleasant 🌤️', 'Cool & Breezy 🌬️', 'Cold & Chilly ❄️', 'Rainy 🌧️'].map((weather, index) => (
+                <TouchableOpacity
+                    key={index}
+                    style={styles.optionButton}
+                    onPress={() => onSelect(weather)}
+                >
+                    <Text style={styles.optionButtonText}>{weather}</Text>
+                </TouchableOpacity>
+            ))}
+        </View>
+    );
+
+    const LocationSelectionMessage = ({ onSelect }: { onSelect: (location: string) => void }) => (
+        <View style={styles.optionsContainer}>
+            {['Office/Work 🏢', 'Casual Outing 🚶', 'Date Night 💕', 'Beach/Vacation 🏖️', 'Party/Event 🎉', 'Home/Relaxing 🏠'].map((location, index) => (
+                <TouchableOpacity
+                    key={index}
+                    style={styles.optionButton}
+                    onPress={() => onSelect(location)}
+                >
+                    <Text style={styles.optionButtonText}>{location}</Text>
+                </TouchableOpacity>
+            ))}
+        </View>
+    );
+
     const OptionsDropdown = () => {
-        const addTestMessage = (type: string) => {
-            const aiId = Date.now().toString() + Math.random().toString(36).slice(2);
+        if (!showDropdown) return null;
 
-            switch (type) {
-                case 'height':
-                    addMessage({
-                        id: aiId,
-                        role: 'assistant',
-                        content: 'Let me help you find the perfect fit!',
-                        type: 'height-selection'
-                    });
-                    break;
-                case 'fit':
-                    addMessage({
-                        id: aiId,
-                        role: 'assistant',
-                        content: 'Tell me about your style preferences!',
-                        type: 'fit-preference'
-                    });
-                    break;
-                case 'carousel':
-                    addMessage({
-                        id: aiId,
-                        role: 'assistant',
-                        content: 'Check out these amazing looks!',
-                        type: 'outfit-carousel',
-                        data: {
-                            outfits: [
-                                { id: '1', name: 'Concert Look 1', image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=300&h=400&fit=crop' },
-                                { id: '2', name: 'Concert Look 2', image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=300&h=400&fit=crop' },
-                                { id: '3', name: 'Concert Look 3', image: 'https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=300&h=400&fit=crop' }
-                            ]
-                        }
-                    });
-                    break;
-                case 'recommendations':
-                    addMessage({
-                        id: aiId,
-                        role: 'assistant',
-                        content: 'Here are some curated outfit ideas for you!',
-                        type: 'outfit-recommendations',
-                        data: {
-                            title: 'Got it! Bali + warm = comfy + cute.',
-                            description: 'Here are 3 outfit ideas that scream: "Cool but effortless traveler." 🌴',
-                            recommendations: [
-                                {
-                                    title: 'Outfit 1: Day Explorer',
-                                    items: ['Breezy linen shirt', 'Khaki shorts', 'Slide sandals', 'Straw tote']
-                                },
-                                {
-                                    title: 'Outfit 2: Sunset Dinner',
-                                    items: ['Sleeveless maxi dress', 'Statement earrings', 'Flat sandals']
-                                }
-                            ]
-                        }
-                    });
-                    break;
-                case 'premium':
-                    addMessage({
-                        id: aiId,
-                        role: 'assistant',
-                        content: 'Ready to unlock more styling magic?',
-                        type: 'premium-upgrade'
-                    });
-                    break;
-            }
-            setChatStarted(true);
-            setShowOptions(false);
-        };
-
-        return showOptions ? (
+        return (
             <View style={styles.optionsDropdown}>
                 <TouchableOpacity
-                    style={styles.optionItem}
-                    onPress={() => {
-                        generateRandomMessage();
-                        setShowOptions(false);
-                    }}
+                    style={styles.dropdownItem}
+                    onPress={handleClearChat}
                     activeOpacity={0.7}
                 >
-                    <Text style={styles.optionText}>Random Message</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.optionItem}
-                    onPress={() => addTestMessage('height')}
-                    activeOpacity={0.7}
-                >
-                    <Text style={styles.optionText}>Height Selection</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.optionItem}
-                    onPress={() => addTestMessage('carousel')}
-                    activeOpacity={0.7}
-                >
-                    <Text style={styles.optionText}>Outfit Carousel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.optionItem}
-                    onPress={() => addTestMessage('recommendations')}
-                    activeOpacity={0.7}
-                >
-                    <Text style={styles.optionText}>Recommendations</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.optionItem}
-                    onPress={() => addTestMessage('premium')}
-                    activeOpacity={0.7}
-                >
-                    <Text style={styles.optionText}>Premium Upgrade</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.optionItem}
-                    onPress={() => {
-                        clearMessages();
-                        setChatStarted(false);
-                        setShowOptions(false);
-                    }}
-                    activeOpacity={0.7}
-                >
-                    <Text style={styles.optionText}>Clear Chat</Text>
+                    <Text style={styles.dropdownItemText}>🗑️ Clear Chat</Text>
                 </TouchableOpacity>
             </View>
-        ) : null;
+        );
     };
 
     return (
@@ -463,7 +608,7 @@ const HomePage = ({
                                     />
                                     <TouchableOpacity
                                         style={styles.optionsButton}
-                                        onPress={() => setShowOptions(!showOptions)}
+                                        onPress={() => setShowDropdown(!showDropdown)}
                                         activeOpacity={0.7}
                                     >
                                         <Text style={styles.optionsButtonText}>⋯</Text>
@@ -506,7 +651,7 @@ const HomePage = ({
                                 />
                                 <TouchableOpacity
                                     style={styles.optionsButton}
-                                    onPress={() => setShowOptions(!showOptions)}
+                                    onPress={() => setShowDropdown(!showDropdown)}
                                     activeOpacity={0.7}
                                 >
                                     <Text style={styles.optionsButtonText}>⋯</Text>
@@ -526,12 +671,61 @@ const HomePage = ({
         </KeyboardAvoidingView>
     );
 };
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#ffffff',
         paddingTop: 16,
+    },
+    optionsContainer: {
+        marginTop: 8,
+        flexDirection: 'column',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    optionButton: {
+        backgroundColor: '#f0f0f0',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#e0e0e0',
+        alignSelf: 'flex-start'
+    },
+    optionButtonText: {
+        fontSize: 14,
+        color: '#333',
+        fontWeight: '500',
+    },
+    dropdownItem: {
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+    },
+    dropdownItemText: {
+        fontSize: 14,
+        color: '#333',
+        fontWeight: '500',
+    },
+    imageGallery: {
+        marginTop: 8,
+        marginLeft: 44,
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    imageContainer: {
+        borderRadius: 12,
+        overflow: 'hidden',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    messageImage: {
+        height: 200,
+        borderRadius: 12,
+        backgroundColor: '#F0F0F0',
     },
     testButton: {
         backgroundColor: '#007AFF',
@@ -700,7 +894,7 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-end',
         borderRadius: 16,
         minWidth: '20%',
-        maxWidth: '85%',
+        maxWidth: '100%',
         paddingHorizontal: 16,
         paddingVertical: 12,
     },
@@ -712,7 +906,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderRadius: 16,
-        // borderBottomLeftRadius: 4,
     },
     interactiveMessage: {
         backgroundColor: 'transparent',
@@ -760,9 +953,10 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
     },
     typingContainer: {
-        flexDirection: 'row',
+        flexDirection: 'column',
         alignItems: 'center',
         paddingHorizontal: 4,
+        borderWidth: 2,
     },
     typingDot: {
         fontSize: 20,
@@ -789,6 +983,7 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         borderRadius: 20,
         marginRight: 8,
+        alignSelf: "flex-start"
     },
     optionsButtonText: {
         color: '#666',

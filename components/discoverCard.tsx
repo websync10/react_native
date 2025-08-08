@@ -1,44 +1,155 @@
 import { FontFamily } from "@/constants/Fonts";
+import {
+  dislikePost,
+  hasUserDislikedPost,
+  hasUserLikedPost,
+  likePost,
+  undislikePost,
+  unlikePost
+} from "@/lib/actions/users/post/postInteractions";
+import { useOnboardingStore } from "@/lib/stores/onboardingStore";
+import { Post } from "@/lib/types/posts";
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
-import React, { useState } from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, {
+  useCallback,
+  useEffect,
+  useState
+} from "react";
+import {
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from "react-native";
 import Svg, { Path } from "react-native-svg";
 import UnfollowConfirmationModal from "./UnfollowConfirmationModal";
 
 export type DiscoverCardProps = {
-  post: {
-    id: string;
-    user: {
-      name: string;
-      avatar: any;
-      followers: any[];
-    };
-    styleImage: any;
-    title: string;
-    description: string;
-    tags: string[];
-    likes: number;
-    dislike: number;
-    comments: number;
-    people: any[];
-    isFollowing: boolean;
-  };
+  post: Post,
   onFollowToggle?: () => void;
 };
 
 const DiscoverCard: React.FC<DiscoverCardProps> = ({ post, onFollowToggle }) => {
-
   const [liked, setLiked] = useState(false);
   const [disliked, setDisliked] = useState(false);
   const [isFollowed, setIsFollowed] = useState(post.isFollowing);
   const [showUnfollowModal, setShowUnfollowModal] = useState(false);
+  const [likesCount, setLikesCount] = useState(Array.isArray(post.likes) ? post.likes.length : post.likes || 0);
+  const [dislikesCount, setDislikesCount] = useState(Array.isArray(post.disLikes) ? post.disLikes.length : post.disLikes || 0);
+  const [loading, setLoading] = useState(true);
+  const { userId } = useOnboardingStore();
+  const isCurrentUserPost = post.user.id === userId;
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
 
-  const handleFollowPress = () => {
-    setIsFollowed((prev) => !prev);
-    // Call the parent callback to update the global state
-    if (onFollowToggle) {
-      onFollowToggle();
+      const initializeReactionStatus = async () => {
+        if (!userId) {
+          setLoading(false);
+          return;
+        }
+
+        try {
+          const [likedStatus, dislikedStatus] = await Promise.all([
+            hasUserLikedPost(post.id, userId),
+            hasUserDislikedPost(post.id, userId)
+          ]);
+          if (isActive) {
+            setLiked(likedStatus);
+            setDisliked(dislikedStatus);
+          }
+        } catch (error) {
+          console.error('Failed to initialize reaction status:', error);
+        } finally {
+          if (isActive) setLoading(false);
+        }
+      };
+      initializeReactionStatus();
+
+      return () => {
+        isActive = false;
+      };
+    }, [post.id, userId])
+  );
+  useEffect(() => {
+    if (post) {
+      setLikesCount(Array.isArray(post.likes) ? post.likes.length : typeof post.likes === 'number' ? post.likes : 0);
+      setDislikesCount(Array.isArray(post.disLikes) ? post.disLikes.length : typeof post.disLikes === 'number' ? post.disLikes : 0);
+    }
+  }, [post]);
+
+  const handleLike = async () => {
+    if (!userId || loading) return;
+
+    const wasLiked = liked;
+    const wasDisliked = disliked;
+    const prevLikesCount = likesCount;
+    const prevDislikesCount = dislikesCount;
+
+    try {
+      if (liked) {
+        setLiked(false);
+        setLikesCount(prev => prev - 1);
+        await unlikePost(post.id, userId);
+      } else {
+        setLiked(true);
+        setLikesCount(prev => prev + 1);
+
+        if (disliked) {
+          setDisliked(false);
+          setDislikesCount(prev => prev - 1);
+          await undislikePost(post.id, userId);
+        }
+
+        await likePost(post.id, userId);
+      }
+    } catch (error) {
+      setLiked(wasLiked);
+      setDisliked(wasDisliked);
+      setLikesCount(prevLikesCount);
+      setDislikesCount(prevDislikesCount);
+
+      console.error('Error handling like:', error);
+    }
+  };
+
+
+
+  const handleDislike = async () => {
+    if (!userId || loading) return;
+
+    const wasLiked = liked;
+    const wasDisliked = disliked;
+    const prevLikesCount = likesCount;
+    const prevDislikesCount = dislikesCount;
+
+    try {
+      if (disliked) {
+        setDisliked(false);
+        setDislikesCount(prev => prev - 1);
+        await undislikePost(post.id, userId);
+      } else {
+        setDisliked(true);
+        setDislikesCount(prev => prev + 1);
+
+        if (liked) {
+          setLiked(false);
+          setLikesCount(prev => prev - 1);
+          await unlikePost(post.id, userId);
+        }
+
+        await dislikePost(post.id, userId);
+      }
+    } catch (error) {
+      setLiked(wasLiked);
+      setDisliked(wasDisliked);
+      setLikesCount(prevLikesCount);
+      setDislikesCount(prevDislikesCount);
+
+      console.error('Error handling dislike:', error);
     }
   };
 
@@ -49,31 +160,34 @@ const DiscoverCard: React.FC<DiscoverCardProps> = ({ post, onFollowToggle }) => 
           router.push("/pages/profileDetails");
         }}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Image source={post.user.avatar} style={styles.avatar} />
-            <Text style={styles.username}>{post.user.name}</Text>
+            <Image source={{ uri: post.user.avatar_url }} style={styles.avatar} />
+            <Text style={styles.username}>{post.user.full_name}</Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.followBtn, isFollowed && styles.followBtnFollowing]}
-          onPress={() => {
-            if (isFollowed) {
-              setShowUnfollowModal(true);
-            } else {
-              setIsFollowed(true);
-              if (onFollowToggle) onFollowToggle();
-            }
-          }}
-        >
-          <Text
-            style={[
-              styles.followBtnText,
-              isFollowed && styles.followBtnTextFollowing,
-            ]}
-          >
-            {isFollowed ? "Following" : "Follow"}
-          </Text>
-        </TouchableOpacity>
-        {/* Unfollow Confirmation Modal */}
+        {
+          !isCurrentUserPost && (
+            <TouchableOpacity
+              style={[styles.followBtn, isFollowed && styles.followBtnFollowing]}
+              onPress={() => {
+                if (isFollowed) {
+                  setShowUnfollowModal(true);
+                } else {
+                  setIsFollowed(true);
+                  if (onFollowToggle) onFollowToggle();
+                }
+              }}
+            >
+              <Text
+                style={[
+                  styles.followBtnText,
+                  isFollowed && styles.followBtnTextFollowing,
+                ]}
+              >
+                {isFollowed ? "Following" : "Follow"}
+              </Text>
+            </TouchableOpacity>
+          )
+        }
         {isFollowed && showUnfollowModal && (
           <UnfollowConfirmationModal
             visible={showUnfollowModal}
@@ -84,14 +198,14 @@ const DiscoverCard: React.FC<DiscoverCardProps> = ({ post, onFollowToggle }) => 
               if (onFollowToggle) onFollowToggle();
             }}
             user={{
-              name: post.user.name,
-              avatar: post.user.avatar,
+              name: post.user.full_name,
+              avatar: post.user.avatar_url,
             }}
           />
         )}
       </View>
       <Image
-        source={post.styleImage}
+        source={{ uri: post.image }}
         style={styles.postImage}
         resizeMode="cover"
       />
@@ -101,18 +215,17 @@ const DiscoverCard: React.FC<DiscoverCardProps> = ({ post, onFollowToggle }) => 
         <View style={styles.tagsRow}>
           {post.tags.map((tag, idx) => (
             <TouchableOpacity key={idx} style={styles.tagBtn} activeOpacity={0.8}>
-              <Text style={styles.tagText}>{tag}</Text>
+              <Text style={styles.tagText}>#{tag}</Text>
             </TouchableOpacity>
           ))}
         </View>
         <View style={styles.cardFooter}>
           <View style={styles.statsRow}>
             <TouchableOpacity
-              onPress={() => {
-                setLiked((l) => !l);
-                if (disliked) setDisliked(false);
-              }}
+              onPress={handleLike}
               activeOpacity={0.7}
+              disabled={loading}
+              style={{ opacity: loading ? 0.5 : 1 }}
             >
               {liked ? (
                 <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
@@ -142,14 +255,13 @@ const DiscoverCard: React.FC<DiscoverCardProps> = ({ post, onFollowToggle }) => 
                 </Svg>
               )}
             </TouchableOpacity>
-            <Text style={styles.statText}>{post.likes}</Text>
+            <Text style={styles.statText}>{likesCount}</Text>
+
             <TouchableOpacity
-              onPress={() => {
-                setDisliked((d) => !d);
-                if (liked) setLiked(false);
-              }}
+              onPress={handleDislike}
               activeOpacity={0.7}
-              style={{ marginLeft: 8 }}
+              disabled={loading}
+              style={{ marginLeft: 8, opacity: loading ? 0.5 : 1 }}
             >
               {disliked ? (
                 <Svg
@@ -163,7 +275,7 @@ const DiscoverCard: React.FC<DiscoverCardProps> = ({ post, onFollowToggle }) => 
                     fillRule="evenodd"
                     clipRule="evenodd"
                     d="M12.7111 21H15.8769C17.7124 21 19.3123 19.7508 19.7575 17.9701L21.3788 11.4851C21.6943 10.2228 20.7396 9 19.4385 9H14.5L15.8069 6.75968C16.7791 5.09303 15.5769 3 13.6474 3H12.5L8.63178 9.76943C8.54543 9.92052 8.50002 10.0915 8.50002 10.2656V18.4648C8.50002 18.7992 8.66712 19.1114 8.94532 19.2969L10.4923 20.3282C11.1494 20.7662 11.9214 21 12.7111 21ZM4 9H5C6.10457 9 7 9.89543 7 11V18C7 19.1046 6.10457 20 5 20H4C2.89543 20 2 19.1046 2 18V11C2 9.89543 2.89543 9 4 9Z"
-                    fill="#000000"
+                    fill="#FF3B30"
                   />
                 </Svg>
               ) : (
@@ -191,14 +303,15 @@ const DiscoverCard: React.FC<DiscoverCardProps> = ({ post, onFollowToggle }) => 
                 </Svg>
               )}
             </TouchableOpacity>
-            <Text style={styles.statText}>{post.dislike}</Text>
+            <Text style={styles.statText}>{dislikesCount}</Text>
+
             <Ionicons
               name="chatbubble-outline"
               size={18}
               color="#000"
               style={{ marginLeft: 12 }}
             />
-            <Text style={styles.statText}>{post.comments}</Text>
+            <Text style={styles.statText}>{post.comments?.length || 0}</Text>
           </View>
         </View>
       </View>
@@ -219,6 +332,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     borderColor: "#e6e7ec",
     borderWidth: 0.5,
+    overflow: "hidden"
   },
   cardHeader: {
     flexDirection: "row",
@@ -272,10 +386,11 @@ const styles = StyleSheet.create({
   },
   postImage: {
     width: "100%",
-    height: 180,
+    height: 200,
     borderRadius: 0,
     marginTop: 12,
     marginBottom: 12,
+    aspectRatio: 16 / 7,
   },
   cardContent: {
     paddingHorizontal: 14,
@@ -319,8 +434,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 50,
     paddingHorizontal: 10,
-    paddingTop:6,
-    paddingBottom:6,
+    paddingTop: 6,
+    paddingBottom: 6,
   },
   tagText: {
     fontSize: 14,

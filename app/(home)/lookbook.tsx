@@ -1,54 +1,38 @@
 import Header from '@/components/Header';
-import MobileSidebar from '@/components/home/Sidebar';
 import LookbookCard from '@/components/lookbookCard';
 import { FontFamily } from '@/constants/Fonts';
+import { getUserLookbooks } from '@/lib/actions/users/getLookBook';
+import { useOnboardingStore } from '@/lib/stores/onboardingStore';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-
-const looks = [
-  {
-    id: '1',
-    image: require('@/assets/images/lookDetail1.png'),
-    title: 'Beach Vibe',
-    date: 'june 27, 2025',
-    isPublic: true,
-    people: [
-      require('@/assets/images/styles/businesscasual-male.png'),
-    ],
-  },
-  {
-    id: '2',
-    image: require('@/assets/images/styles/minimal-female.png'),
-    title: 'Beach Vibe',
-    date: 'june 27, 2025',
-    isPublic: true,
-    people: [
-      require('@/assets/images/styles/bohemian-female.png'),
-      require('@/assets/images/styles/businesscasual-male.png'),
-    ],
-  },
-];
-
-const userData = {
-  id: 'user-1',
-  name: 'Jacklaw_',
-  fullName: 'Jack Lawson',
-  avatar: require('@/assets/images/styles/businesscasual-male.png'),
-  profileImage: require('@/assets/images/styles/businesscasual-male.png'),
-  followers: [require('@/assets/images/styles/bohemian-female.png'), require('@/assets/images/styles/businesscasual-male.png')],
-};
+import { Link } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View
+} from 'react-native';
+import { LookBook } from '../pages/public-lookbook-feed';
 
 const Lookbook = () => {
-  const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [looks, setLooks] = useState<LookBook[]>([]);
+  const { userId } = useOnboardingStore()
+  const fetchMore = async () => {
+    const newLookbooks = await getUserLookbooks(userId);
+    setLooks((prev) => [...prev, ...newLookbooks]);
+  };
+    const handleDeleteLookbook = (id: string) => {
+      setLooks(prev => prev.filter(lb => lb.id !== id));
+    };
+
+  useEffect(() => {
+    fetchMore()
+  }, [userId])
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff', paddingTop: 16,  }}>
-    <Header title='LookBook'/>
-      <MobileSidebar
-        visible={sidebarVisible}
-        onClose={() => setSidebarVisible(false)}
-        userData={userData}
-      />
+    <View style={{ flex: 1, backgroundColor: '#fff', paddingTop: 16, }}>
+      <Header title='LookBook' />
+      <Link href={"/pages/public-lookbook-feed"}>View more</Link>
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
         <Text style={styles.pageTitle}>My Looks</Text>
         <View style={styles.searchRow}>
@@ -60,15 +44,17 @@ const Lookbook = () => {
         <View style={{ marginHorizontal: 20 }}>
           {looks.map(look => (
             <LookbookCard
+              id={look.id}
               key={look.id}
-              image={look.image}
+              image={{ uri: look.image }}
               title={look.title}
               date={look.date}
-              isPublic={look.isPublic}
-              people={look.people}
+              is_public={look.is_public}
+              onDelete={handleDeleteLookbook}
             />
           ))}
         </View>
+
       </ScrollView>
     </View>
   );

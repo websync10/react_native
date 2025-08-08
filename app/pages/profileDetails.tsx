@@ -17,9 +17,8 @@ import {
 import Svg, { Path, Rect } from "react-native-svg";
 
 const { width } = Dimensions.get("window");
-const imageWidth = (width - 60) / 2; // Two columns with padding
+const imageWidth = (width - 60) / 2;
 
-// Mock user data - in real app, this would come from API
 type User = {
   id: string;
   name: string;
@@ -105,7 +104,6 @@ const ProfileDetails = () => {
   const scrollY = useRef(new Animated.Value(0)).current;
   const [showStickyHeader, setShowStickyHeader] = useState(false);
 
-  // Get user data - default to stevee if no userId provided
   const user = mockUsers[userId as string] || mockUsers["stevee"];
 
   const handleGoBack = () => {
