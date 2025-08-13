@@ -1,5 +1,6 @@
+import { router } from 'expo-router';
 import React from 'react';
-import { FlatList, Image, StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface LikedPost {
     id: string;
@@ -13,28 +14,44 @@ interface Props {
 }
 
 const LikedPostsList: React.FC<Props> = ({ posts }) => {
-    const renderItem = ({ item }: { item: LikedPost }) => (
-        <View style={styles.card}>
+    const handlePostPress = (post: LikedPost) => {
+        if (post.image) {
+            router.push({
+                pathname: '/pages/tryLookPage',
+                params: { outfitImage: post.image }
+            });
+        }
+    };
+
+    const renderItem = (item: LikedPost, index: number) => (
+        <TouchableOpacity
+            key={item.id}
+            style={styles.card}
+            activeOpacity={0.8}
+            onPress={() => handlePostPress(item)}
+        >
             <Image source={{ uri: item.image }} style={styles.image} />
             <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
             <Text style={styles.date}>{new Date(item.created_at).toLocaleDateString()}</Text>
-        </View>
+        </TouchableOpacity>
     );
 
     return (
-        <FlatList
-            data={posts}
-            keyExtractor={(item) => item.id}
-            numColumns={2}
-            renderItem={renderItem}
-        />
+        <View style={styles.container}>
+            {posts.map((item, index) => renderItem(item, index))}
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
+    container: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+    },
     card: {
-        flex: 1,
-        margin: 8,
+        width: '48%',
+        marginBottom: 16,
         backgroundColor: '#f8f8f8',
         borderRadius: 12,
         overflow: 'hidden',

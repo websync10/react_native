@@ -1,18 +1,24 @@
 import Header from "@/components/Header";
 import { FontFamily } from "@/constants/Fonts";
+import { followUser, unfollowUser } from "@/lib/actions/users/follow/handleFollowLogic";
+
+import { getProfile } from "@/lib/actions/users/getProfile";
+import { useOnboardingStore } from "@/lib/stores/onboardingStore";
+import { supabase } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  Animated,
-  Dimensions,
-  Image,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Animated,
+    Dimensions,
+    Image,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import Svg, { Path, Rect } from "react-native-svg";
 
@@ -21,97 +27,127 @@ const imageWidth = (width - 60) / 2;
 
 type User = {
   id: string;
-  name: string;
-  username: string;
-  avatar: any;
+  name: string | null;
+  username: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  outfits: { id: string; user_id: string; image: string; created_at: string }[] | null;
   posts: number;
-  followers: string;
-  following: number;
-  isFollowing: boolean;
-  outfits: { id: string; image: any }[];
-  likedOutfits: { id: string; image: any }[];
+  liked_outfits: any[] | null;
+  followers_count: number;
+  following_count: number;
 };
 
-const mockUsers: { [key: string]: User } = {
-  stevee: {
-    id: "stevee",
-    name: "Stevee_",
-    username: "@Stevee_",
-    avatar: require("@/assets/images/profileImgs/bohemian-female.png"),
-    posts: 127,
-    followers: "1.2K",
-    following: 465,
-    isFollowing: true,
-    outfits: [
-      {
-        id: "1",
-        image: require("@/assets/images/profileImgs/businesscasual-female.png"),
-      },
-      {
-        id: "2",
-        image: require("@/assets/images/profileImgs/casual-female.png"),
-      },
-      {
-        id: "3",
-        image: require("@/assets/images/profileImgs/formal-female.png"),
-      },
-      {
-        id: "4",
-        image: require("@/assets/images/profileImgs/minimal-female.png"),
-      },
-      {
-        id: "5",
-        image: require("@/assets/images/profileImgs/streetwear-female.png"),
-      },
-      {
-        id: "6",
-        image: require("@/assets/images/profileImgs/vintage-female.png"),
-      },
-      {
-        id: "7",
-        image: require("@/assets/images/profileImgs/formal-female.png"),
-      },
-      {
-        id: "8",
-        image: require("@/assets/images/profileImgs/street-female.png"),
-      },
-    ],
-    likedOutfits: [
-      {
-        id: "l1",
-        image: require("@/assets/images/profileImgs/formal-female.png"),
-      },
-      {
-        id: "l2",
-        image: require("@/assets/images/profileImgs/street-female.png"),
-      },
-    ],
-  },
-};
+
 
 // Add this helper for navigation to try-on page
-const goToTryOn = (outfitId: string) => {
-  router.push({
-    pathname: "/pages/mylookDetails",
-    params: { outfitId },
-  });
-};
+
 
 const ProfileDetails = () => {
   const { userId } = useLocalSearchParams();
+  const { userId: currentUserId } = useOnboardingStore();
   const [activeTab, setActiveTab] = useState("Outfits");
-  const [isFollowing, setIsFollowing] = useState(true);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const scrollY = useRef(new Animated.Value(0)).current;
   const [showStickyHeader, setShowStickyHeader] = useState(false);
 
-  const user = mockUsers[userId as string] || mockUsers["stevee"];
+  const isCurrentUser = userId === currentUserId;
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!userId) {
+        setError("No user ID provided");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        
+        // Fetch user profile
+        const profileData = await getProfile(userId as string);
+        
+        if (profileData && !profileData.error) {
+          // Check if current user is following this user
+          let followingStatus = false;
+          if (!isCurrentUser && currentUserId) {
+            const { data: followData } = await supabase
+              .from('followers')
+              .select('*')
+              .eq('follower_id', currentUserId)
+              .eq('following_id', userId)
+              .single();
+            
+            followingStatus = !!followData;
+          }
+
+          // The getProfile function returns an array, take the first element
+          const userData = Array.isArray(profileData) ? profileData[0] : profileData;
+          
+          if (userData) {
+            const transformedUser: User = {
+              id: userData.id || userId as string,
+              name: userData.name,
+              username: userData.username,
+              avatar_url: userData.avatar_url,
+              created_at: userData.created_at,
+              outfits: userData.outfits,
+              posts: userData.outfits?.length || 0,
+              liked_outfits: userData.liked_outfits,
+              followers_count: userData.followers_count || 0,
+              following_count: userData.following_count || 0,
+            };
+
+            setUser(transformedUser);
+            setIsFollowing(followingStatus);
+          } else {
+            setError("Failed to fetch user profile");
+          }
+        } else {
+          setError("Failed to fetch user profile");
+        }
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+        setError("Failed to load user profile");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [userId, currentUserId, isCurrentUser]);
 
   const handleGoBack = () => {
     router.back();
   };
 
-  const handleFollowToggle = () => {
-    setIsFollowing(!isFollowing);
+  const handleFollowToggle = async () => {
+    if (!currentUserId || !user) return;
+
+    try {
+      if (isFollowing) {
+        // Unfollow
+        const result = await unfollowUser(currentUserId, user.id);
+        
+        if (result.success) {
+          setIsFollowing(false);
+          setUser(prev => prev ? { ...prev, followers_count: (prev.followers_count || 0) - 1 } : null);
+        }
+      } else {
+        // Follow
+        const result = await followUser(currentUserId, user.id);
+        
+        if (result.success) {
+          setIsFollowing(true);
+          setUser(prev => prev ? { ...prev, followers_count: (prev.followers_count || 0) + 1 } : null);
+        }
+      }
+    } catch (err) {
+      console.error("Error toggling follow:", err);
+    }
   };
 
   const handleScroll = Animated.event(
@@ -120,13 +156,20 @@ const ProfileDetails = () => {
       useNativeDriver: false,
       listener: (event: any) => {
         const scrollOffset = event.nativeEvent.contentOffset.y;
-        // Show sticky header when scrolled past the profile section (approximately 200px)
         setShowStickyHeader(scrollOffset > 200);
       },
     }
   );
 
   const renderOutfitGrid = (outfits: any[]) => {
+    if (!outfits || outfits.length === 0) {
+      return (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyStateText}>No outfits yet</Text>
+        </View>
+      );
+    }
+
     return (
       <View style={styles.outfitsGrid}>
         {outfits.map((outfit, index) => (
@@ -135,11 +178,16 @@ const ProfileDetails = () => {
             style={styles.outfitItem}
             activeOpacity={0.8}
             onPress={() => {
-              goToTryOn(outfit.id);
+              if (outfit.image) {
+                router.push({
+                  pathname: '/pages/tryLookPage',
+                  params: { outfitImage: outfit.image }
+                });
+              }
             }}
           >
             <Image
-              source={outfit.image}
+              source={outfit.image ? { uri: outfit.image } : require('../../assets/images/logo.png')}
               style={styles.outfitImage}
               resizeMode="cover"
             />
@@ -148,6 +196,32 @@ const ProfileDetails = () => {
       </View>
     );
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Header title="Profile Details" />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#000" />
+          <Text style={styles.loadingText}>Loading profile...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error || !user) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Header title="Profile Details" />
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error || "User not found"}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => router.back()}>
+            <Text style={styles.retryButtonText}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -160,15 +234,17 @@ const ProfileDetails = () => {
             </TouchableOpacity>
             <Text style={styles.stickyHeaderTitleLeft}>{user.name}</Text>
           </View>
-          <TouchableOpacity style={styles.followedButton}>
-            <Svg width={32} height={32} viewBox="0 0 25 24" fill="none">
-              <Rect width={24} height={24} x={0.146484} y={0} fill="none" />
-              <Path
-                d="M12.1948 5.8335C14.0455 5.8335 15.5458 7.33383 15.5458 9.1845C15.5458 10.3877 14.9118 11.4426 13.9597 12.0336C14.7617 12.2761 15.5049 12.6819 16.1424 13.2255C16.1881 13.2644 16.2257 13.3119 16.253 13.3654C16.2804 13.4188 16.2969 13.4771 16.3017 13.5369C16.3065 13.5967 16.2995 13.6569 16.281 13.714C16.2626 13.7711 16.233 13.824 16.1941 13.8697C16.1552 13.9154 16.1077 13.953 16.0543 13.9804C16.0008 14.0077 15.9426 14.0242 15.8827 14.029C15.8229 14.0338 15.7627 14.0268 15.7056 14.0083C15.6485 13.9899 15.5956 13.9604 15.5499 13.9215C14.6144 13.1233 13.4245 12.6858 12.1948 12.6878C9.50058 12.6878 7.26211 14.7537 7.03485 17.4204C7.02332 17.5401 6.96501 17.6505 6.8726 17.7275C6.78018 17.8046 6.66112 17.8421 6.54124 17.8318C6.42136 17.8216 6.31034 17.7646 6.23228 17.673C6.15422 17.5815 6.11542 17.4628 6.12429 17.3428C6.34013 14.8107 8.0956 12.7398 10.4303 12.0338C9.47819 11.4431 8.84379 10.3878 8.84379 9.1845C8.84379 7.33383 10.3441 5.8335 12.1948 5.8335ZM18.1344 14.7924L18.1497 14.8069C18.1919 14.8467 18.2256 14.8947 18.2486 14.948C18.2716 15.0013 18.2835 15.0588 18.2835 15.1168C18.2835 15.1749 18.2716 15.2324 18.2486 15.2857C18.2256 15.339 18.1919 15.387 18.1497 15.4268L15.8326 17.6111C15.745 17.6938 15.6281 17.7385 15.5076 17.7354C15.387 17.7386 15.2701 17.6939 15.1824 17.6111L13.8517 16.3567C13.8095 16.3169 13.7758 16.2689 13.7528 16.2156C13.7298 16.1623 13.7179 16.1048 13.7179 16.0468C13.7179 15.9887 13.7298 15.9312 13.7528 15.8779C13.7758 15.8246 13.8095 15.7766 13.8517 15.7368L13.8671 15.7223C13.9519 15.6424 14.064 15.5978 14.1806 15.5978C14.2971 15.5978 14.4092 15.6424 14.494 15.7223L15.5076 16.6777L17.5075 14.7924C17.5923 14.7125 17.7044 14.6679 17.821 14.6679C17.9375 14.6679 18.0497 14.7125 18.1344 14.7924ZM12.1948 6.74741C10.8488 6.74741 9.7577 7.83846 9.7577 9.1845C9.7577 10.5305 10.8488 11.6216 12.1948 11.6216C13.5408 11.6216 14.6319 10.5305 14.6319 9.1845C14.6319 7.83846 13.5408 6.74741 12.1948 6.74741Z"
-                fill="#202020"
-              />
-            </Svg>
-          </TouchableOpacity>
+          {!isCurrentUser && (
+            <TouchableOpacity style={styles.followedButton}>
+              <Svg width={32} height={32} viewBox="0 0 25 24" fill="none">
+                <Rect width={24} height={24} x={0.146484} y={0} fill="none" />
+                <Path
+                  d="M12.1948 5.8335C14.0455 5.8335 15.5458 7.33383 15.5458 9.1845C15.5458 10.3877 14.9118 11.4426 13.9597 12.0336C14.7617 12.2761 15.5049 12.6819 16.1424 13.2255C16.1881 13.2644 16.2257 13.3119 16.253 13.3654C16.2804 13.4188 16.2969 13.4771 16.3017 13.5369C16.3065 13.5967 16.2995 13.6569 16.281 13.714C16.2626 13.7711 16.233 13.824 16.1941 13.8697C16.1552 13.9154 16.1077 13.953 16.0543 13.9804C16.0008 14.0077 15.9426 14.0242 15.8827 14.029C15.8229 14.0338 15.7627 14.0268 15.7056 14.0083C15.6485 13.9899 15.5956 13.9604 15.5499 13.9215C14.6144 13.1233 13.4245 12.6858 12.1948 12.6878C9.50058 12.6878 7.26211 14.7537 7.03485 17.4204C7.02332 17.5401 6.96501 17.6505 6.8726 17.7275C6.78018 17.8046 6.66112 17.8421 6.54124 17.8318C6.42136 17.8216 6.31034 17.7646 6.23228 17.673C6.15422 17.5815 6.11542 17.4628 6.12429 17.3428C6.34013 14.8107 8.0956 12.7398 10.4303 12.0338C9.47819 11.4431 8.84379 10.3878 8.84379 9.1845C8.84379 7.33383 10.3441 5.8335 12.1948 5.8335ZM18.1344 14.7924L18.1497 14.8069C18.1919 14.8467 18.2256 14.8947 18.2486 14.948C18.2716 15.0013 18.2835 15.0588 18.2835 15.1168C18.2835 15.1749 18.2716 15.2324 18.2486 15.2857C18.2256 15.339 18.1919 15.387 18.1497 15.4268L15.8326 17.6111C15.745 17.6938 15.6281 17.7385 15.5076 17.7354C15.387 17.7386 15.2701 17.6939 15.1824 17.6111L13.8517 16.3567C13.8095 16.3169 13.7758 16.2689 13.7528 16.2156C13.7298 16.1623 13.7179 16.1048 13.7179 16.0468C13.7179 15.9887 13.7298 15.9312 13.7528 15.8779C13.7758 15.8246 13.8095 15.7766 13.8517 15.7368L13.8671 15.7223C13.9519 15.6424 14.064 15.5978 14.1806 15.5978C14.2971 15.5978 14.4092 15.6424 14.494 15.7223L15.5076 16.6777L17.5075 14.7924C17.5923 14.7125 17.7044 14.6679 17.821 14.6679C17.9375 14.6679 18.0497 14.7125 18.1344 14.7924ZM12.1948 6.74741C10.8488 6.74741 9.7577 7.83846 9.7577 9.1845C9.7577 10.5305 10.8488 11.6216 12.1948 11.6216C13.5408 11.6216 14.6319 10.5305 14.6319 9.1845C14.6319 7.83846 10.8488 6.74741 12.1948 6.74741Z"
+                  fill="#202020"
+                />
+              </Svg>
+            </TouchableOpacity>
+          )}
         </Animated.View>
       )}
 
@@ -185,44 +261,49 @@ const ProfileDetails = () => {
         <View style={styles.profileSection}>
           <View style={styles.profileHeader}>
             <View style={styles.profileInfo}>
-              <Image source={user.avatar} style={styles.profileAvatar} />
+              <Image 
+                source={user.avatar_url ? { uri: user.avatar_url } : require("@/assets/images/profileImgs/casual-female.png")} 
+                style={styles.profileAvatar} 
+              />
               <View style={styles.profileText}>
                 <Text style={styles.profileName}>{user.name}</Text>
                 <Text style={styles.profileUsername}>{user.username}</Text>
               </View>
             </View>
-            <TouchableOpacity
-              style={[
-                styles.followButton,
-                isFollowing && styles.followingButton,
-              ]}
-              onPress={handleFollowToggle}
-            >
-              <Text
+            {!isCurrentUser && (
+              <TouchableOpacity
                 style={[
-                  styles.followButtonText,
-                  isFollowing && styles.followingButtonText,
+                  styles.followButton,
+                  isFollowing && styles.followingButton,
                 ]}
+                onPress={handleFollowToggle}
               >
-                {isFollowing ? "Following" : "Follow"}
-              </Text>
-            </TouchableOpacity>
+                <Text
+                  style={[
+                    styles.followButtonText,
+                    isFollowing && styles.followingButtonText,
+                  ]}
+                >
+                  {isFollowing ? "Following" : "Follow"}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Stats Section */}
           <View style={styles.statsSection}>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{user.posts}</Text>
+              <Text style={styles.statNumber}>{user.posts || 0}</Text>
               <Text style={styles.statLabel}>Posts</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{user.followers}</Text>
+              <Text style={styles.statNumber}>{user.followers_count || 0}</Text>
               <Text style={styles.statLabel}>Followers</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{user.following}</Text>
+              <Text style={styles.statNumber}>{user.following_count || 0}</Text>
               <Text style={styles.statLabel}>Following</Text>
             </View>
           </View>
@@ -267,8 +348,8 @@ const ProfileDetails = () => {
         {/* Content Section */}
         <View style={styles.contentSection}>
           {activeTab === "Outfits"
-            ? renderOutfitGrid(user.outfits)
-            : renderOutfitGrid(user.likedOutfits)}
+            ? renderOutfitGrid(user.outfits || [])
+            : renderOutfitGrid(user.liked_outfits || [])}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -279,10 +360,57 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFFFFF",
-    paddingTop: 16,
+    paddingTop: 32,
   },
   scrollView: {
     flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    fontFamily: FontFamily.HelveticaNeue.Regular,
+    color: "#8288A0",
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    fontFamily: FontFamily.HelveticaNeue.Regular,
+    color: "#FF0000",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: "#000",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontFamily: FontFamily.HelveticaNeue.Medium,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 40,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    fontFamily: FontFamily.HelveticaNeue.Regular,
+    color: "#8288A0",
   },
   stickyHeader: {
     position: "absolute",

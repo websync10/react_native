@@ -55,7 +55,7 @@ export default function TryLookPage() {
 
     async function processTryOn() {
       try {
-        const response = await fetch(`https://34c9237df877.ngrok-free.app/api/virtual-tryon/${userId}`, {
+        const response = await fetch(`https://97853ae52608.ngrok-free.app/api/virtual-tryon/${userId}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ model_image: userImage, garment_image: outfitImage, category: "tops" }),
@@ -102,7 +102,7 @@ export default function TryLookPage() {
           >
           </LinearGradient>
           <View style={[styles.processingContent, { position: 'absolute', width: '100%', height: '100%' }]}>
-            <Image source={require('../../assets/images/baglogo.png')} style={styles.processingIcon} />
+            <Image source={require('../../assets/images/icon.png')} style={styles.processingIcon} />
             <BlinkingText style={styles.processingText}>Processing...</BlinkingText>
           </View>
         </RNAnimated.View>
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingVertical: 15,
+    paddingVertical: 32,
     paddingHorizontal: 4,
   },
   cardWrapper: {

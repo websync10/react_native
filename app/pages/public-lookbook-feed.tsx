@@ -38,7 +38,7 @@ const PublicLookbookFeed = () => {
 
     return (
         <>
-            <View style={{ margin: 20 }}>
+            <View style={{ margin: 32 }}>
                 <Header title="Public Look Books" />
             </View>
             <FlatList
@@ -53,6 +53,7 @@ const PublicLookbookFeed = () => {
                         title={item.title}
                         date={item.date}
                         is_public={item.is_public}
+                        lookbookUserId={item.userId}
                     />
                 )}
                 onEndReached={fetchMore}

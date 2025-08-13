@@ -3,6 +3,7 @@ import { uploadToCloudinary } from '@/lib/services/upload-images/uploadToCloudin
 import { ChatMessage, useChatStore } from '@/lib/stores/chatStore';
 import { useOnboardingStore } from '@/lib/stores/onboardingStore';
 import { Feather, Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from "axios";
 import { BlurView } from 'expo-blur';
 import React, { useEffect, useRef, useState } from 'react';
@@ -63,31 +64,71 @@ const HomePage = ({
         initialRequest?: string;
     }>({});
     const [isTyping, setIsTyping] = useState(false);
-
-    // New state to track which message options should be shown
     const [showOptionsForMessage, setShowOptionsForMessage] = useState<string | null>(null);
+    const [isReturningUser, setIsReturningUser] = useState(false);
+    const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
 
     const { width: screenWidth } = Dimensions.get('window');
 
+    // Load chat started state and messages on component mount
     useEffect(() => {
-        const loadInitialMessages = async () => {
-            if (!hasLoadedInitialMessages.current) {
-                await loadMessages();
-                hasLoadedInitialMessages.current = true;
+        const loadChatState = async () => {
+            try {
+                // Load messages first to determine if user is returning
+                if (!hasLoadedInitialMessages.current) {
+                    await loadMessages();
+                    hasLoadedInitialMessages.current = true;
+                }
+
+                // Load chat started state
+                const chatStartedState = await AsyncStorage.getItem('chatStarted');
+                const hasChatStarted = chatStartedState === 'true';
+                setChatStarted(hasChatStarted);
+
+                // Check if user has completed onboarding before
+                const onboardingCompleted = await AsyncStorage.getItem('onboardingCompleted');
+                if (onboardingCompleted === 'true') {
+                    setHasCompletedOnboarding(true);
+                }
+            } catch (error) {
+                console.error('Error loading chat state:', error);
             }
         };
-        loadInitialMessages();
+
+        loadChatState();
     }, [loadMessages]);
 
+    // Handle messages loading and determine chat state
     useEffect(() => {
         if (hasLoadedInitialMessages.current && initialMessageCount === 0) {
             setInitialMessageCount(messages.length);
+            
+            // If there are existing messages, show chat interface and skip onboarding
             if (messages.length > 0) {
                 setIsFirstInteraction(false);
                 setOptionsShown(true);
+                setIsReturningUser(true);
+                // Ensure chat is marked as started if there are messages
+                if (!chatStarted) {
+                    setChatStarted(true);
+                }
+            } else {
+                // No messages means this is a first-time user or cleared chat
+                // But if they've completed onboarding before or are returning users, don't show onboarding flow
+                if (hasCompletedOnboarding || isReturningUser) {
+                    setIsFirstInteraction(false);
+                    setOptionsShown(false);
+                    setIsReturningUser(true);
+                    setChatStarted(false);
+                } else {
+                    setIsFirstInteraction(true);
+                    setOptionsShown(false);
+                    setIsReturningUser(false);
+                    setChatStarted(false);
+                }
             }
         }
-    }, [messages.length, initialMessageCount]);
+    }, [messages.length, initialMessageCount, chatStarted, hasCompletedOnboarding]);
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -97,21 +138,75 @@ const HomePage = ({
 
     const generateId = () => (Date.now() + Math.random().toString(36).slice(2));
 
-    const handleClearChat = () => {
-        clearMessages();
-        setChatStarted(false);
-        setIsFirstInteraction(true);
-        setOptionsShown(false);
-        setUserPreferences({});
-        setTypingMessageId(null);
-        setShowDropdown(false);
-        setShowOptionsForMessage(null);
+    const handleClearChat = async () => {
+        try {
+            // Clear messages from store
+            clearMessages();
+            
+            // Reset local state but maintain onboarding completion status and returning user status
+            setChatStarted(false);
+            setOptionsShown(false);
+            setUserPreferences({});
+            setTypingMessageId(null);
+            setShowDropdown(false);
+            setShowOptionsForMessage(null);
+            setInitialMessageCount(0);
+            
+            // Maintain isReturningUser status so returning users don't see greeting screen
+            // Don't reset isFirstInteraction here - it will be set correctly by the useEffect
+            
+            // Remove chat started state from storage
+            await AsyncStorage.removeItem('chatStarted');
+            
+            // Reset the ref to allow reloading
+            hasLoadedInitialMessages.current = false;
+            
+            // Force re-evaluation of chat state
+            setTimeout(() => {
+                setInitialMessageCount(0);
+            }, 100);
+        } catch (error) {
+            console.error('Error clearing chat:', error);
+        }
+    };
+
+    const handleResetOnboarding = async () => {
+        try {
+            // Clear messages from store
+            clearMessages();
+            
+            // Reset all local state including onboarding completion
+            setChatStarted(false);
+            setIsFirstInteraction(true);
+            setOptionsShown(false);
+            setUserPreferences({});
+            setTypingMessageId(null);
+            setShowDropdown(false);
+            setShowOptionsForMessage(null);
+            setInitialMessageCount(0);
+            setIsReturningUser(false);
+            setHasCompletedOnboarding(false);
+            await AsyncStorage.removeItem('chatStarted');
+            await AsyncStorage.removeItem('onboardingCompleted');
+            hasLoadedInitialMessages.current = false;
+            
+            setTimeout(() => {
+                setInitialMessageCount(0);
+            }, 100);
+        } catch (error) {
+            console.error('Error resetting onboarding:', error);
+        }
     };
 
     const sendMessage = async () => {
         if (!input.trim()) return;
 
-        setChatStarted(true);
+        // Set chat started state and save to storage
+        if (!chatStarted) {
+            setChatStarted(true);
+            await AsyncStorage.setItem('chatStarted', 'true');
+        }
+
         const userMsg: ChatMessage = { id: generateId(), role: 'user', content: input };
         addMessage(userMsg);
 
@@ -119,7 +214,8 @@ const HomePage = ({
         setInput('');
         inputRef.current?.blur();
 
-        if (isFirstInteraction && !optionsShown) {
+        // Only show onboarding flow for first-time users who haven't been through it
+        if (isFirstInteraction && !optionsShown && !isReturningUser && !hasCompletedOnboarding && messages.length === 0) {
             setUserPreferences(prev => ({ ...prev, initialRequest: userInput }));
             setIsFirstInteraction(false);
 
@@ -136,6 +232,12 @@ const HomePage = ({
                 setIsTyping(true);
                 setOptionsShown(true);
             }, 800);
+            return;
+        }
+
+        // For returning users or users who have completed onboarding, send directly to backend
+        if (isReturningUser || hasCompletedOnboarding) {
+            await callAPI(userInput);
             return;
         }
 
@@ -310,96 +412,122 @@ const HomePage = ({
         const handleTypewriterComplete = () => {
             if (shouldShowTyping) {
                 setTypingMessageId(null);
-                if (msg.type) {
+                // Only show options for non-returning users, users who haven't completed onboarding, and non-onboarding message types
+                if (msg.type && !isReturningUser && !hasCompletedOnboarding && 
+                    !['height-selection', 'fit-preference', 'weather-selection', 'location-selection'].includes(msg.type)) {
                     setShowOptionsForMessage(msg.id); 
                 }
             }
         };
 
-        const handleHeightSelect = (height: string) => {
-            const responseId = generateId();
-            addMessage({ id: responseId, role: 'user', content: height });
+            const handleHeightSelect = (height: string) => {
+        // Skip onboarding flow for returning users
+        if (isReturningUser) {
+            return;
+        }
+        
+        const responseId = generateId();
+        addMessage({ id: responseId, role: 'user', content: height });
 
-            setUserPreferences(prev => ({ ...prev, height }));
-            setShowOptionsForMessage(null);
+        setUserPreferences(prev => ({ ...prev, height }));
+        setShowOptionsForMessage(null);
+
+        setTimeout(() => {
+            const aiMsgId = generateId();
+            const fitMsg: ChatMessage = {
+                id: aiMsgId,
+                role: 'assistant',
+                content: 'Perfect! Now tell me about your style preferences:',
+                type: 'fit-preference'
+            };
+            setTypingMessageId(aiMsgId);
+            addMessage(fitMsg);
+        }, 800);
+    };
+
+            const handleFitSelect = (fit: string) => {
+        // Skip onboarding flow for returning users
+        if (isReturningUser) {
+            return;
+        }
+        
+        const responseId = generateId();
+        addMessage({ id: responseId, role: 'user', content: fit });
+
+        setUserPreferences(prev => ({ ...prev, fit }));
+        setShowOptionsForMessage(null);
+
+        setTimeout(() => {
+            const aiMsgId = generateId();
+            const weatherMsg: ChatMessage = {
+                id: aiMsgId,
+                role: 'assistant',
+                content: 'Great! What\'s the weather like where you are?',
+                type: 'weather-selection'
+            };
+            setTypingMessageId(aiMsgId);
+            addMessage(weatherMsg);
+        }, 800);
+    };
+
+            const handleWeatherSelect = (weather: string) => {
+        // Skip onboarding flow for returning users
+        if (isReturningUser) {
+            return;
+        }
+        
+        const responseId = generateId();
+        addMessage({ id: responseId, role: 'user', content: weather });
+
+        setUserPreferences(prev => ({ ...prev, weather }));
+        setShowOptionsForMessage(null);
+
+        setTimeout(() => {
+            const aiMsgId = generateId();
+            const locationMsg: ChatMessage = {
+                id: aiMsgId,
+                role: 'assistant',
+                content: 'Almost done! Where are you located?',
+                type: 'location-selection'
+            };
+            setTypingMessageId(aiMsgId);
+            addMessage(locationMsg);
+        }, 800);
+    };
+
+            const handleLocationSelect = (location: string) => {
+        // Skip onboarding flow for returning users
+        if (isReturningUser) {
+            return;
+        }
+        
+        const responseId = generateId();
+        addMessage({ id: responseId, role: 'user', content: location });
+
+        const updatedPreferences = { ...userPreferences, location };
+        setUserPreferences(updatedPreferences);
+        setShowOptionsForMessage(null);
+
+        setTimeout(() => {
+            const aiMsgId = generateId();
+            const continueMsg: ChatMessage = {
+                id: aiMsgId,
+                role: 'assistant',
+                content: 'Perfect! Let me create some outfit suggestions for you...',
+            };
+            setTypingMessageId(aiMsgId);
+            addMessage(continueMsg);
+
+            // Mark onboarding as completed
+            setHasCompletedOnboarding(true);
+            AsyncStorage.setItem('onboardingCompleted', 'true');
 
             setTimeout(() => {
-                const aiMsgId = generateId();
-                const fitMsg: ChatMessage = {
-                    id: aiMsgId,
-                    role: 'assistant',
-                    content: 'Perfect! Now tell me about your style preferences:',
-                    type: 'fit-preference'
-                };
-                setTypingMessageId(aiMsgId);
-                addMessage(fitMsg);
-            }, 800);
-        };
-
-        const handleFitSelect = (fit: string) => {
-            const responseId = generateId();
-            addMessage({ id: responseId, role: 'user', content: fit });
-
-            setUserPreferences(prev => ({ ...prev, fit }));
-            setShowOptionsForMessage(null);
-
-            setTimeout(() => {
-                const aiMsgId = generateId();
-                const weatherMsg: ChatMessage = {
-                    id: aiMsgId,
-                    role: 'assistant',
-                    content: 'Great! What\'s the weather like where you are?',
-                    type: 'weather-selection'
-                };
-                setTypingMessageId(aiMsgId);
-                addMessage(weatherMsg);
-            }, 800);
-        };
-
-        const handleWeatherSelect = (weather: string) => {
-            const responseId = generateId();
-            addMessage({ id: responseId, role: 'user', content: weather });
-
-            setUserPreferences(prev => ({ ...prev, weather }));
-            setShowOptionsForMessage(null);
-
-            setTimeout(() => {
-                const aiMsgId = generateId();
-                const locationMsg: ChatMessage = {
-                    id: aiMsgId,
-                    role: 'assistant',
-                    content: 'Almost done! Where are you located?',
-                    type: 'location-selection'
-                };
-                setTypingMessageId(aiMsgId);
-                addMessage(locationMsg);
-            }, 800);
-        };
-
-        const handleLocationSelect = (location: string) => {
-            const responseId = generateId();
-            addMessage({ id: responseId, role: 'user', content: location });
-
-            const updatedPreferences = { ...userPreferences, location };
-            setUserPreferences(updatedPreferences);
-            setShowOptionsForMessage(null);
-
-            setTimeout(() => {
-                const aiMsgId = generateId();
-                const continueMsg: ChatMessage = {
-                    id: aiMsgId,
-                    role: 'assistant',
-                    content: 'Perfect! Let me create some outfit suggestions for you...',
-                };
-                setTypingMessageId(aiMsgId);
-                addMessage(continueMsg);
-
-                setTimeout(() => {
-                    const contextMessage = `Based on my preferences: I'm ${updatedPreferences.height} tall, prefer ${updatedPreferences.fit} fit clothing, it's ${updatedPreferences.weather} weather, and I'm located in ${location}. ${updatedPreferences.initialRequest}`;
-                    callAPI(contextMessage, true);
-                }, 1500);
-            }, 800);
-        };
+                const contextMessage = `Based on my preferences: I'm ${updatedPreferences.height} tall, prefer ${updatedPreferences.fit} fit clothing, it's ${updatedPreferences.weather} weather, and I'm located in ${location}. ${updatedPreferences.initialRequest}`;
+                callAPI(contextMessage, true);
+            }, 1500);
+        }, 800);
+    };
 
         const handleTryNow = (outfitId: string) => {
             const responseId = generateId();
@@ -438,7 +566,7 @@ const HomePage = ({
                     </View>
                 )}
 
-                {msg.type && msg.role === 'assistant' ? (
+                {msg.type && msg.role === 'assistant' && !isReturningUser && !hasCompletedOnboarding ? (
                     <View>
                         <View style={[styles.messageBubble, styles.aiBubble]}>
                             <TypewriterText
@@ -453,7 +581,7 @@ const HomePage = ({
                             <ImageGallery images={msg.images} />
                         )}
 
-                        {shouldShowOptions && (
+                        {shouldShowOptions && !isReturningUser && !hasCompletedOnboarding && (
                             <>
                                 {msg.type === 'height-selection' && (
                                     <HeightSelectionMessage onSelect={handleHeightSelect} />
@@ -555,12 +683,29 @@ const HomePage = ({
 
         return (
             <View style={styles.optionsDropdown}>
+                <View style={styles.dropdownHeader}>
+                    <Text style={styles.dropdownTitle}>Options</Text>
+                    <TouchableOpacity
+                        style={styles.closeButton}
+                        onPress={() => setShowDropdown(false)}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="close" size={20} color="#666" />
+                    </TouchableOpacity>
+                </View>
                 <TouchableOpacity
                     style={styles.dropdownItem}
                     onPress={handleClearChat}
                     activeOpacity={0.7}
                 >
                     <Text style={styles.dropdownItemText}>🗑️ Clear Chat</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.dropdownItem, { borderBottomWidth: 0 }]}
+                    onPress={handleResetOnboarding}
+                    activeOpacity={0.7}
+                >
+                    <Text style={styles.dropdownItemText}>🔄 Reset Onboarding</Text>
                 </TouchableOpacity>
             </View>
         );
@@ -571,7 +716,7 @@ const HomePage = ({
             style={{ flex: 1 }}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-            <SafeAreaView style={styles.container}>
+            <SafeAreaView style={[styles.container, { paddingTop: 32 }]}>
                 <StatusBar
                     barStyle="dark-content"
                     backgroundColor="#ffffff"
@@ -587,7 +732,7 @@ const HomePage = ({
                     userData={userData}
                 />
 
-                {!chatStarted ? (
+                {!chatStarted && !isReturningUser && !hasCompletedOnboarding ? (
                     <>
                         <View style={styles.mainContent}>
                             <Text style={styles.greeting}>How can I help you today? 👋</Text>
@@ -625,6 +770,7 @@ const HomePage = ({
                         </View>
                     </>
                 ) : (
+                    // Show chat list for both started chat and returning users
                     <ScrollView
                         ref={scrollRef}
                         style={styles.chatList}
@@ -635,7 +781,7 @@ const HomePage = ({
                     </ScrollView>
                 )}
 
-                {chatStarted && (
+                {(chatStarted || isReturningUser || hasCompletedOnboarding) && (
                     <View style={styles.bottomSection}>
                         <OptionsDropdown />
                         <BlurView intensity={150} style={styles.inputBlurContainer}>
@@ -700,6 +846,8 @@ const styles = StyleSheet.create({
     dropdownItem: {
         paddingHorizontal: 16,
         paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
     },
     dropdownItemText: {
         fontSize: 14,
@@ -993,7 +1141,7 @@ const styles = StyleSheet.create({
     optionsDropdown: {
         position: 'absolute',
         bottom: 70,
-        right: 20,
+        right: 80,
         backgroundColor: '#ffffff',
         borderRadius: 12,
         shadowColor: '#000',
@@ -1018,6 +1166,25 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#333',
         fontFamily: FontFamily.HelveticaNeue.Regular,
+    },
+    closeButton: {
+        padding: 8,
+        borderRadius: 16,
+        backgroundColor: '#f5f5f5',
+    },
+    dropdownHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+    },
+    dropdownTitle: {
+        fontSize: 16,
+        fontFamily: FontFamily.HelveticaNeue.Medium,
+        color: '#333',
     },
 });
 

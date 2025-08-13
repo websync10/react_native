@@ -1,5 +1,8 @@
+import SplashScreenComponent from '@/components/SplashScreen';
+import { ProfileRefreshProvider } from '@/lib/contexts/ProfileRefreshContext';
 import { useOnboardingStore } from '@/lib/stores/onboardingStore';
 import { supabase } from '@/lib/supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -14,6 +17,7 @@ if (typeof global.structuredClone === 'undefined') {
 
 export default function RootLayout() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [showSplash, setShowSplash] = useState(true);
   const {setField} = useOnboardingStore();
   const [loaded] = useFonts({
     // Helvetica Neue font family variants
@@ -49,28 +53,61 @@ export default function RootLayout() {
     return () => subscription.subscription.unsubscribe();
   }, []);
 
-  if (!loaded || isLoggedIn === null) return null
+  // Check if it's the first app launch
+  useEffect(() => {
+    const checkFirstLaunch = async () => {
+      try {
+        const hasLaunched = await AsyncStorage.getItem('hasLaunched');
+        if (!hasLaunched) {
+          // First time launching the app
+          setShowSplash(true);
+          // Mark as launched
+          await AsyncStorage.setItem('hasLaunched', 'true');
+        } else {
+          // Not first time, skip splash
+          setShowSplash(false);
+        }
+      } catch (error) {
+        console.error('Error checking first launch:', error);
+        setShowSplash(false);
+      }
+    };
+
+    checkFirstLaunch();
+  }, []);
+
+  if (!loaded || isLoggedIn === null) return null;
+  
   return (
-    <SafeAreaProvider>
-      <StatusBar style="dark" backgroundColor="#FFFFFF" translucent={false} />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Protected guard={isLoggedIn}> 
-          {/* true= valid !true= notvalid */}
-          <Stack.Screen name="(auth)/onboarding" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)/findYourFitMale" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)/findYourFitFemale" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)/yourStyleMale" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)/yourStyleFemale" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)/accountsetup" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)/bodyShapemale" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)/bodyShapeFemale" options={{ headerShown: false }} />
-          <Stack.Screen name="(home)" options={{ headerShown: false }} />
-          <Stack.Screen name="edit" options={{ headerShown: false }} />
-        </Stack.Protected>
-        <Stack.Protected guard={!isLoggedIn}>
-          <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
-        </Stack.Protected>
-      </Stack>
-    </SafeAreaProvider>
+    <ProfileRefreshProvider>
+      <SafeAreaProvider>
+        <StatusBar style="dark" backgroundColor="#FFFFFF" translucent={false} />
+        
+        {/* Show splash screen on first load */}
+        {showSplash && (
+          <SplashScreenComponent onFinish={() => setShowSplash(false)} />
+        )}
+        
+        {isLoggedIn ? (
+          <Stack screenOptions={{ headerShown: false }}>
+            {/* Routes accessible when logged in */}
+            <Stack.Screen name="(auth)/onboarding" options={{ headerShown: false }} />
+            <Stack.Screen name="(auth)/findYourFitMale" options={{ headerShown: false }} />
+            <Stack.Screen name="(auth)/findYourFitFemale" options={{ headerShown: false }} />
+            <Stack.Screen name="(auth)/yourStyleMale" options={{ headerShown: false }} />
+            <Stack.Screen name="(auth)/yourStyleFemale" options={{ headerShown: false }} />
+            <Stack.Screen name="(auth)/accountsetup" options={{ headerShown: false }} />
+            <Stack.Screen name="(auth)/bodyShapemale" options={{ headerShown: false }} />
+            <Stack.Screen name="(auth)/bodyShapeFemale" options={{ headerShown: false }} />
+            <Stack.Screen name="(home)" options={{ headerShown: false }} />
+          </Stack>
+        ) : (
+          <Stack screenOptions={{ headerShown: false }}>
+            {/* Routes accessible when not logged in */}
+            <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
+          </Stack>
+        )}
+      </SafeAreaProvider>
+    </ProfileRefreshProvider>
   );
 }

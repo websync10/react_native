@@ -1,34 +1,166 @@
 
+import CustomAlert from '@/components/CustomAlert';
 import Header from '@/components/Header';
 import DatePickerField from '@/components/onboarding/DatePickerField';
 import PrimaryButton from '@/components/PrimaryButton';
 import SecondaryButton from '@/components/SecondaryButton';
 import { FontFamily } from '@/constants/Fonts';
+import { updateProfile } from '@/lib/actions/users/updateProfile';
+import { useProfileRefresh } from '@/lib/contexts/ProfileRefreshContext';
+import { uploadToCloudinary } from '@/lib/services/upload-images/uploadToCloudinary';
 import { useOnboardingStore } from '@/lib/stores/onboardingStore';
+import { useCustomAlert } from '@/lib/utils/customAlert';
+import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Image,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const EditProfileScreen = () => {
-  const { fullName, username, gender, image, setField } = useOnboardingStore()
+  const { userId, fullName, username, gender, image, dob, setField } = useOnboardingStore();
+  const { triggerProfileRefresh } = useProfileRefresh();
+  const [localImage, setLocalImage] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+  const { alertState, showError, showInfo, showSuccess, showConfirmation, hideAlert } = useCustomAlert();
+  const [showImagePickerModal, setShowImagePickerModal] = useState(false);
 
   const handleGenderChange = (gender: string) => {
     setField("gender", gender);
+    setHasChanges(true);
   };
 
+  const handleFieldChange = (field: string, value: string) => {
+    setField(field as any, value);
+    setHasChanges(true);
+  };
+
+  const pickFromGallery = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      showError('Permission Denied', 'We need gallery permission to proceed.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.8,
+      aspect: [1, 1],
+    });
+
+    if (!result.canceled) {
+      setLocalImage(result.assets[0].uri);
+      setHasChanges(true);
+    }
+  };
+
+  const openCamera = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      showError('Permission Denied', 'We need camera permission to proceed.');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      quality: 0.8,
+      aspect: [1, 1],
+    });
+
+    if (!result.canceled) {
+      setLocalImage(result.assets[0].uri);
+      setHasChanges(true);
+    }
+  };
+
+  const showImagePickerOptions = () => {
+    setShowImagePickerModal(true);
+  };
+
+  const handleSave = async () => {
+    if (!hasChanges) {
+      showInfo('No Changes', 'No changes to save.');
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      let cloudUrl: string | null = image || null; // Use existing image by default
+
+      // Upload image if changed
+      if (localImage) {
+        const uploadedUrl = await uploadToCloudinary(localImage);
+        if (uploadedUrl) {
+          cloudUrl = uploadedUrl;
+          setField('image', uploadedUrl);
+        } else {
+          showError('Upload Failed', 'Could not upload image. Please try again.');
+          setUploading(false);
+          return;
+        }
+      }
+
+      // Prepare profile data for database update
+      const profileData = {
+        full_name: fullName,
+        username: username,
+        avatar_url: cloudUrl || null,
+      };
+
+      // Update the profiles table
+      const result = await updateProfile(userId, profileData);
+      
+      if (result.success) {
+        // Trigger profile refresh to update sidebar and other components
+        triggerProfileRefresh();
+        
+        // Show success message
+        showSuccess('Success', 'Profile updated successfully!', () => {
+          setHasChanges(false);
+          setLocalImage(null);
+        });
+      } else {
+        showError('Error', 'Failed to update profile in database. Please try again.');
+      }
+    } catch (error) {
+      showError('Error', 'Failed to update profile. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (hasChanges) {
+      showConfirmation(
+        'Discard Changes',
+        'Are you sure you want to discard your changes?',
+        () => router.back(),
+        'Cancel',
+        'Discard'
+      );
+    } else {
+      router.back();
+    }
+  };
+
+  const displayImage = localImage || image;
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { paddingTop: 32 }]}>
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -46,10 +178,10 @@ const EditProfileScreen = () => {
           <View style={styles.avatarSection}>
             <View style={styles.avatarContainer}>
               <Image
-                source={{ uri: image }}
+                source={displayImage ? { uri: displayImage } : require('@/assets/images/logo.png')}
                 style={styles.avatar}
               />
-              <TouchableOpacity style={styles.cameraButton}>
+              <TouchableOpacity style={styles.cameraButton} onPress={showImagePickerOptions}>
                 <View style={styles.cameraIconBg}>
                   <Image
                     source={require('@/assets/images/icons/camera.png')}
@@ -70,7 +202,7 @@ const EditProfileScreen = () => {
                 placeholder="Full name"
                 placeholderTextColor="#999"
                 value={fullName}
-                onChangeText={(text) => setField("fullName", text)}
+                onChangeText={(text) => handleFieldChange("fullName", text)}
                 autoCapitalize="words"
               />
             </View>
@@ -82,7 +214,7 @@ const EditProfileScreen = () => {
                 placeholder="Username"
                 placeholderTextColor="#999"
                 value={username}
-                onChangeText={(text) => setField("username", text)}
+                onChangeText={(text) => handleFieldChange("username", text)}
                 autoCapitalize="none"
               />
             </View>
@@ -113,28 +245,85 @@ const EditProfileScreen = () => {
             {/* Date of Birth */}
             <View style={styles.inputSection}>
               <Text style={styles.inputLabel}>Date of birth</Text>
-              <DatePickerField styles={styles} />
+              <DatePickerField 
+                styles={styles} 
+                onDateChange={() => setHasChanges(true)}
+              />
             </View>
           </View>
 
           {/* Save Button */}
           <View style={styles.buttons}>
             <PrimaryButton
-              title="Save"
-              onPress={() => {
-                if (gender === 'Male') {
-                  router.push('/(auth)/findYourFitMale')
-                } else if (gender === 'Female') {
-                  router.push('/(auth)/findYourFitFemale')
-                } else {
-                  console.log('Please select a gender first')
-                }
-              }}
+              title={uploading ? "Saving..." : "Save"}
+              onPress={handleSave}
+              disabled={!hasChanges || uploading}
             />
-            <SecondaryButton title='Cancel' onPress={() => { router.push("/pages/myProfile") }} />
+            <SecondaryButton title='Cancel' onPress={handleCancel} />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      
+      {/* Custom Image Picker Modal */}
+      <Modal
+        visible={showImagePickerModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowImagePickerModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Select Image</Text>
+            <Text style={styles.modalSubtitle}>Choose how you want to select an image</Text>
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={() => {
+                  setShowImagePickerModal(false);
+                  openCamera();
+                }}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="camera" size={24} color="#fff" />
+                <Text style={styles.modalButtonText}>Camera</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={() => {
+                  setShowImagePickerModal(false);
+                  pickFromGallery();
+                }}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="images" size={24} color="#fff" />
+                <Text style={styles.modalButtonText}>Gallery</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => setShowImagePickerModal(false)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      
+      <CustomAlert
+        visible={alertState.visible}
+        title={alertState.title}
+        message={alertState.message}
+        type={alertState.type}
+        onClose={hideAlert}
+        onConfirm={alertState.onConfirm}
+        confirmText={alertState.confirmText}
+        cancelText={alertState.cancelText}
+        showCancel={alertState.showCancel}
+      />
     </SafeAreaView>
   );
 };
@@ -306,6 +495,64 @@ const styles = StyleSheet.create({
     gap: 12,
     marginHorizontal: 20,
     paddingTop: 104,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    width: '80%',
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontFamily: FontFamily.HelveticaNeue.Bold,
+    color: '#00332E',
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 24,
+    fontFamily: FontFamily.HelveticaNeue.Regular,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginBottom: 20,
+  },
+  modalButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    backgroundColor: '#00332E',
+    gap: 8,
+  },
+  modalButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontFamily: FontFamily.HelveticaNeue.Medium,
+  },
+  cancelButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    backgroundColor: '#D9DBE2',
+  },
+  cancelButtonText: {
+    color: '#333',
+    fontSize: 16,
+    fontFamily: FontFamily.HelveticaNeue.Medium,
   },
 });
 

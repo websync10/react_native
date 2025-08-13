@@ -2,18 +2,32 @@ import Header from "@/components/Header";
 import UnfollowConfirmationModal from "@/components/UnfollowConfirmationModal";
 import { FontFamily } from "@/constants/Fonts";
 import { getPostById } from "@/lib/actions/users/post/getPostById";
-import { dislikePost, hasUserDislikedPost, hasUserLikedPost, likePost, undislikePost, unlikePost } from "@/lib/actions/users/post/postInteractions";
+import {
+  dislikePost,
+  hasUserDislikedPost,
+  hasUserLikedPost,
+  likePost,
+  undislikePost,
+  unlikePost
+} from "@/lib/actions/users/post/postInteractions";
 import { useOnboardingStore } from "@/lib/stores/onboardingStore";
+import { supabase } from "@/lib/supabase";
 import { Post } from "@/lib/types/posts";
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
   Image,
+  Modal,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View
 } from "react-native";
@@ -22,6 +36,7 @@ import Svg, { Path } from "react-native-svg";
 const DiscoverPostDetail = () => {
   const params = useLocalSearchParams();
   const postId = params.postId as string;
+  const showCommentsParam = params.showComments as string;
   const [liked, setLiked] = useState(false);
   const [disliked, setDisliked] = useState(false);
   const [isFollowed, setIsFollowed] = useState(false);
@@ -30,31 +45,37 @@ const DiscoverPostDetail = () => {
   const currentUserId = userId;
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const [showComments, setShowComments] = useState(false);
+  const [comments, setComments] = useState<any[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [submittingComment, setSubmittingComment] = useState(false);
+
+
   const [likesCount, setLikesCount] = useState<number>(
     Array.isArray(post?.likes) ? post.likes.length : typeof post?.likes === 'number' ? post.likes : 0
   );
   const [dislikesCount, setDislikesCount] = useState<number>(
     Array.isArray(post?.disLikes) ? post.disLikes.length : typeof post?.disLikes === 'number' ? post.disLikes : 0
   );
-
-
   const isCurrentUserPost = post?.user?.id === currentUserId;
 
+  const fetchPost = async () => {
+    try {
+      console.log("postid", postId)
+      const res = await getPostById(postId, currentUserId);
+      if (!res.success) throw new Error("Post fetch failed");
+
+      const postData = res?.data as Post
+      setPost(postData);
+      setIsFollowed(postData.isFollowing || false);
+    } catch (err) {
+      console.error("Error loading post:", err);
+    }
+  };
+
   useEffect(() => {
-    const fetchPost = async () => {
-      try {
-        console.log("postid", postId)
-        const res = await getPostById(postId, currentUserId);
-        if (!res.success) throw new Error("Post fetch failed");
-
-        const postData = res?.data as Post
-        setPost(postData);
-        setIsFollowed(postData.isFollowing || false);
-      } catch (err) {
-        console.error("Error loading post:", err);
-      }
-    };
-
     if (postId && currentUserId) fetchPost();
   }, [postId, currentUserId]);
 
@@ -84,9 +105,98 @@ const DiscoverPostDetail = () => {
     initializeReactionStatus();
   }, [post?.id, userId]);
 
+  useEffect(() => {
+    if (showCommentsParam === 'true') {
+      setShowComments(true);
+      fetchComments();
+    }
+  }, [showCommentsParam]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (postId && currentUserId) {
+        fetchPost();
+      }
+    }, [postId, currentUserId])
+  );
+
+  const fetchComments = async () => {
+    setLoadingComments(true);
+    try {
+      const { data, error } = await supabase
+        .from('post_comments')
+        .select(`
+          id,
+          comment,
+          created_at,
+          user_id,
+          users:user_id (
+            id,
+            full_name,
+            avatar_url
+          )
+        `)
+        .eq('post_id', postId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setComments(data as any || []);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  const submitComment = async () => {
+    if (!newComment.trim() || !userId || submittingComment) return;
+
+    setSubmittingComment(true);
+    try {
+      const { data, error } = await supabase
+        .from('post_comments')
+        .insert({
+          post_id: postId,
+          user_id: userId,
+          comment: newComment.trim()
+        })
+        .select(`
+          id,
+          comment,
+          created_at,
+          user_id,
+          users:user_id(
+            id,
+            full_name,
+            avatar_url
+          )
+        `)
+        .single();
+
+      if (error) throw error;
+
+      setComments(prev => [data, ...prev]);
+      setNewComment('');
+
+      if (post) {
+        setPost(prev => prev ? { ...prev, comments: [...(prev.comments || []), data] } : null);
+      }
+    } catch (error) {
+      console.error('Error submitting comment:', error);
+      Alert.alert('Error', 'Failed to post comment. Please try again.');
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  const handleCommentPress = () => {
+    setShowComments(true);
+    if (comments.length === 0) {
+      fetchComments();
+    }
+  };
+
   const handleLike = async () => {
     if (!userId || loading) return;
-
     const wasLiked = liked;
     const wasDisliked = disliked;
     const prevLikesCount = likesCount;
@@ -148,7 +258,6 @@ const DiscoverPostDetail = () => {
           setLikesCount(prev => prev - 1);
           await unlikePost(postId, userId);
         }
-
         await dislikePost(postId, userId);
       }
     } catch (error) {
@@ -160,6 +269,23 @@ const DiscoverPostDetail = () => {
       console.error('Error handling dislike:', error);
     }
   };
+
+
+  const renderComment = ({ item }: { item: any }) => (
+    <View style={styles.commentItem}>
+      <Image
+        source={{ uri: item.users?.avatar_url }}
+        style={styles.commentAvatar}
+      />
+      <View style={styles.commentContent}>
+        <View style={styles.commentHeader}>
+          <Text style={styles.commentUsername}>{item.users?.full_name}</Text>
+          <Text style={styles.commentTime}>{(item.created_at.slice(0, 10))}</Text>
+        </View>
+        <Text style={styles.commentText}>{item.comment}</Text>
+      </View>
+    </View>
+  );
 
 
   return (
@@ -175,9 +301,13 @@ const DiscoverPostDetail = () => {
           />
         </View>
 
-        {/* User Info and Follow Button */}
         <View style={styles.userSection}>
-          <TouchableOpacity onPress={() => { router.push('./pages/profileDetails') }} >
+          <TouchableOpacity onPress={() => { 
+            router.push({
+              pathname: '/pages/profileDetails',
+              params: { userId: post?.user.id }
+            });
+          }} >
             <View style={styles.userInfo}>
               <Image source={{ uri: post?.user.avatar_url }} style={styles.avatar} />
               <Text style={styles.username}>{post?.user.full_name}</Text>
@@ -350,7 +480,7 @@ const DiscoverPostDetail = () => {
                     fillRule="evenodd"
                     clipRule="evenodd"
                     d="M12.7111 21H15.8769C17.7124 21 19.3123 19.7508 19.7575 17.9701L21.3788 11.4851C21.6943 10.2228 20.7396 9 19.4385 9H14.5L15.8069 6.75968C16.7791 5.09303 15.5769 3 13.6474 3H12.5L8.63178 9.76943C8.54543 9.92052 8.50002 10.0915 8.50002 10.2656V18.4648C8.50002 18.7992 8.66712 19.1114 8.94532 19.2969L10.4923 20.3282C11.1494 20.7662 11.9214 21 12.7111 21ZM4 9H5C6.10457 9 7 9.89543 7 11V18C7 19.1046 6.10457 20 5 20H4C2.89543 20 2 19.1046 2 18V11C2 9.89543 2.89543 9 4 9Z"
-                     fill="#FF3B30"
+                    fill="#FF3B30"
                   />
                 </Svg>
               ) : (
@@ -380,13 +510,91 @@ const DiscoverPostDetail = () => {
             </TouchableOpacity>
             <Text style={styles.statText}>{dislikesCount}</Text>
 
-            <TouchableOpacity style={[styles.statButton, { marginLeft: 16 }]}>
+            <TouchableOpacity
+              style={[styles.statButton, { marginLeft: 16 }]}
+              onPress={handleCommentPress}
+              activeOpacity={0.7}
+            >
               <Ionicons name="chatbubble-outline" size={20} color="#000" />
             </TouchableOpacity>
             <Text style={styles.statText}>{post?.comments.length ?? 0}</Text>
           </View>
         </View>
       </ScrollView>
+      <Modal
+        visible={showComments}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <SafeAreaView style={styles.commentsContainer}>
+          {/* Comments Header */}
+          <View style={styles.commentsHeader}>
+            <Text style={styles.commentsTitle}>Comments</Text>
+            <TouchableOpacity
+              onPress={() => setShowComments(false)}
+              style={styles.closeButton}
+            >
+              <Ionicons name="close" size={24} color="#000" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Comments List */}
+          <FlatList
+            data={comments}
+            renderItem={renderComment}
+            keyExtractor={(item) => item.id}
+            style={styles.commentsList}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={() => (
+              <View style={styles.emptyComments}>
+                {loadingComments ? (
+                  <ActivityIndicator size="large" color="#000" />
+                ) : (
+                  <>
+                    <Ionicons name="chatbubbles-outline" size={48} color="#ccc" />
+                    <Text style={styles.emptyCommentsText}>No comments yet</Text>
+                    <Text style={styles.emptyCommentsSubtext}>Be the first to comment!</Text>
+                  </>
+                )}
+              </View>
+            )}
+            refreshing={loadingComments}
+            onRefresh={fetchComments}
+          />
+
+          {/* Comment Input */}
+          <View style={styles.commentInputContainer}>
+            <Image
+              source={{ uri: post?.user?.avatar_url }}
+              style={styles.commentInputAvatar}
+            />
+            <View style={styles.commentInputWrapper}>
+              <TextInput
+                style={styles.commentInput}
+                placeholder="Add a comment..."
+                value={newComment}
+                onChangeText={setNewComment}
+                multiline
+                maxLength={500}
+              />
+              <TouchableOpacity
+                style={[
+                  styles.commentSubmitButton,
+                  (!newComment.trim() || submittingComment) && styles.commentSubmitButtonDisabled
+                ]}
+                onPress={submitComment}
+                disabled={!newComment.trim() || submittingComment}
+              >
+                {submittingComment ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Ionicons name="send" size={16} color="#fff" />
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -546,6 +754,124 @@ const styles = StyleSheet.create({
     color: "#000",
     marginRight: 16,
   },
+  commentsContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  commentsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  commentsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000',
+  },
+  closeButton: {
+    padding: 4,
+  },
+  commentsList: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  commentItem: {
+    flexDirection: 'row',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f5f5f5',
+  },
+  commentAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 12,
+  },
+  commentContent: {
+    flex: 1,
+  },
+  commentHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  commentUsername: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#000',
+    marginRight: 8,
+  },
+  commentTime: {
+    fontSize: 12,
+    color: '#666',
+  },
+  commentText: {
+    fontSize: 14,
+    color: '#333',
+    lineHeight: 20,
+  },
+  emptyComments: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  emptyCommentsText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#666',
+    marginTop: 12,
+  },
+  emptyCommentsSubtext: {
+    fontSize: 14,
+    color: '#999',
+    marginTop: 4,
+  },
+  commentInputContainer: {
+    flexDirection: 'row',
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+    backgroundColor: '#fff',
+  },
+  commentInputAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 12,
+  },
+  commentInputWrapper: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
+  commentInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    fontSize: 14,
+    maxHeight: 100,
+    marginRight: 8,
+  },
+  commentSubmitButton: {
+    backgroundColor: '#000',
+    borderRadius: 20,
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  commentSubmitButtonDisabled: {
+    backgroundColor: '#ccc',
+  },
 });
+
 
 export default DiscoverPostDetail;

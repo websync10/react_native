@@ -93,7 +93,7 @@ const LoginScreen = () => {
             <View style={styles.headerSection}>
               <View style={styles.logoContainer}>
                 <Image
-                  source={require("../../assets/images/baglogo.png")}
+                  source={require("../../assets/images/icon.png")}
                   resizeMode="contain"
                   style={styles.bagLogo}
                 />

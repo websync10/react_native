@@ -6,15 +6,15 @@ import { followUser, unfollowUser } from '@/lib/actions/users/follow/handleFollo
 import { getPosts } from '@/lib/actions/users/post/getPost';
 import { useOnboardingStore } from '@/lib/stores/onboardingStore';
 import { Post } from '@/lib/types/posts';
-import { router } from 'expo-router';
 
+import { useFocusEffect } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 
 const Discover = () => {
@@ -25,33 +25,48 @@ const Discover = () => {
   const currentUserId = userId
   const [followedUserIds, setFollowedUserIds] = useState<Set<string>>(new Set());
 
+  const fetchPosts = async () => {
+    try {
+      const response = await getPosts(userId);
+      if (!response.success) throw new Error("Failed to fetch posts");
+      const mappedPosts: Post[] = response.data
+      setPosts(mappedPosts ?? []);
+      setFilteredPosts(mappedPosts);
+
+      const followedSet = new Set<string>();
+      mappedPosts.forEach(post => {
+        if (post.isFollowing) followedSet.add(post.user.id);
+      });
+      setFollowedUserIds(followedSet);
+
+  } catch (err) {
+    console.error("Error loading posts:", err);
+  }
+};
+
   useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const response = await getPosts(userId);
-        if (!response.success) throw new Error("Failed to fetch posts");
-        const mappedPosts: Post[] = response.data
-        setPosts(mappedPosts ?? []);
-        setFilteredPosts(mappedPosts);
+    fetchPosts();
+  }, []);
 
-        const followedSet = new Set<string>();
-        mappedPosts.forEach(post => {
-          if (post.isFollowing) followedSet.add(post.user.id);
-        });
-        setFollowedUserIds(followedSet);
-
-    } catch (err) {
-      console.error("Error loading posts:", err);
-    }
-  };
-  fetchPosts();
-}, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchPosts();
+    }, [userId])
+  );
 
 const handleFollowToggle = async (postId: string, targetUserId: string) => {
   const post = posts.find(p => p.id === postId);
   if (!post) return;
 
   const isNowFollowing = !post.isFollowing;
+  
+  console.log('Follow toggle:', {
+    postId,
+    targetUserId,
+    currentFollowing: post.isFollowing,
+    newFollowing: isNowFollowing,
+    totalPostsByUser: posts.filter(p => p.user.id === targetUserId).length
+  });
 
   if (isNowFollowing) {
     await followUser(currentUserId, targetUserId);
@@ -65,17 +80,22 @@ const handleFollowToggle = async (postId: string, targetUserId: string) => {
     });
   }
 
-  setPosts(prevPosts =>
-    prevPosts.map(post =>
-      post.id === postId ? { ...post, isFollowing: isNowFollowing } : post
-    )
+  const updatedPosts = posts.map(post =>
+    post.user.id === targetUserId ? { ...post, isFollowing: isNowFollowing } : post
   );
-
-  setFilteredPosts(filtered =>
-    filtered.map(post =>
-      post.id === postId ? { ...post, isFollowing: isNowFollowing } : post
-    )
+  
+  const updatedFilteredPosts = filteredPosts.map(post =>
+    post.user.id === targetUserId ? { ...post, isFollowing: isNowFollowing } : post
   );
+  
+  console.log('Updated posts by user:', {
+    targetUserId,
+    updatedCount: updatedPosts.filter(p => p.user.id === targetUserId && p.isFollowing === isNowFollowing).length,
+    totalPostsByUser: updatedPosts.filter(p => p.user.id === targetUserId).length
+  });
+  
+  setPosts(updatedPosts);
+  setFilteredPosts(updatedFilteredPosts);
 };
 
 
@@ -130,7 +150,7 @@ const handleFiltersApplied = (filters: { styleCategory: any[]; seasonWeather: an
 };
 
 return (
-  <View style={{ flex: 1, backgroundColor: '#fff', paddingTop: 16, }}>
+  <View style={{ flex: 1, backgroundColor: '#fff', paddingTop: 32, }}>
     <Header title='Discover' />
     <ScrollView contentContainerStyle={{ paddingBottom: 80 }} showsVerticalScrollIndicator={false}>
       <Text style={styles.pageTitle}>Discover</Text>
@@ -149,31 +169,23 @@ return (
       <View style={{ marginTop: 15 }}>
         {activeTab === 'Trending' ? (
           filteredPosts.map(post => (
-            <TouchableOpacity
-              key={post.id}
-              activeOpacity={0.85}
-              onPress={() => router.push(`/discover/${post.id}`)}
-            >
+            <View key={`${post.id}-${post.likes}-${post.disLikes}-${post.isFollowing}`}>
               <DiscoverCard
                 post={post}
                 onFollowToggle={() => handleFollowToggle(post.id, post.user.id)}
               />
-            </TouchableOpacity>
+            </View>
           ))
-        ) : (
-          filteredPosts.filter(post => post.isFollowing).length > 0 ? (
-            filteredPosts.filter(post => post.isFollowing).map(post => (
-              <TouchableOpacity
-                key={post.id}
-                activeOpacity={0.85}
-                onPress={() => router.push(`/discover/${post.id}`)}
-              >
-                <DiscoverCard
-                  post={post}
-                  onFollowToggle={() => handleFollowToggle(post.id, post.user.id)}
-                />
-              </TouchableOpacity>
-            ))
+                  ) : (
+            filteredPosts.filter(post => post.isFollowing).length > 0 ? (
+              filteredPosts.filter(post => post.isFollowing).map(post => (
+                <View key={`${post.id}-${post.likes}-${post.disLikes}-${post.isFollowing}`}>
+                  <DiscoverCard
+                    post={post}
+                    onFollowToggle={() => handleFollowToggle(post.id, post.user.id)}
+                  />
+                </View>
+              ))
           ) : (
             <Text style={{ textAlign: 'center', color: '#888', marginTop: 32 }}>
               No posts yet. Follow some users to see their posts here!

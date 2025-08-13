@@ -58,7 +58,7 @@ export default function HelpSupportScreen() {
             style={{ flex: 1 }}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-            <SafeAreaView style={styles.container}>
+            <SafeAreaView style={[styles.container, { paddingTop: 32 }]}>
                 <StatusBar
                     barStyle="dark-content"
                     backgroundColor="#ffffff"

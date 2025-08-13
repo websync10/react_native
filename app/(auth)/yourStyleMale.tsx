@@ -40,31 +40,31 @@ const MalePickstyle = () => {
       id: 'streetwear',
       title: 'Streetwear',
       description: 'Urban and trendy styles with modern edge',
-      imageSource: require('../../assets/images/styles/streetwear-male.png'),
+      imageSource: require('../../assets/images/styles/streetwearmale.png'),
     },
     {
       id: 'classic',
       title: 'Classic',
       description: 'Timeless and sophisticated looks for any occasion',
-      imageSource: require('../../assets/images/styles/classic-male.png'),
+      imageSource: require('../../assets/images/styles/classicmale.png'),
     },
     {
       id: 'businesscausal',
       title: 'Business Causal',
       description: 'Professional attire for work and formal meetings',
-      imageSource: require('../../assets/images/styles/businesscasual-male.png'),
+      imageSource: require('../../assets/images/styles/businesscasualmale.png'),
     },
     {
       id: 'workwear',
       title: 'Workwear',
       description: 'Athletic and active wear for fitness and sports',
-      imageSource: require('../../assets/images/styles/workwear-male.png'),
+      imageSource: require('../../assets/images/styles/workwearmale.png'),
     },
     {
       id: 'minimal',
       title: 'Minimal',
       description: 'Balanced blend of formal and casual elements',
-      imageSource: require('../../assets/images/styles/minimal-male.png'),
+      imageSource: require('../../assets/images/styles/minimalmale.png'),
     },
   ]
 

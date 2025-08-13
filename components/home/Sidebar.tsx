@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
     },
     header: {
         paddingHorizontal: 20,
-        paddingTop: 16,
+        paddingTop: 32,
         paddingBottom: 16,
         backgroundColor: 'transparent',
     },

@@ -7,15 +7,16 @@ import * as FileSystem from 'expo-file-system';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Sharing from 'expo-sharing';
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  Alert,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    Alert,
+    Animated,
+    Image,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { Path, Svg } from 'react-native-svg';
 
@@ -26,6 +27,9 @@ export default function TryLookOutput() {
   const originalPhoto = params.userImage as string;
   console.log(resultImage, clothingItem, originalPhoto)
   const { userId } = useOnboardingStore();
+  
+  // Animation value for share button press effect
+  const [scaleValue] = useState(new Animated.Value(1));
   const shareImage = async () => {
     const localUri = FileSystem.documentDirectory + 'shared_image.jpg';
   
@@ -36,6 +40,24 @@ export default function TryLookOutput() {
     } else {
       Alert.alert('Sharing not available');
     }
+  };
+
+  const handleSharePress = () => {
+    // Animate button press
+    Animated.sequence([
+      Animated.timing(scaleValue, {
+        toValue: 0.9,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleValue, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+    
+    shareImage();
   };
 
   const handleSubmit = async () => {
@@ -79,10 +101,18 @@ export default function TryLookOutput() {
         {/* Main Result Image */}
         <View style={styles.imageContainer}>
           <Image source={{ uri: resultImage }} style={styles.mainImage} />
+          
+          {/* Floating Share Button - Positioned top-right for easy access */}
+          <Animated.View style={[styles.floatingShareButton, { transform: [{ scale: scaleValue }] }]}>
+            <TouchableOpacity 
+              onPress={handleSharePress} 
+              style={styles.shareButtonInner}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="share-outline" size={24} color="#fff" />
+            </TouchableOpacity>
+          </Animated.View>
         </View>
-        <TouchableOpacity onPress={shareImage} style={styles.videoButton}>
-          <Text style={styles.videoButtonText}>Share Image</Text>
-        </TouchableOpacity>
 
         {/* Upload Arrow */}
         <View style={styles.uploadArrowContainer}>
@@ -150,6 +180,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+    paddingTop: 32,
   },
   headerWrapper: {
     backgroundColor: '#fff',
@@ -188,12 +219,39 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     alignItems: 'center',
+    position: 'relative',
   },
   mainImage: {
     width: '100%',
     height: 450,
     borderRadius: 24,
     resizeMode: 'cover',
+  },
+  floatingShareButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  shareButtonInner: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 24,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   uploadArrowContainer: {
     alignItems: 'center',

@@ -12,7 +12,7 @@ import {
     View
 } from 'react-native';
 
-export default function DatePickerField({ styles }: { styles: any }) {
+export default function DatePickerField({ styles, onDateChange }: { styles: any; onDateChange?: () => void }) {
     const [showPicker, setShowPicker] = useState(false);
     const { dob, setField } = useOnboardingStore()
     const [date, setDate] = useState(dob ? new Date(dob) : new Date(2000));
@@ -36,6 +36,7 @@ export default function DatePickerField({ styles }: { styles: any }) {
 
         setDate(selectedDate);
         setField('dob', selectedDate.toISOString().split('T')[0]);
+        onDateChange?.();
 
         if (Platform.OS === 'android') {
             setShowPicker(false);
@@ -51,6 +52,7 @@ export default function DatePickerField({ styles }: { styles: any }) {
     const closeIOSPicker = () => {
         setShowPicker(false);
         setField('dob', date.toISOString().split('T')[0]);
+        onDateChange?.();
     };
 
     return (

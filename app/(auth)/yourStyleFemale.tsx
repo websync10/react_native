@@ -40,37 +40,37 @@ const FemalePickstyle = () => {
       id: 'minimal',
       title: 'Minimal',
       description: 'Relaxed everyday looks perfect for daily activities',
-      imageSource: require('../../assets/images/styles/minimal-female.png'),
+      imageSource: require('../../assets/images/styles/minimalfemale.png'),
     },
     {
       id: 'casual',
       title: 'Casual',
       description: 'Relaxed everyday looks perfect for daily activities',
-      imageSource: require('../../assets/images/styles/casual-female.png'),
+      imageSource: require('../../assets/images/styles/casualfemale.png'),
     },
     {
       id: 'professional',
       title: 'Professional',
       description: 'Sophisticated outfits for work and business meetings',
-      imageSource: require('../../assets/images/styles/professional-female.png'),
+      imageSource: require('../../assets/images/styles/professionalfemale.png'),
     },
     {
       id: 'vintage',
       title: 'Vintage',
       description: 'Latest fashion trends and statement pieces',
-      imageSource: require('../../assets/images/styles/vintage-female.png'),
+      imageSource: require('../../assets/images/styles/vintagefemale.png'),
     },
     {
       id: 'athleisure',
       title: 'Athleisure',
       description: 'Timeless pieces for special occasions and events',
-      imageSource: require('../../assets/images/styles/athleisure-female.png'),
+      imageSource: require('../../assets/images/styles/athleisurefemale.png'),
     },
     {
       id: 'bohemian',
       title: 'Bohemian',
       description: 'Timeless pieces for special occasions and events',
-      imageSource: require('../../assets/images/styles/bohemian-female.png'),
+      imageSource: require('../../assets/images/styles/bohemianfemale.png'),
     },
   ]
 

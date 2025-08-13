@@ -57,7 +57,10 @@ const TryOnHistory = () => {
   const filteredLooks = looksData.filter((look) => {
     const matchesSearch =
       look.category.toLowerCase().includes(search.toLowerCase()) ||
-      look.location.toLowerCase().includes(search.toLowerCase());
+      look.location.toLowerCase().includes(search.toLowerCase()) ||
+      look.body_type.toLowerCase().includes(search.toLowerCase()) ||
+      look.weather.toLowerCase().includes(search.toLowerCase()) ||
+      look.type.toLowerCase().includes(search.toLowerCase());
 
     const matchesTab =
       activeTab === 'All' ||
@@ -121,7 +124,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingTop: 16,
+    paddingTop: 32,
   },
   searchBoxWrapper: {
     marginTop: 8,

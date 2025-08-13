@@ -7,17 +7,17 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
 import React, { useState } from 'react'
 import {
-  Image,
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Image,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native'
 import Animated from 'react-native-reanimated'
-import Svg, { Circle, Defs, Filter, G, Path } from 'react-native-svg'
+import Svg, { Circle } from 'react-native-svg'
 
 const FindYourFitFemaleScreen = () => {
   const [showSizeDropdown, setShowSizeDropdown] = useState(false)
@@ -126,6 +126,9 @@ const FindYourFitFemaleScreen = () => {
               {/* Interactive Skin Tone Slider */}
               <View style={styles.skinToneSliderContainer}>
                 <View style={styles.skinToneGradient}>
+                  {/* Background Vertical Line */}
+                  <View style={styles.backgroundVerticalLine} />
+                  
                   {getSkinToneOptions().map((tone, index) => {
                     const isSelected = skin_tone === tone.name
                     return (
@@ -141,23 +144,9 @@ const FindYourFitFemaleScreen = () => {
                       >
                         {isSelected && (
                           <View style={styles.selectedIndicator}>
-                            <Svg width={22} height={50} viewBox="0 0 22 50" fill="none">
-                              <Path d="M10.9561 1V49" strokeWidth={1.5} stroke="black" strokeLinecap="round" />
-                              <G filter="url(#filter0_d_100_1911)">
-                                <Circle cx={11} cy={25} r={8} fill="#030318" />
-                                <Circle cx={11} cy={25} r={8} stroke="white" />
-                              </G>
-                              <Defs>
-                                <Filter
-                                  id="filter0_d_100_1911"
-                                  x={0.5}
-                                  y={16.5}
-                                  width={21}
-                                  height={21}
-                                  filterUnits="userSpaceOnUse"
-                                >
-                                </Filter>
-                              </Defs>
+                            <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+                              <Circle cx={12} cy={12} r={10} fill="#030318" />
+                              <Circle cx={12} cy={12} r={10} stroke="white" strokeWidth={1.5} />
                             </Svg>
                           </View>
                         )}
@@ -380,11 +369,20 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.HelveticaNeue.Medium,
   },
   selectedIndicator: {
-    width: '1%',
-    height: '1%',
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -12 }, { translateY: -12 }],
     justifyContent: 'center',
     alignItems: 'center',
-    overflow: 'visible',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   // Interactive Skin Tone Slider
   skinToneSliderContainer: {
@@ -514,19 +512,58 @@ const styles = StyleSheet.create({
   skinToneGradient: {
     flexDirection: 'row',
     height: 40,
-    borderRadius: 20,
+    borderRadius: 18,
     overflow: 'hidden',
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    position: 'relative',
+  },
+  backgroundVerticalLine: {
+    position: 'absolute',
+    left: '50%',
+    top: 0,
+    bottom: 0,
+    width: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    zIndex: 1,
+    shadowColor: '#fff',
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 0.5,
+    shadowRadius: 2,
+    elevation: 2,
   },
   skinToneOption: {
     flex: 1,
     height: '100%',
     borderWidth: 2,
     borderColor: 'transparent',
+    position: 'relative',
+    zIndex: 2,
   },
   skinToneOptionSelected: {
     borderColor: '#000',
-    transform: [{ scale: 1.1 }],
+    borderWidth: 3,
+    transform: [{ scale: 1.05 }],
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
   },
 
   // Dropdown

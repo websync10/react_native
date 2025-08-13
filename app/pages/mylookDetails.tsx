@@ -5,12 +5,12 @@ import { supabase } from '@/lib/supabase';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    Image,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { Path, Svg } from 'react-native-svg';
 import { TryOnLook } from './tryOnHistory';
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: '#fff',
     flex: 1,
-    paddingVertical: 16,
+    paddingVertical: 32,
   },
   headerWrapper: {
     paddingHorizontal: 0,
