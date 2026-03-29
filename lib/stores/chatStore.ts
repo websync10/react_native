@@ -1,9 +1,21 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 
+export type MessageType = 
+    | 'text'
+    | 'height-selection'
+    | 'fit-preference'
+    | 'outfit-carousel'
+    | 'outfit-recommendations'
+    | 'capsule-wardrobe'
+    | 'premium-upgrade';
+
 export type ChatMessage = {
+    id: string;
     role: 'user' | 'assistant';
     content: string;
+    type?: MessageType;
+    data?: any; // Additional data for interactive messages
 };
 
 interface ChatState {

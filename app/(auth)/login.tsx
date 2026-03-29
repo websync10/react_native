@@ -1,5 +1,6 @@
+import PrimaryButton from "@/components/PrimaryButton";
 import GradientBackground from "@/components/ui/GradientBackground";
-import GradientRight from "@/components/ui/GradientRight";
+import { FontFamily } from "@/constants/Fonts";
 import { createSessionFromUrl } from "@/lib/services/supabase/createSession";
 import { supabase } from "@/lib/supabase";
 import { makeRedirectUri } from "expo-auth-session";
@@ -12,7 +13,6 @@ import {
   Image,
   SafeAreaView,
   ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -51,22 +51,6 @@ const performOAuth = async (provider: "google" | "facebook") => {
   }
 };
 
-const sendMagicLink = async (email: string) => {
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      emailRedirectTo: Linking.createURL("/validate"),
-    },
-  });
-
-  if (error) {
-    console.error("Magic link error:", error.message);
-    Alert.alert("Error", error.message);
-  } else {
-    Alert.alert("Check your inbox", "Magic link sent to: " + email);
-  }
-};
-
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
   const url = Linking.useURL();
@@ -75,19 +59,13 @@ const LoginScreen = () => {
     if (url) {
       createSessionFromUrl(url).catch(console.error);
     }
-    console.log("redirectTo", redirectTo);
   }, [url]);
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="transparent"
-        translucent
-      />
       <GradientBackground />
-      <ScrollView>
-        <View style={styles.content}>
+      <ScrollView >
+        <View style={styles.content}> 
           {/* Section 1: Logo and Header Text */}
           <View style={styles.headerSection}>
             <View style={styles.logoContainer}>
@@ -109,6 +87,12 @@ const LoginScreen = () => {
 
           {/* Section 2: Authentication Forms */}
           <View style={styles.authSection}>
+            <View style={{gap:8}}>
+              <Text style={styles.headerboldText}>Sign in</Text>
+              <Text style={styles.headerText}>Enter your email address to complete sign in</Text>
+
+            </View>
+            
             {/* Section 2.1: Social Login Buttons */}
             <View style={styles.socialLoginSection}>
               <TouchableOpacity
@@ -123,7 +107,7 @@ const LoginScreen = () => {
                     style={styles.socialIcon}
                   />
                   <Text style={styles.socialButtonText}>
-                    Log in with Google
+                    Continue with Google
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -137,61 +121,50 @@ const LoginScreen = () => {
                     <Text style={styles.facebookIconText}>f</Text>
                   </View>
                   <Text style={styles.socialButtonText}>
-                    Log in with Facebook
+                    Continue with Facebook
                   </Text>
                 </View>
               </TouchableOpacity>
             </View>
 
             {/* Section 2.2: Divider */}
-            <View style={styles.dividerSection}>
-              <View style={styles.dividerContainer}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>OR</Text>
-                <View style={styles.dividerLine} />
-              </View>
+            <View style={styles.dividerContainer}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>Or sign in with</Text>
+              <View style={styles.dividerLine} />
             </View>
 
             {/* Section 2.3: Email Input */}
-            <View style={styles.emailSection}>
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Email</Text>
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="Enter email"
-                  placeholderTextColor="#999"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-              </View>
+            <View>
+              <Text style={styles.inputLabel}>Email address</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Enter email address"
+                placeholderTextColor="#999"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
             </View>
 
             {/* Section 2.4: Continue Button and Sign Up Link */}
             <View style={styles.actionSection}>
-              <TouchableOpacity
-                onPress={() => sendMagicLink(email)}
-                style={styles.continueButton}
-              >
-                <Text style={styles.continueButtonText}>
-                  Continue with email
-                </Text>
-              </TouchableOpacity>
+
+              <PrimaryButton title="Sign in" onPress={()=>{}}/>
 
               <View style={styles.signUpContainer}>
                 <Text style={styles.signUpText}>
                   Don&apos;t have an account?{" "}
                 </Text>
                 <TouchableOpacity onPress={() => router.push("/accountsetup")}>
-                  <Text style={styles.signUpLink}>Sign Up</Text>
+                  <Text style={styles.signUpLink}>Sign up</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </View>
         </View>
       </ScrollView>
-      <GradientRight />
     </SafeAreaView>
   );
 };
@@ -199,7 +172,7 @@ const LoginScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "white",
+    backgroundColor: "#fff",
   },
   safeArea: {
     flex: 1,
@@ -208,12 +181,13 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     justifyContent: "center",
-    gap: 64,
+    gap: 54,
   },
   // Section 1: Header Section
   headerSection: {
     alignItems: "center",
     marginBottom: 32,
+    paddingTop:86,
     gap: 23,
   },
   logoContainer: {
@@ -233,41 +207,43 @@ const styles = StyleSheet.create({
     top: 10,
   },
   headerText: {
-    color: "#737373",
-    fontFamily: "Helvetica Neue",
-    fontWeight: "400",
-    fontStyle: "normal",
-    fontSize: 20,
-    letterSpacing: 0.2,
+    color: "#67696E",
+    fontFamily: FontFamily.HelveticaNeue.Regular,
+    fontSize: 16,
+    letterSpacing: -0.24,
+    lineHeight:20,
     textAlign: "center",
   },
   // Section 2: Auth Section
+  headerboldText: {
+    color: "#1D2F4E",
+    fontFamily: FontFamily.HelveticaNeue.Bold,
+    fontSize: 24,
+    letterSpacing: -0.24,
+    textAlign: "center",
+    marginTop:24
+  },
+
   authSection: {
     flex: 1,
     gap: 32,
+    backgroundColor: '#fff',
+    marginHorizontal: -24,
+    paddingHorizontal: 24,
+    marginTop: -16,
+    paddingBottom: 20,
   },
-  // Section 2.1: Social Login Section
   socialLoginSection: {
     flexDirection: "column",
     gap: 17,
   },
-  // Section 2.2: Divider Section
-  dividerSection: {
-    // marginVertical: 10,
-  },
-  // Section 2.3: Email Section
-  emailSection: {
-    // marginVertical: 15,
-  },
-  // Section 2.4: Action Section
   actionSection: {
     flexDirection: "column",
     gap: 16,
-    // marginTop: 10,
   },
   socialButton: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 4,
+    borderRadius: 50,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderWidth: 1,
@@ -280,6 +256,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    gap:1
   },
   socialIcon: {
     width: 20,
@@ -303,9 +280,8 @@ const styles = StyleSheet.create({
   },
   socialButtonText: {
     fontSize: 16,
-    color: "#0B0C0C",
-    fontWeight: "500",
-    fontFamily: "Helvetica Neue",
+    color: "#2F4366",
+    fontFamily: FontFamily.HelveticaNeue.Medium,
   },
   dividerContainer: {
     flexDirection: "row",
@@ -314,73 +290,53 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginVertical: 5,
     width: "100%",
-    paddingHorizontal: 40,
+    // paddingHorizontal: 5,
   },
   dividerLine: {
     flex: 1,
-    height: 2,
+    height: 1,
     backgroundColor: "#E0E0E0",
   },
   dividerText: {
     marginHorizontal: 16,
     fontSize: 14,
-    color: "#999",
-    fontFamily: "Helvetica Neue",
+    color: "#636369",
+    fontFamily: FontFamily.HelveticaNeue.Regular,
   },
   inputContainer: {
     marginBottom: 0,
   },
   inputLabel: {
     fontSize: 16,
-    color: "#262627",
+    color: "#343640",
     marginBottom: 8,
-    fontWeight: "400",
-    fontFamily: "Helvetica Neue",
+    fontFamily: FontFamily.HelveticaNeue.Regular,
   },
   textInput: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 4,
-    // paddingVertical: 16,
+    borderRadius: 12,
     paddingHorizontal: 14,
     fontSize: 16,
     color: "#333",
-    borderWidth: 0.3,
-    borderColor: "#777",
+    borderWidth: 1,
+    borderColor: "#D9DBE2",
     height: 60,
-    fontFamily: "Helvetica Neue",
+    fontFamily: FontFamily.HelveticaNeue.Regular,
   },
   signUpContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: 15,
+    marginTop:24 ,
   },
   signUpText: {
     fontSize: 14,
-    color: "#666",
-    fontFamily: "Helvetica Neue",
+    color: "#737373",
+    fontFamily: FontFamily.HelveticaNeue.Regular,
   },
   signUpLink: {
     fontSize: 14,
-    color: "#00272E",
-    fontWeight: "bold",
-    fontFamily: "Helvetica Neue",
-  },
-  continueButton: {
-    backgroundColor: "#999999",
-    borderRadius: 4,
-    paddingVertical: 16,
-    alignItems: "center",
-  },
-  continueButtonText: {
-    color: "#FEFEFF",
-    fontSize: 16,
-    fontWeight: "bold",
-    fontFamily: "Helvetica Neue",
-  },
-  nextPage: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
+    color: "#000",
+    fontFamily: FontFamily.HelveticaNeue.Bold,
   },
 });
 export default LoginScreen;

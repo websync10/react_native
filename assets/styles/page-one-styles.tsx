@@ -1,3 +1,4 @@
+import { defaultFontFamily } from '@/constants/GlobalStyles';
 import {
   StyleSheet
 } from 'react-native';
@@ -5,7 +6,7 @@ import {
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
-    fontFamily: "Helvetica",
+    fontFamily: defaultFontFamily,
   },
   header: {
     flexDirection: 'row',

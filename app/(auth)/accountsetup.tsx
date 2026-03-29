@@ -1,74 +1,85 @@
 import PrimaryButton from '@/components/PrimaryButton'
-import HeaderWithLogo from '@/components/headerwithlogo'
+import SecondaryButton from '@/components/SecondaryButton'
+import { FontFamily } from '@/constants/Fonts'
+import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
 import React, { useState } from 'react'
 import {
   Image,
+  KeyboardAvoidingView,
+  Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native'
 
 const AccountSetupScreen = () => {
   const [fullName, setFullName] = useState('')
+  const [username, setUsername] = useState('')
   const [selectedGender, setSelectedGender] = useState('')
-  const [selectedSkinTone, setSelectedSkinTone] = useState('')
-  const [selectedSize, setSelectedSize] = useState('')
-  const [showSizeDropdown, setShowSizeDropdown] = useState(false)
-  const [showSkinToneDropdown, setShowSkinToneDropdown] = useState(false)
-
-  // Skin tone options with colors
-  const getSkinToneOptions = () => {
-    return [
-      { name: 'Yellow', color: '#F1C27D' },
-      { name: 'Fair', color: '#FDBCB4' },
-      { name: 'Medium', color: '#E0AC69' },
-      { name: 'Olive', color: '#C68642' },
-      { name: 'Tan', color: '#8D5524' },
-      { name: 'Dark', color: '#6B4423' }
-    ]
-  }
-
-  // Size options based on gender
-  const getSizeOptions = () => {
-    if (selectedGender === 'Male') {
-      return ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL']
-    } else if (selectedGender === 'Female') {
-      return ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL']
-    }
-    return ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'] // Default to male sizes
-  }
+  const [dateOfBirth, setDateOfBirth] = useState('')
 
   // Reset size when gender changes
   const handleGenderChange = (gender: string) => {
     setSelectedGender(gender)
-    setSelectedSize('') // Reset size when gender changes
+  }
+
+  const handleGoBack = () => {
+      router.push('/(auth)/login')
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        {/* Header Section */}
-        <HeaderWithLogo />
+      <KeyboardAvoidingView 
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        // keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      >
+        <ScrollView 
+          style={styles.scrollView} 
+          contentContainerStyle={styles.scrollContentContainer}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header Section */}
+          {/* <HeaderWithLogo /> */}
 
-        {/* Progress Section */}
+          {/* Progress Section */}
         <View style={styles.progressSection}>
-          <View style={styles.progressContainer}>
-            <View style={styles.progressBarActive} />
-            <View style={styles.progressBarInactive} />
+          <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+            <Image 
+              source={require('@/assets/images/icons/leftarrow.png')} 
+              style={styles.backArrowIcon}
+            />
+          </TouchableOpacity>
+          
+          <View style={styles.progressBarContainer}>
+            <View style={styles.progressBar}>
+              <LinearGradient
+                colors={['#595CFF', '#C6F8FF']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.progressFill}
+              />
+            </View>
           </View>
-            <Text style={styles.progressText}>
-            <Text style={{ fontWeight: '900', fontSize: 18 }}>1</Text>/2
-            </Text>
+          
+          <View style={styles.progressCounterContainer}>
+            <Text style={styles.progressCounterCurrent}>1</Text>
+            <Text style={styles.progressCounterTotal}> of 4</Text>
+          </View>
         </View>
+
+        {/* Progress Divider */}
+        <View style={styles.progressDivider} />
 
         {/* Content Section */}
         <View style={styles.contentSection}>
-          <Text style={styles.title}>Set up your account</Text>
+          <Text style={styles.title}>Let&apos;s Get to Know You</Text>
           <Text style={styles.subtitle}>Please complete your try-on information</Text>
 
           {/* Form Section */}
@@ -85,6 +96,18 @@ const AccountSetupScreen = () => {
                 autoCapitalize="words"
               />
             </View>
+            {/* Username Section */}
+            <View style={styles.inputSection}>
+              <Text style={styles.inputLabel}>Username</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Enter username"
+                placeholderTextColor="#999"
+                value={username}
+                onChangeText={setUsername}
+                autoCapitalize="none"
+              />
+            </View>
 
             {/* Gender Section */}
             <View style={styles.genderSection}>
@@ -97,14 +120,6 @@ const AccountSetupScreen = () => {
                   ]}
                   onPress={() => handleGenderChange('Male')}
                 >
-                  <View
-                    style={[
-                      styles.radioButton,
-                      selectedGender === 'Male' && styles.radioButtonSelected,
-                    ]}
-                  >
-                    {selectedGender === 'Male' && <View style={styles.radioButtonInner} />}
-                  </View>
                   <Text style={styles.genderText}>Male</Text>
                 </TouchableOpacity>
 
@@ -115,244 +130,59 @@ const AccountSetupScreen = () => {
                   ]}
                   onPress={() => handleGenderChange('Female')}
                 >
-                  <View
-                    style={[
-                      styles.radioButton,
-                      selectedGender === 'Female' && styles.radioButtonSelected,
-                    ]}
-                  >
-                    {selectedGender === 'Female' && <View style={styles.radioButtonInner} />}
-                  </View>
                   <Text style={styles.genderText}>Female</Text>
                 </TouchableOpacity>
               </View>
             </View>
 
-            {/* Skin Tone Section */}
+            {/* Date of Birth Section */}
             <View style={styles.inputSection}>
-              <Text style={styles.inputLabel}>Skin Tone</Text>
-              <TouchableOpacity 
-                style={[
-                  styles.dropdownButton,
-                  showSkinToneDropdown && styles.dropdownButtonActive
-                ]}
-                onPress={() => setShowSkinToneDropdown(!showSkinToneDropdown)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.dropdownContent}>
-                  <View style={[
-                    styles.colorIndicator,
-                    { backgroundColor: getSkinToneOptions().find(tone => tone.name === selectedSkinTone)?.color || '#F1C27D' }
-                  ]} />
-                  <Text style={styles.dropdownText}>
-                    {selectedSkinTone || 'Yellow'}
-                  </Text>
-                  <Image 
-                    source={require('@/assets/images/icons/leftarrow.png')} 
-                    style={[
-                      styles.dropdownArrowImage,
-                      showSkinToneDropdown && styles.dropdownArrowImageRotated
-                    ]} 
-                  />
-                </View>
-              </TouchableOpacity>
-
-              {/* Skin Tone Options Dropdown */}
-              {showSkinToneDropdown && (
-                <View style={styles.dropdownOptions}>
-                  <ScrollView 
-                    style={styles.dropdownScrollView}
-                    nestedScrollEnabled={true}
-                    showsVerticalScrollIndicator={true}
-                    scrollIndicatorInsets={{ right: 1 }}
-                    contentContainerStyle={{ flexGrow: 1 }}
-                    keyboardShouldPersistTaps="handled"
-                  >
-                    {getSkinToneOptions().map((tone, index) => (
-                      <TouchableOpacity
-                        key={tone.name}
-                        style={[
-                          styles.dropdownOption,
-                          selectedSkinTone === tone.name && styles.dropdownOptionSelected,
-                          index === getSkinToneOptions().length - 1 && styles.dropdownOptionLast
-                        ]}
-                        onPress={() => {
-                          setSelectedSkinTone(tone.name)
-                          setShowSkinToneDropdown(false)
-                        }}
-                        activeOpacity={0.7}
-                      >
-                        <View style={styles.skinToneOptionContent}>
-                          <View style={[
-                            styles.skinToneColorIndicator,
-                            { backgroundColor: tone.color }
-                          ]} />
-                          <Text style={[
-                            styles.dropdownOptionText,
-                            selectedSkinTone === tone.name && styles.dropdownOptionTextSelected
-                          ]}>
-                            {tone.name}
-                          </Text>
-                        </View>
-                        {selectedSkinTone === tone.name && (
-                          <Text style={styles.checkMark}>✓</Text>
-                        )}
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                </View>
-              )}
-            </View>
-
-            {/* Size Section */}
-            <View style={styles.inputSection}>
-              <Text style={styles.inputLabel}>Size</Text>
-              <TouchableOpacity 
-                style={[
-                  styles.dropdownButton,
-                  showSizeDropdown && styles.dropdownButtonActive
-                ]}
-                onPress={() => setShowSizeDropdown(!showSizeDropdown)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.dropdownContent}>
-                  <Text style={styles.dropdownText}>
-                  {selectedSize || (selectedGender === 'Female' ? 'XXS' : 'XS')}
-                  </Text>
-                  <Image 
-                  source={require('@/assets/images/icons/leftarrow.png')} 
-                  style={[
-                    styles.dropdownArrowImage,
-                    showSizeDropdown && styles.dropdownArrowImageRotated
-                  ]} 
-                  />
-                </View>
-              </TouchableOpacity>
-              
-              {/* Size Options Dropdown */}
-              {showSizeDropdown && (
-                <View style={styles.dropdownOptions}>
-                  <ScrollView 
-                    style={styles.dropdownScrollView}
-                    nestedScrollEnabled={true}
-                    showsVerticalScrollIndicator={true}
-                    scrollIndicatorInsets={{ right: 1 }}
-                    contentContainerStyle={{ flexGrow: 1 }}
-                    keyboardShouldPersistTaps="handled"
-                  >
-                    {getSizeOptions().map((size, index) => (
-                      <TouchableOpacity
-                        key={size}
-                        style={[
-                          styles.dropdownOption,
-                          selectedSize === size && styles.dropdownOptionSelected,
-                          index === getSizeOptions().length - 1 && styles.dropdownOptionLast
-                        ]}
-                        onPress={() => {
-                          setSelectedSize(size)
-                          setShowSizeDropdown(false)
-                        }}
-                        activeOpacity={0.7}
-                      >
-                        <Text style={[
-                          styles.dropdownOptionText,
-                          selectedSize === size && styles.dropdownOptionTextSelected
-                        ]}>
-                          {size}
-                        </Text>
-                        {selectedSize === size && (
-                          <Text style={styles.checkMark}>✓</Text>
-                        )}
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                </View>
-              )}
-              
-              <Text style={styles.sizeSubtext}>
-                Share your usual size to help us suggest the best fit
-              </Text>
-            </View>
-
-            {/* Profile Photo Section */}
-            <View style={styles.inputSection}>
-              <Text style={styles.inputLabel}>Profile Photo</Text>
-              <View style={styles.photoUploadContainer}>
-                <View style={styles.dashedBorder}>
-                  <Image
-                    source={
-                      selectedGender === 'Female' 
-                        ? require('../../assets/images/femalevector.png')
-                        : require('../../assets/images/MaleVector.png')
-                    }
-                    style={styles.humanFigure}
-                    resizeMode="contain"
-                  />
-                </View>
-
-                {/* Camera and Gallery Icons */}
-                <View style={styles.photoActions}>
-                  <TouchableOpacity style={styles.photoActionButton}>
-                    <View style={styles.photoIconContainer}>
-                        <Image style={styles.photoActionImage} source={require('../../assets/images/icons/gallery.png')} />
+              <Text style={styles.inputLabel}>Date of birth</Text>
+              <View style={styles.dateInputContainer}>
+                <TextInput
+                  style={styles.dateInput}
+                  placeholder="Enter your birth"
+                  placeholderTextColor="#999"
+                  value={dateOfBirth}
+                  onChangeText={setDateOfBirth}
+                />
+                <TouchableOpacity style={styles.calendarButton}>
+                  <View style={styles.calendarIcon}>
+                    <View style={styles.calendarTop} />
+                    <View style={styles.calendarBody}>
+                      <View style={styles.calendarGrid}>
+                        <View style={styles.calendarDot} />
+                        <View style={styles.calendarDot} />
+                        <View style={styles.calendarDot} />
+                        <View style={styles.calendarDot} />
+                      </View>
                     </View>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.photoActionButton}>
-                    <View style={styles.photoIconContainer}>
-                      <Image style={styles.photoActionImage} source={require('../../assets/images/icons/camera.png')} />
-                    </View>
-                  </TouchableOpacity>
-                </View>
+                  </View>
+                </TouchableOpacity>
               </View>
             </View>
-
-            {/* Info Section */}
-            <View style={styles.infoSection}>
-              <View style={styles.infoItem}>
-                <View style={styles.checkIcon}>
-                  <Image style={styles.photoActionImage} source={require('../../assets/images/icons/tick-circle.png')} />
-                </View>
-                <Text style={styles.infoText}>
-                  Please keep the shooting environment clean and lighting appropriate for best fitting effect.
-                </Text>
-              </View>
-
-              <View style={styles.infoItem}>
-                <View style={styles.checkIcon}>
-                  <Image style={styles.photoActionImage} source={require('../../assets/images/icons/tick-circle.png')} />
-                </View>
-                <Text style={styles.infoText}>
-                  Please wear fitted clothes and keep your hands out of your pockets.
-                </Text>
-              </View>
-
-              <View style={styles.infoItem}>
-                <View style={styles.checkIcon}>
-                  <Image style={styles.photoActionImage} source={require('../../assets/images/icons/tick-circle.png')} />
-                </View>
-                <Text style={styles.infoText}>
-                  Your photo stays private and securely stored — never shared!
-                </Text>
-              </View>
-            </View>
-
-            {/* Next Button */}
-            <PrimaryButton 
-              title="Next"
-              onPress={() => {
-                if (selectedGender === 'Male') {
-                  router.push('/(auth)/MalePickstyle')
-                } else if (selectedGender === 'Female') {
-                  router.push('/(auth)/FemalePickstyle')
-                } else {
-                  // Optional: Show alert or validation message if no gender is selected
-                  console.log('Please select a gender first')
-                }
-              }} 
-            />
           </View>
         </View>
+        
+        {/* Fixed Bottom Buttons */}
+        <View style={styles.buttons}>
+          <PrimaryButton 
+            title="Save"
+            onPress={() => {
+              if (selectedGender === 'Male') {
+                router.push('/(auth)/findYourFitMale')
+              } else if (selectedGender === 'Female') {
+                router.push('/(auth)/findYourFitFemale')
+              } else {
+                // Optional: Show alert or validation message if no gender is selected
+                console.log('Please select a gender first')
+              }
+            }} 
+          />
+          <SecondaryButton title='Cancel' onPress={() => {}} />
+        </View>
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   )
 }
@@ -365,41 +195,85 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  scrollContentContainer: {
+    flexGrow: 1,
+  },
   
   // Progress Section
   progressSection: {
     paddingHorizontal: 20,
-    marginBottom: 18,
+    paddingVertical: 16, 
+    // marginBottom: 42,
+    flexDirection: 'row',
     alignItems: 'center',
-    display: 'flex',
-    flexDirection: 'row',
-    alignSelf: 'center',
     justifyContent: 'center',
-    gap:16,
+    top:6
   },
-  progressContainer: {
+  backButton: {
+    position: 'absolute',
+    left: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  backArrowIcon: {
+    width: 8,
+    height: 16,
+    left:-2
+  },
+  progressBarContainer: {
+    flex: 1,
+    marginLeft: 60,
+    marginRight: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  progressBar: {
+    height: 10,
+    width: '100%',
+    backgroundColor: '#F5F6F8',
+    borderRadius: 50,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    width: '25%', // 1 of 4 = 25%
+    backgroundColor: '#4A90E2',
+    borderRadius: 50,
+  },
+  progressCounter: {
+    fontSize: 16,
+    // fontWeight: '600',
+    color: '#333',
+    minWidth: 50,
+    textAlign: 'right',
+    fontFamily: FontFamily.HelveticaNeue.Regular,
+  },
+  progressCounterContainer: {
     flexDirection: 'row',
-    width: '80%',
-    gap: 8,
-    marginBottom: 10,
+    minWidth: 50,
+    justifyContent: 'flex-end',
   },
-  progressBarActive: {
-    flex: 1,
-    height: 6,
-    backgroundColor: '#000',
-    borderRadius: 2,
+  progressCounterCurrent: {
+    fontSize: 16,
+    color: '#1F242D',
+    fontFamily: FontFamily.HelveticaNeue.Bold,
   },
-  progressBarInactive: {
-    flex: 1,
-    height: 6,
-    backgroundColor: '#D3D3D3',
-    borderRadius: 2,
+  progressCounterTotal: {
+    fontSize: 16,
+    color: '#4E617B',
+    fontFamily: FontFamily.HelveticaNeue.Regular,
   },
-  progressText: {
-    fontSize: 14,
-    fontWeight: 400,
-    color: '#000',
-    top:-6,
+  progressDivider: {
+    height: 1,
+    backgroundColor: '#F0F0F0',
+    marginTop: 10,
   },
   // Content
   contentSection: {
@@ -407,40 +281,44 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#00272E',
+    fontSize: 26,
+    color: '#343640',
     textAlign: 'center',
+    marginTop: 24,
     marginBottom: 2,
+    fontFamily: FontFamily.HelveticaNeue.Medium,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#737373',
+    fontSize: 14,
+    color: '#8288A0',
     textAlign: 'center',
     marginBottom: 36,
+    fontFamily: FontFamily.HelveticaNeue.Regular,
   },
   formSection: {
     gap: 30,
+    marginBottom: 60, // Extra space before buttons
   },
   inputSection: {
     gap: 8,
   },
   inputLabel: {
     fontSize: 14,
-    fontWeight: '500',
     color: '#00272E',
     marginBottom: 2,
+    fontFamily: FontFamily.HelveticaNeue.Medium,
   },
   textInput: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 8,
+    borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 16,
     fontSize: 16,
     color: '#333',
     borderWidth: 1,
-    borderColor: '#D3D3D3',
+    borderColor: '#D9DBE2',
     height: 56,
+    fontFamily: FontFamily.HelveticaNeue.Regular,
   },
   // Gender
   genderSection: {
@@ -453,278 +331,88 @@ const styles = StyleSheet.create({
   genderOption: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent:'center',
     paddingVertical: 16,
-    paddingRight: 32,
-    paddingLeft:16,
-    borderRadius: 18,
-    borderWidth: 2,
-    borderColor: '#D3D3D3',
+    paddingHorizontal:16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#D9DBE2',
     backgroundColor: '#FFFFFF',
-    // flex: 1,
+    flex: 1,
     gap: 12,
   },
   genderOptionSelected: {
     borderColor: '#000',
     backgroundColor: '#F8F8F8',
   },
-  radioButton: {
-    width: 20,
-    height: 20,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#D3D3D3',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioButtonSelected: {
-    borderColor: '#000',
-  },
-  radioButtonInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#000',
-  },
   genderText: {
     fontSize: 16,
     color: '#000',
-    fontWeight: '500',
+    fontFamily: FontFamily.HelveticaNeue.Regular,
   },
-  // Dropdown
-  dropdownButton: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: '#D3D3D3',
-    height: 56,
-  },
-  dropdownButtonActive: {
-    borderColor: '#000000',
-    borderWidth: 2,
-    backgroundColor: '#F8F8F8',
-  },
-  dropdownContent: {
+
+  // Date of Birth
+  dateInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#D9DBE2',
+    height: 56,
+    paddingHorizontal: 16,
   },
-  colorIndicator: {
+  dateInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+    paddingVertical: 16,
+  },
+  calendarButton: {
+    padding: 4,
+  },
+  calendarIcon: {
     width: 20,
     height: 20,
-    borderRadius: 10,
-    backgroundColor: '#FFD700',
-    marginRight: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  dropdownText: {
-    fontSize: 16,
-    color: '#333',
-    flex: 1,
+  calendarTop: {
+    width: 16,
+    height: 2,
+    backgroundColor: '#666',
+    borderRadius: 1,
+    marginBottom: 1,
   },
-  dropdownArrow: {
-    fontSize: 14,
-    color: '#666',
-    transform: [{ rotate: '0deg' }],
+  calendarBody: {
+    width: 18,
+    height: 14,
+    borderWidth: 1,
+    borderColor: '#666',
+    borderRadius: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  dropdownArrowRotated: {
-    transform: [{ rotate: '180deg' }],
-    color: '#000000',
-  },
-  dropdownArrowImage: {
-    width: 6,
-    height: 12,
-    transform: [{ rotate: '270deg' }], // Initially points down (left arrow rotated to point down)
-  },
-  dropdownArrowImageRotated: {
-    transform: [{ rotate: '90deg' }], // Points up when dropdown is open
-  },
-  sizeSubtext: {
-    fontSize: 14,
-    color: '#737373',
-    marginTop: 8,
-  },
-  // Dropdown Options Styles
-  dropdownOptions: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: '#D3D3D3',
-    marginTop: 1,
-    elevation: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    zIndex: 1000,
-    maxHeight: 300,
-  },
-  dropdownScrollView: {
-    flexGrow: 1,
-  },
-  dropdownOption: {
+  calendarGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    width: 12,
+    height: 8,
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-    minHeight: 48,
   },
-  dropdownOptionLast: {
-    borderBottomWidth: 0,
+  calendarDot: {
+    width: 2,
+    height: 2,
+    backgroundColor: '#666',
+    borderRadius: 1,
+    margin: 0.5,
   },
-  dropdownOptionSelected: {
-    backgroundColor: '#F5F5F5',
-    borderBottomColor: '#E0E0E0',
-    borderLeftWidth: 2,
-    borderLeftColor: '#000000',
-  },
-  dropdownOptionText: {
-    fontSize: 16,
-    color: '#333',
-    flex: 1,
-  },
-  dropdownOptionTextSelected: {
-    color: '#000000',
-    fontWeight: '600',
-  },
-  checkMark: {
-    fontSize: 16,
-    color: '#000000',
-    fontWeight: 'bold',
-  },
-  // Skin Tone Specific Styles
-  skinToneOptionContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
+  buttons: {
     gap: 12,
-  },
-  skinToneColorIndicator: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#E0E0E0',
-  },
-  // Profile Photo
-  photoUploadContainer: {
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#000000',
-    backgroundColor: '#F8F8F8',
-    padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dashedBorder: {
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#000000',
-    borderStyle: 'dashed',
-    backgroundColor: '#FFFFFF',
-    width: '100%',
-    height: 300,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  humanFigure: {
-    width: 120,
-    height: 240,
-    opacity: 0.6,
-  },
-  profilePlusButton: {
-    position: 'absolute',
-    top: 60,
-    left: 80,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#FF1493',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-  },
-  profilePlusIcon: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-  },
-  photoActions: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 20,
-    marginTop: 16,
-  },
-  photoActionButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 30,
-    backgroundColor: '#F0F0F0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#D3D3D3',
-  },
-  photoIconContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  photoActionIcon: {
-    fontSize: 24,
-  },
-  photoActionImage: {
-    width: 24,
-    height: 24,
-  },
-  // Info
-  infoSection: {
-    gap: 20,
-    marginTop: 10,
-  },
-  infoItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  checkIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 2,
-  },
-  checkText: {
-    fontSize: 14,
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-  },
-  infoText: {
-    fontSize: 16,
-    color: '#737373',
-    lineHeight: 24,
-    flex: 1,
-  },
-  // Next Button
-  nextButton: {
-    backgroundColor: '#000000',
-    borderRadius: 8,
-    paddingVertical: 18,
-    alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 40,
-  },
-  nextButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
+    marginHorizontal: 20,
+    paddingBottom: 64, // Safe area bottom padding
+  }
 })
 
 export default AccountSetupScreen

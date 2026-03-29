@@ -25,18 +25,18 @@ export default function HomeScreen() {
 
       setSession(session);
 
-      if (session?.user) {
-        const profile = await getUserProfile(session.user.id);
-        const onboarded = await getUser(session.user.id)
-        if (profile) {
-          setUserData(profile)
-        }
-        if (onboarded) {
-          setIsOnboarded(onboarded ?? false);
-        } else {
-          setIsOnboarded(false);
-        }
-      }
+      // if (session?.user) {
+      //   const profile = await getUserProfile(session.user.id);
+      //   const onboarded = await getUser(session.user.id)
+      //   if (profile) {
+      //     setUserData(profile)
+      //   }
+      //   if (onboarded) {
+      //     setIsOnboarded(onboarded ?? false);
+      //   } else {
+      //     setIsOnboarded(false);
+      //   }
+      // }
 
       setLoading(false);
     };
@@ -61,7 +61,6 @@ export default function HomeScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: "#ffffff" }}>
       <HomePage userData={userData}  />
-
 
     </View>
   );
